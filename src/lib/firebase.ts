@@ -13,15 +13,14 @@ import { getStorage } from "firebase/storage";
 // 4. Scroll down to "Your apps" section
 // 5. Copy the configuration object values
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
-  measurementId: "YOUR_MEASUREMENT_ID"
+  apiKey: "AIzaSyDnGjHrKVCdHt78-DW3tkHq7Nzv86YdCmg",
+  authDomain: "dhamma-al-nur-project.firebaseapp.com",
+  projectId: "dhamma-al-nur-project",
+  storageBucket: "dhamma-al-nur-project.firebasestorage.app",
+  messagingSenderId: "479477583909",
+  appId: "1:479477583909:web:91ab605ce0f93d37acefcc",
+  measurementId: "G-JQE6XPY8ZT"
 };
-
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 

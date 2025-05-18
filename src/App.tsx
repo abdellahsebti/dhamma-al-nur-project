@@ -11,6 +11,7 @@ import AlQawlAlMufid from "./pages/AlQawlAlMufid";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Admin from "./pages/Admin";
+import Join from "./pages/Join";
 import NotFound from "./pages/NotFound";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
@@ -33,6 +34,7 @@ const App = () => (
               <Route path="/al-qawl-al-mufid" element={<AlQawlAlMufid />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/join" element={<Join />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

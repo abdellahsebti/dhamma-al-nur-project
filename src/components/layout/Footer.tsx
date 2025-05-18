@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Facebook, Instagram, Linkedin, Youtube } from 'lucide-react';
 
 const Footer: React.FC = () => {
   const navigate = useNavigate();
@@ -14,6 +15,46 @@ const Footer: React.FC = () => {
             <p className="text-white/80">
               منصة إسلامية تهدف إلى نشر الوعي السلفي والبحث العلمي من خلال مقاطع الفيديو والبودكاست والفوائد العلمية.
             </p>
+            
+            {/* Social Media Links */}
+            <div className="flex space-x-4 space-x-reverse mt-4">
+              <a 
+                href="https://instagram.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="hover:text-white/80 transition-colors"
+                aria-label="Instagram"
+              >
+                <Instagram className="w-5 h-5" />
+              </a>
+              <a 
+                href="https://facebook.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="hover:text-white/80 transition-colors"
+                aria-label="Facebook"
+              >
+                <Facebook className="w-5 h-5" />
+              </a>
+              <a 
+                href="https://linkedin.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="hover:text-white/80 transition-colors"
+                aria-label="LinkedIn"
+              >
+                <Linkedin className="w-5 h-5" />
+              </a>
+              <a 
+                href="https://youtube.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="hover:text-white/80 transition-colors"
+                aria-label="YouTube"
+              >
+                <Youtube className="w-5 h-5" />
+              </a>
+            </div>
           </div>
           
           <div>
@@ -49,6 +90,14 @@ const Footer: React.FC = () => {
                   onClick={() => navigate('/al-qawl-al-mufid')}
                 >
                   القول المفيد
+                </span>
+              </li>
+              <li>
+                <span 
+                  className="cursor-pointer hover:text-white/80 transition-colors"
+                  onClick={() => navigate('/join')}
+                >
+                  انضم إلينا
                 </span>
               </li>
             </ul>

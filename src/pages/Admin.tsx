@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -23,7 +23,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useForm } from 'react-hook-form';
-import { Plus, BookPlus } from 'lucide-react';
+import { Plus, BookPlus, Trash2, Edit } from 'lucide-react';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  addBenefit, 
+  getBenefits, 
+  deleteBenefit, 
+  updateBenefit,
+  Benefit 
+} from '@/services/benefitsService';
 
 // Benefit form type
 interface BenefitFormValues {
@@ -35,12 +44,17 @@ interface BenefitFormValues {
 }
 
 const Admin: React.FC = () => {
-  // In a real implementation, this would check Firebase Auth status
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showAddBenefitDialog, setShowAddBenefitDialog] = useState(false);
+  const [benefits, setBenefits] = useState<Benefit[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [editingBenefit, setEditingBenefit] = useState<Benefit | null>(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  // Use our Firebase authentication hook
+  const { user, signIn, signOut, error: authError } = useFirebaseAuth();
   
   // Benefit form
   const benefitForm = useForm<BenefitFormValues>({
@@ -53,26 +67,133 @@ const Admin: React.FC = () => {
     }
   });
   
-  // Mock login function (would use Firebase Auth in real implementation)
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Demo authentication with basic validation
-    if (email && password) {
-      setIsAuthenticated(true);
-      setEmail('');
-      setPassword('');
+  // Fetch benefits from Firestore
+  useEffect(() => {
+    if (user) {
+      fetchBenefits();
+    }
+  }, [user]);
+  
+  // Fetch benefits function
+  const fetchBenefits = async () => {
+    try {
+      setLoading(true);
+      const fetchedBenefits = await getBenefits();
+      setBenefits(fetchedBenefits);
+    } catch (error) {
+      console.error("Error fetching benefits:", error);
+      toast({
+        title: "خطأ في جلب البيانات",
+        description: "حدث خطأ أثناء جلب الفوائد",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
   
-  // Mock submit function for adding a benefit
-  const onSubmitBenefit = (data: BenefitFormValues) => {
-    console.log('Benefit submitted:', data);
-    // Here you would add the benefit to Firestore
-    setShowAddBenefitDialog(false);
-    benefitForm.reset();
+  // Login with Firebase
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email && password) {
+      await signIn(email, password);
+      if (authError) {
+        toast({
+          title: "خطأ في تسجيل الدخول",
+          description: "يرجى التحقق من البريد الإلكتروني وكلمة المرور",
+          variant: "destructive",
+        });
+      }
+    }
   };
   
-  if (!isAuthenticated) {
+  // Handle logout
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/admin');
+  };
+  
+  // Open dialog for adding a new benefit
+  const handleAddBenefitClick = () => {
+    setEditingBenefit(null);
+    benefitForm.reset({
+      bookName: '',
+      volumeAndPage: '',
+      benefitText: '',
+      scholarComment: '',
+      category: '',
+    });
+    setShowAddBenefitDialog(true);
+  };
+  
+  // Open dialog for editing a benefit
+  const handleEditBenefitClick = (benefit: Benefit) => {
+    setEditingBenefit(benefit);
+    benefitForm.reset({
+      bookName: benefit.bookName,
+      volumeAndPage: benefit.volumeAndPage,
+      benefitText: benefit.benefitText,
+      scholarComment: benefit.scholarComment || '',
+      category: benefit.category,
+    });
+    setShowAddBenefitDialog(true);
+  };
+  
+  // Submit function for adding/editing a benefit
+  const onSubmitBenefit = async (data: BenefitFormValues) => {
+    try {
+      if (editingBenefit?.id) {
+        // Update existing benefit
+        await updateBenefit(editingBenefit.id, data);
+        toast({
+          title: "تم التحديث بنجاح",
+          description: "تم تحديث الفائدة بنجاح",
+        });
+      } else {
+        // Add new benefit
+        await addBenefit(data);
+        toast({
+          title: "تمت الإضافة بنجاح",
+          description: "تمت إضافة الفائدة بنجاح",
+        });
+      }
+      // Refresh benefits list
+      fetchBenefits();
+      setShowAddBenefitDialog(false);
+      benefitForm.reset();
+    } catch (error) {
+      console.error("Error submitting benefit:", error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء حفظ الفائدة",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Delete a benefit
+  const handleDeleteBenefit = async (id: string) => {
+    if (confirm("هل أنت متأكد من حذف هذه الفائدة؟")) {
+      try {
+        await deleteBenefit(id);
+        toast({
+          title: "تم الحذف بنجاح",
+          description: "تم حذف الفائدة بنجاح",
+        });
+        // Refresh benefits list
+        fetchBenefits();
+      } catch (error) {
+        console.error("Error deleting benefit:", error);
+        toast({
+          title: "خطأ",
+          description: "حدث خطأ أثناء حذف الفائدة",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+  
+  if (!user) {
     return (
       <div className="min-h-screen py-12">
         <div className="container mx-auto max-w-md">
@@ -145,7 +266,7 @@ const Admin: React.FC = () => {
           <Button 
             variant="outline" 
             className="border-saudi text-saudi hover:bg-saudi-light"
-            onClick={() => setIsAuthenticated(false)}
+            onClick={handleLogout}
           >
             تسجيل الخروج
           </Button>
@@ -175,7 +296,7 @@ const Admin: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-saudi">إدارة القول المفيد</h2>
               <Button 
-                onClick={() => setShowAddBenefitDialog(true)}
+                onClick={handleAddBenefitClick}
                 className="bg-saudi hover:bg-saudi-dark flex items-center gap-2"
               >
                 <Plus size={18} />
@@ -185,41 +306,72 @@ const Admin: React.FC = () => {
             
             <p className="text-gray-500 mb-8">يمكنك هنا إضافة وتعديل وحذف الفوائد العلمية</p>
             
-            {/* Benefits list would go here */}
-            <div className="grid grid-cols-1 gap-6">
-              {/* This would be populated with benefits from Firestore */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>البداية والنهاية - لابن كثير</CardTitle>
-                      <CardDescription>المجلد 9، صفحة 357</CardDescription>
-                    </div>
-                    <div className="category-badge">التاريخ الإسلامي</div>
+            {/* Benefits list */}
+            {loading ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">جاري تحميل البيانات...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-6">
+                {benefits.length > 0 ? (
+                  benefits.map((benefit) => (
+                    <Card key={benefit.id}>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <CardTitle>{benefit.bookName}</CardTitle>
+                            <CardDescription>{benefit.volumeAndPage}</CardDescription>
+                          </div>
+                          <div className="category-badge">{benefit.category}</div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div>
+                            <h3 className="font-bold mb-2">نص الفائدة:</h3>
+                            <p className="text-gray-700">
+                              {benefit.benefitText}
+                            </p>
+                          </div>
+                          {benefit.scholarComment && (
+                            <div>
+                              <h3 className="font-bold mb-2">تعليق العلماء:</h3>
+                              <p className="text-gray-700">
+                                {benefit.scholarComment}
+                              </p>
+                            </div>
+                          )}
+                          <div className="flex gap-2 pt-4 justify-end">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="border-saudi text-saudi"
+                              onClick={() => handleEditBenefitClick(benefit)}
+                            >
+                              <Edit size={16} className="mr-2" />
+                              تعديل
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="border-destructive text-destructive"
+                              onClick={() => benefit.id && handleDeleteBenefit(benefit.id)}
+                            >
+                              <Trash2 size={16} className="mr-2" />
+                              حذف
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500">لا توجد فوائد مضافة</p>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="font-bold mb-2">نص الفائدة:</h3>
-                      <p className="text-gray-700">
-                        قال ابن كثير: "وكان عمر بن عبد العزيز من خيار خلفاء بني أمية، وكان عادلًا في رعيته، متبعًا للسنة، مجتهدًا في العبادة."
-                      </p>
-                    </div>
-                    <div>
-                      <h3 className="font-bold mb-2">تعليق العلماء:</h3>
-                      <p className="text-gray-700">
-                        قال الإمام الذهبي: "كان عمر بن عبد العزيز إمامًا عادلًا، مقتديًا بالخلفاء الراشدين، في زهده وورعه وعدله."
-                      </p>
-                    </div>
-                    <div className="flex gap-2 pt-4 justify-end">
-                      <Button variant="outline" size="sm" className="border-saudi text-saudi">تعديل</Button>
-                      <Button variant="outline" size="sm" className="border-destructive text-destructive">حذف</Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                )}
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="contact" className="bg-white rounded-2xl p-8 shadow-md border border-saudi-light">
@@ -230,11 +382,13 @@ const Admin: React.FC = () => {
         </Tabs>
       </div>
       
-      {/* Dialog for adding a new benefit */}
+      {/* Dialog for adding/editing a benefit */}
       <Dialog open={showAddBenefitDialog} onOpenChange={setShowAddBenefitDialog}>
         <DialogContent className="sm:max-w-[600px]" dir="rtl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-saudi">إضافة فائدة جديدة</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-saudi">
+              {editingBenefit ? 'تعديل فائدة' : 'إضافة فائدة جديدة'}
+            </DialogTitle>
           </DialogHeader>
           <Form {...benefitForm}>
             <form onSubmit={benefitForm.handleSubmit(onSubmitBenefit)} className="space-y-6">
@@ -336,7 +490,7 @@ const Admin: React.FC = () => {
                 </Button>
                 <Button type="submit" className="bg-saudi hover:bg-saudi-dark">
                   <BookPlus className="ml-2" size={18} />
-                  إضافة الفائدة
+                  {editingBenefit ? 'تحديث الفائدة' : 'إضافة الفائدة'}
                 </Button>
               </DialogFooter>
             </form>

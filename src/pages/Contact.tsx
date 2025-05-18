@@ -4,6 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const Contact: React.FC = () => {
   const { toast } = useToast();
@@ -29,14 +31,11 @@ const Contact: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // In a real implementation, this would send data to Firebase
-      // await addDoc(collection(db, "contacts"), {
-      //   ...formData,
-      //   timestamp: serverTimestamp(),
-      // });
-
-      // For now, let's just simulate a successful submission
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Send data to Firebase
+      await addDoc(collection(db, "contacts"), {
+        ...formData,
+        timestamp: serverTimestamp(),
+      });
 
       toast({
         title: "تم الإرسال بنجاح",

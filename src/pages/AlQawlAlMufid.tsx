@@ -1,39 +1,37 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import BenefitCard from '@/components/BenefitCard';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { getBenefits, Benefit } from '@/services/benefitsService';
+import { useToast } from '@/hooks/use-toast';
 
 const AlQawlAlMufid: React.FC = () => {
-  const [searchTerm, setSearchTerm] = React.useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [benefits, setBenefits] = useState<Benefit[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
   
-  // Sample data (would come from Firebase in real implementation)
-  const benefits = [
-    {
-      id: '1',
-      bookName: 'البداية والنهاية - لابن كثير',
-      volumeAndPage: 'المجلد 9، صفحة 357',
-      benefitText: 'قال ابن كثير: "وكان عمر بن عبد العزيز من خيار خلفاء بني أمية، وكان عادلًا في رعيته، متبعًا للسنة، مجتهدًا في العبادة."',
-      scholarComment: 'قال الإمام الذهبي: "كان عمر بن عبد العزيز إمامًا عادلًا، مقتديًا بالخلفاء الراشدين، في زهده وورعه وعدله."',
-      category: 'التاريخ الإسلامي',
-    },
-    {
-      id: '2',
-      bookName: 'مجموع الفتاوى - لابن تيمية',
-      volumeAndPage: 'المجلد 3، صفحة 125',
-      benefitText: 'قال ابن تيمية: "إن الأعمال بالنيات، وإنما لكل امرئ ما نوى، فالتوحيد أصل الدين وأساسه، وهو أول واجب على المكلف."',
-      scholarComment: 'قال ابن القيم: "وهذا من أعظم قواعد الإسلام، إذ لا يصح عمل إلا بإخلاص النية لله تعالى."',
-      category: 'العقيدة',
-    },
-    {
-      id: '3',
-      bookName: 'صحيح البخاري',
-      volumeAndPage: 'كتاب العلم، حديث رقم 67',
-      benefitText: 'عن معاوية رضي الله عنه قال: قال رسول الله صلى الله عليه وسلم: "من يرد الله به خيرا يفقهه في الدين".',
-      scholarComment: 'قال ابن حجر: "وفيه فضل التفقه في الدين، وأن التوفيق إليه علامة إرادة الله الخير بالشخص."',
-      category: 'العلم',
-    },
-  ];
+  useEffect(() => {
+    fetchBenefits();
+  }, []);
+  
+  const fetchBenefits = async () => {
+    try {
+      setLoading(true);
+      const data = await getBenefits();
+      setBenefits(data);
+    } catch (error) {
+      console.error("Error fetching benefits:", error);
+      toast({
+        title: "خطأ في جلب البيانات",
+        description: "حدث خطأ أثناء جلب الفوائد",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const filteredBenefits = benefits.filter((benefit) => 
     benefit.bookName.includes(searchTerm) || 
@@ -58,22 +56,28 @@ const AlQawlAlMufid: React.FC = () => {
           />
         </div>
         
-        <div className="grid grid-cols-1 gap-6">
-          {filteredBenefits.map((benefit) => (
-            <BenefitCard
-              key={benefit.id}
-              bookName={benefit.bookName}
-              volumeAndPage={benefit.volumeAndPage}
-              benefitText={benefit.benefitText}
-              scholarComment={benefit.scholarComment}
-              category={benefit.category}
-            />
-          ))}
-        </div>
-        
-        {filteredBenefits.length === 0 && (
+        {loading ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">لا توجد فوائد مطابقة للبحث</p>
+            <p className="text-gray-500">جاري تحميل الفوائد...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6">
+            {filteredBenefits.map((benefit) => (
+              <BenefitCard
+                key={benefit.id}
+                bookName={benefit.bookName}
+                volumeAndPage={benefit.volumeAndPage}
+                benefitText={benefit.benefitText}
+                scholarComment={benefit.scholarComment}
+                category={benefit.category}
+              />
+            ))}
+            
+            {filteredBenefits.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-gray-500">لا توجد فوائد مطابقة للبحث</p>
+              </div>
+            )}
           </div>
         )}
       </div>

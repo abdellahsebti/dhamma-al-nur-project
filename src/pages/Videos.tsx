@@ -1,55 +1,61 @@
-
-import React from 'react';
-import VideoCard from '@/components/VideoCard';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import VideoCard from '@/components/VideoCard';
+
+interface Video {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  duration: string;
+  videoUrl: string;
+  thumbnailUrl: string;
+  featured: boolean;
+  views: number;
+  youtubeId: string;
+}
 
 const Videos: React.FC = () => {
-  const [searchTerm, setSearchTerm] = React.useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
   
-  // Sample data (would come from Firebase in real implementation)
-  const videos = [
-    {
-      id: '1',
-      title: 'شرح أصول السنة للإمام أحمد - الدرس الأول',
-      youtubeId: 'dQw4w9WgXcQ',
-      category: 'العقيدة',
-    },
-    {
-      id: '2',
-      title: 'تفسير سورة الفاتحة',
-      youtubeId: 'dQw4w9WgXcQ',
-      category: 'التفسير',
-    },
-    {
-      id: '3',
-      title: 'الأذكار المشروعة بعد الصلاة',
-      youtubeId: 'dQw4w9WgXcQ',
-      category: 'الفقه',
-    },
-    {
-      id: '4',
-      title: 'أحكام الصيام',
-      youtubeId: 'dQw4w9WgXcQ',
-      category: 'الفقه',
-    },
-    {
-      id: '5',
-      title: 'قصة موسى عليه السلام',
-      youtubeId: 'dQw4w9WgXcQ',
-      category: 'القصص',
-    },
-    {
-      id: '6',
-      title: 'سلسلة الأخلاق - الصبر',
-      youtubeId: 'dQw4w9WgXcQ',
-      category: 'الأخلاق',
-    },
-  ];
+  useEffect(() => {
+    fetchVideos();
+  }, []);
+  
+  const fetchVideos = async () => {
+    try {
+      setLoading(true);
+      const videosRef = collection(db, 'videos');
+      const q = query(videosRef, orderBy('title'));
+      const querySnapshot = await getDocs(q);
+      const fetchedVideos = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Video[];
+      setVideos(fetchedVideos);
+    } catch (error) {
+      console.error("Error fetching videos:", error);
+      toast({
+        title: "خطأ في جلب البيانات",
+        description: "حدث خطأ أثناء جلب الفيديوهات",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const filteredVideos = videos.filter((video) => 
-    video.title.includes(searchTerm) || 
-    video.category.includes(searchTerm)
+    video.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    video.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    video.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -63,26 +69,35 @@ const Videos: React.FC = () => {
           </div>
           <Input
             className="pl-3 pr-10"
-            placeholder="ابحث عن فيديو..."
+            placeholder="ابحث في الفيديوهات..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredVideos.map((video) => (
-            <VideoCard
-              key={video.id}
-              title={video.title}
-              youtubeId={video.youtubeId}
-              category={video.category}
-            />
-          ))}
-        </div>
-        
-        {filteredVideos.length === 0 && (
+        {loading ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">لا توجد فيديوهات مطابقة للبحث</p>
+            <p className="text-gray-500">جاري تحميل الفيديوهات...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredVideos.map((video) => (
+              <VideoCard
+                key={video.id}
+                id={video.id}
+                title={video.title}
+                youtubeId={video.youtubeId}
+                category={video.category}
+                views={video.views}
+                thumbnail={video.thumbnailUrl}
+              />
+            ))}
+            
+            {filteredVideos.length === 0 && (
+              <div className="text-center py-12 col-span-3">
+                <p className="text-gray-500">لا توجد فيديوهات مطابقة للبحث</p>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -1,15 +1,15 @@
-
+import { db } from '@/lib/firebase';
 import { 
   collection, 
   addDoc, 
-  updateDoc, 
+  getDocs, 
   deleteDoc, 
+  updateDoc, 
   doc, 
-  getDocs,
-  query,
-  serverTimestamp 
-} from "firebase/firestore";
-import { db } from "@/lib/firebase";
+  query, 
+  orderBy,
+  where 
+} from 'firebase/firestore';
 
 // Types for benefits
 export interface Benefit {
@@ -19,50 +19,94 @@ export interface Benefit {
   benefitText: string;
   scholarComment?: string;
   category: string;
-  createdAt?: any;
+  tags?: string[];
+  createdAt: Date;
+  updatedAt: Date;
+  featured: boolean;
+  author?: string;
+  source?: string;
 }
 
-// Collection reference
-const benefitsCollection = collection(db, "benefits");
-
 // Add a new benefit
-export const addBenefit = async (benefit: Omit<Benefit, "id" | "createdAt">) => {
+export const addBenefit = async (benefitData: Omit<Benefit, 'id' | 'createdAt' | 'updatedAt'>) => {
   try {
-    const docRef = await addDoc(benefitsCollection, {
-      ...benefit,
-      createdAt: serverTimestamp(),
+    const now = new Date();
+    const benefitRef = await addDoc(collection(db, 'benefits'), {
+      ...benefitData,
+      createdAt: now,
+      updatedAt: now,
     });
-    return { id: docRef.id, ...benefit };
+    return { id: benefitRef.id, ...benefitData, createdAt: now, updatedAt: now };
   } catch (error) {
-    console.error("Error adding benefit: ", error);
+    console.error('Error adding benefit:', error);
     throw error;
   }
 };
 
 // Get all benefits
-export const getBenefits = async (): Promise<Benefit[]> => {
+export const getBenefits = async () => {
   try {
-    const q = query(benefitsCollection);
-    const querySnapshot = await getDocs(q);
-    
+    const benefitsQuery = query(collection(db, 'benefits'), orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(benefitsQuery);
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     })) as Benefit[];
   } catch (error) {
-    console.error("Error getting benefits: ", error);
+    console.error('Error getting benefits:', error);
+    throw error;
+  }
+};
+
+// Get benefits by category
+export const getBenefitsByCategory = async (category: string) => {
+  try {
+    const benefitsQuery = query(
+      collection(db, 'benefits'),
+      where('category', '==', category),
+      orderBy('createdAt', 'desc')
+    );
+    const querySnapshot = await getDocs(benefitsQuery);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Benefit[];
+  } catch (error) {
+    console.error('Error getting benefits by category:', error);
+    throw error;
+  }
+};
+
+// Get featured benefits
+export const getFeaturedBenefits = async () => {
+  try {
+    const benefitsQuery = query(
+      collection(db, 'benefits'),
+      where('featured', '==', true),
+      orderBy('createdAt', 'desc')
+    );
+    const querySnapshot = await getDocs(benefitsQuery);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Benefit[];
+  } catch (error) {
+    console.error('Error getting featured benefits:', error);
     throw error;
   }
 };
 
 // Update a benefit
-export const updateBenefit = async (id: string, benefit: Partial<Benefit>) => {
+export const updateBenefit = async (id: string, benefitData: Partial<Benefit>) => {
   try {
-    const benefitRef = doc(db, "benefits", id);
-    await updateDoc(benefitRef, benefit);
-    return { id, ...benefit };
+    const benefitRef = doc(db, 'benefits', id);
+    await updateDoc(benefitRef, {
+      ...benefitData,
+      updatedAt: new Date()
+    });
+    return { id, ...benefitData };
   } catch (error) {
-    console.error("Error updating benefit: ", error);
+    console.error('Error updating benefit:', error);
     throw error;
   }
 };
@@ -70,11 +114,32 @@ export const updateBenefit = async (id: string, benefit: Partial<Benefit>) => {
 // Delete a benefit
 export const deleteBenefit = async (id: string) => {
   try {
-    const benefitRef = doc(db, "benefits", id);
-    await deleteDoc(benefitRef);
-    return id;
+    await deleteDoc(doc(db, 'benefits', id));
   } catch (error) {
-    console.error("Error deleting benefit: ", error);
+    console.error('Error deleting benefit:', error);
+    throw error;
+  }
+};
+
+// Search benefits
+export const searchBenefits = async (searchTerm: string) => {
+  try {
+    const benefitsQuery = query(collection(db, 'benefits'));
+    const querySnapshot = await getDocs(benefitsQuery);
+    const benefits = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Benefit[];
+    
+    // Filter benefits based on search term
+    return benefits.filter(benefit => 
+      benefit.bookName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      benefit.benefitText.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      benefit.scholarComment?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      benefit.category.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  } catch (error) {
+    console.error('Error searching benefits:', error);
     throw error;
   }
 };

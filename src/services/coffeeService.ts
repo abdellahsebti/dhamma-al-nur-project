@@ -1,17 +1,14 @@
-
 import { db, storage } from '@/lib/firebase';
 import { 
   collection, 
   addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
   getDocs, 
+  deleteDoc, 
+  updateDoc, 
+  doc, 
   query, 
-  orderBy, 
-  where, 
-  serverTimestamp, 
-  getDoc 
+  orderBy,
+  where 
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
@@ -20,54 +17,74 @@ export interface CoffeeStory {
   id?: string;
   title: string;
   author: string;
-  cover: string;
   summary: string;
+  cover?: string;
   chaptersCount: number;
-  createdAt?: any;
+  category: string;
+  tags?: string[];
+  createdAt: Date;
+  updatedAt: Date;
+  featured: boolean;
+  status: 'draft' | 'published';
+  language: string;
+  readingTime?: number;
 }
 
 export interface Chapter {
   id?: string;
   storyId: string;
   title: string;
-  content: string;
   orderNumber: number;
+  content: string;
+  createdAt: Date;
+  updatedAt: Date;
+  wordCount: number;
+  readingTime: number;
 }
 
 // Coffee Stories CRUD Operations
-export const addCoffeeStory = async (story: Omit<CoffeeStory, 'id' | 'createdAt'>) => {
+export const addCoffeeStory = async (storyData: Omit<CoffeeStory, 'id' | 'chaptersCount' | 'createdAt' | 'updatedAt'>) => {
   try {
-    const storyData = {
-      ...story,
-      chaptersCount: story.chaptersCount || 0,
-      createdAt: serverTimestamp()
+    const now = new Date();
+    const storyRef = await addDoc(collection(db, 'coffee-stories'), {
+      ...storyData,
+      chaptersCount: 0,
+      createdAt: now,
+      updatedAt: now,
+    });
+    return { 
+      id: storyRef.id, 
+      ...storyData, 
+      chaptersCount: 0,
+      createdAt: now,
+      updatedAt: now
     };
-    
-    const docRef = await addDoc(collection(db, 'coffeeStories'), storyData);
-    return { id: docRef.id, ...storyData };
   } catch (error) {
     console.error('Error adding coffee story:', error);
     throw error;
   }
 };
 
-export const uploadCoverImage = async (file: File): Promise<string> => {
+export const uploadCoverImage = async (file: File) => {
   try {
-    const storageRef = ref(storage, `covers/${Date.now()}_${file.name}`);
+    const storageRef = ref(storage, `coffee-covers/${Date.now()}_${file.name}`);
     await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(storageRef);
-    return downloadURL;
+    const downloadUrl = await getDownloadURL(storageRef);
+    return downloadUrl;
   } catch (error) {
     console.error('Error uploading cover image:', error);
     throw error;
   }
 };
 
-export const updateCoffeeStory = async (id: string, story: Partial<CoffeeStory>) => {
+export const updateCoffeeStory = async (id: string, storyData: Partial<CoffeeStory>) => {
   try {
-    const storyRef = doc(db, 'coffeeStories', id);
-    await updateDoc(storyRef, story);
-    return { id, ...story };
+    const storyRef = doc(db, 'coffee-stories', id);
+    await updateDoc(storyRef, {
+      ...storyData,
+      updatedAt: new Date()
+    });
+    return { id, ...storyData };
   } catch (error) {
     console.error('Error updating coffee story:', error);
     throw error;
@@ -76,27 +93,23 @@ export const updateCoffeeStory = async (id: string, story: Partial<CoffeeStory>)
 
 export const deleteCoffeeStory = async (id: string, coverUrl?: string) => {
   try {
-    // Delete the story document
-    await deleteDoc(doc(db, 'coffeeStories', id));
-    
-    // Delete the cover image if it exists
+    // Delete cover image if exists
     if (coverUrl) {
-      try {
-        const imageRef = ref(storage, coverUrl);
-        await deleteObject(imageRef);
-      } catch (err) {
-        console.error("Error deleting cover image:", err);
-      }
+      const coverRef = ref(storage, coverUrl);
+      await deleteObject(coverRef);
     }
     
-    // Delete all related chapters
-    const chaptersQuery = query(collection(db, 'coffeeChapters'), where('storyId', '==', id));
+    // Delete all chapters
+    const chaptersQuery = query(
+      collection(db, 'chapters'),
+      where('storyId', '==', id)
+    );
     const chaptersSnapshot = await getDocs(chaptersQuery);
-    
     const deletePromises = chaptersSnapshot.docs.map(doc => deleteDoc(doc.ref));
     await Promise.all(deletePromises);
     
-    return true;
+    // Delete the story
+    await deleteDoc(doc(db, 'coffee-stories', id));
   } catch (error) {
     console.error('Error deleting coffee story:', error);
     throw error;
@@ -105,78 +118,112 @@ export const deleteCoffeeStory = async (id: string, coverUrl?: string) => {
 
 export const getCoffeeStories = async () => {
   try {
-    const q = query(collection(db, 'coffeeStories'), orderBy('createdAt', 'desc'));
-    const querySnapshot = await getDocs(q);
-    
-    const stories: CoffeeStory[] = [];
-    querySnapshot.forEach((doc) => {
-      const data = doc.data() as Omit<CoffeeStory, 'id'>;
-      stories.push({ 
-        id: doc.id, 
-        ...data,
-        createdAt: data.createdAt?.toDate() || new Date()
-      });
-    });
-    
-    return stories;
+    const storiesQuery = query(
+      collection(db, 'coffee-stories'),
+      where('status', '==', 'published'),
+      orderBy('createdAt', 'desc')
+    );
+    const querySnapshot = await getDocs(storiesQuery);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as CoffeeStory[];
   } catch (error) {
     console.error('Error getting coffee stories:', error);
     throw error;
   }
 };
 
-export const getCoffeeStory = async (id: string) => {
+export const getFeaturedStories = async () => {
   try {
-    const storyDoc = await getDoc(doc(db, 'coffeeStories', id));
-    
-    if (!storyDoc.exists()) {
-      throw new Error('Coffee story not found');
-    }
-    
-    const storyData = storyDoc.data() as Omit<CoffeeStory, 'id'>;
-    return { 
-      id: storyDoc.id, 
-      ...storyData,
-      createdAt: storyData.createdAt?.toDate() || new Date()
-    };
+    const storiesQuery = query(
+      collection(db, 'coffee-stories'),
+      where('featured', '==', true),
+      where('status', '==', 'published'),
+      orderBy('createdAt', 'desc')
+    );
+    const querySnapshot = await getDocs(storiesQuery);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as CoffeeStory[];
   } catch (error) {
-    console.error('Error getting coffee story:', error);
+    console.error('Error getting featured stories:', error);
     throw error;
   }
 };
 
 // Chapters CRUD Operations
-export const addChapter = async (chapter: Omit<Chapter, 'id'>) => {
+export const addChapter = async (chapterData: Omit<Chapter, 'id' | 'createdAt' | 'updatedAt' | 'wordCount' | 'readingTime'>) => {
   try {
-    const chapterData = {
-      ...chapter,
-      orderNumber: chapter.orderNumber || 1,
+    const now = new Date();
+    const wordCount = chapterData.content.split(/\s+/).length;
+    const readingTime = Math.ceil(wordCount / 200); // Assuming 200 words per minute reading speed
+    
+    const chapterRef = await addDoc(collection(db, 'chapters'), {
+      ...chapterData,
+      createdAt: now,
+      updatedAt: now,
+      wordCount,
+      readingTime
+    });
+    
+    // Update story's chapter count
+    const storyRef = doc(db, 'coffee-stories', chapterData.storyId);
+    const storyDoc = await getDocs(query(collection(db, 'coffee-stories'), where('id', '==', chapterData.storyId)));
+    const currentCount = storyDoc.docs[0]?.data()?.chaptersCount || 0;
+    await updateDoc(storyRef, { chaptersCount: currentCount + 1 });
+    
+    return { 
+      id: chapterRef.id, 
+      ...chapterData,
+      createdAt: now,
+      updatedAt: now,
+      wordCount,
+      readingTime
     };
-    
-    const docRef = await addDoc(collection(db, 'coffeeChapters'), chapterData);
-    
-    // Update chapter count in the related story
-    const storyRef = doc(db, 'coffeeStories', chapter.storyId);
-    const storyDoc = await getDoc(storyRef);
-    if (storyDoc.exists()) {
-      const storyData = storyDoc.data();
-      await updateDoc(storyRef, {
-        chaptersCount: (storyData.chaptersCount || 0) + 1
-      });
-    }
-    
-    return { id: docRef.id, ...chapterData };
   } catch (error) {
     console.error('Error adding chapter:', error);
     throw error;
   }
 };
 
-export const updateChapter = async (id: string, chapter: Partial<Chapter>) => {
+export const getChapters = async (storyId: string) => {
   try {
-    const chapterRef = doc(db, 'coffeeChapters', id);
-    await updateDoc(chapterRef, chapter);
-    return { id, ...chapter };
+    const chaptersQuery = query(
+      collection(db, 'chapters'),
+      where('storyId', '==', storyId),
+      orderBy('orderNumber', 'asc')
+    );
+    const querySnapshot = await getDocs(chaptersQuery);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Chapter[];
+  } catch (error) {
+    console.error('Error getting chapters:', error);
+    throw error;
+  }
+};
+
+export const updateChapter = async (id: string, chapterData: Partial<Chapter>) => {
+  try {
+    const chapterRef = doc(db, 'chapters', id);
+    const updates: any = {
+      ...chapterData,
+      updatedAt: new Date()
+    };
+    
+    // Recalculate word count and reading time if content is updated
+    if (chapterData.content) {
+      const wordCount = chapterData.content.split(/\s+/).length;
+      const readingTime = Math.ceil(wordCount / 200);
+      updates.wordCount = wordCount;
+      updates.readingTime = readingTime;
+    }
+    
+    await updateDoc(chapterRef, updates);
+    return { id, ...updates };
   } catch (error) {
     console.error('Error updating chapter:', error);
     throw error;
@@ -185,50 +232,16 @@ export const updateChapter = async (id: string, chapter: Partial<Chapter>) => {
 
 export const deleteChapter = async (id: string, storyId: string) => {
   try {
-    // Delete the chapter document
-    await deleteDoc(doc(db, 'coffeeChapters', id));
+    // Delete the chapter
+    await deleteDoc(doc(db, 'chapters', id));
     
-    // Update chapter count in the related story
-    const storyRef = doc(db, 'coffeeStories', storyId);
-    const storyDoc = await getDoc(storyRef);
-    if (storyDoc.exists()) {
-      const storyData = storyDoc.data();
-      if (storyData.chaptersCount > 0) {
-        await updateDoc(storyRef, {
-          chaptersCount: storyData.chaptersCount - 1
-        });
-      }
-    }
-    
-    return true;
+    // Update story's chapter count
+    const storyRef = doc(db, 'coffee-stories', storyId);
+    const storyDoc = await getDocs(query(collection(db, 'coffee-stories'), where('id', '==', storyId)));
+    const currentCount = storyDoc.docs[0]?.data()?.chaptersCount || 0;
+    await updateDoc(storyRef, { chaptersCount: Math.max(0, currentCount - 1) });
   } catch (error) {
     console.error('Error deleting chapter:', error);
-    throw error;
-  }
-};
-
-export const getChapters = async (storyId: string) => {
-  try {
-    const q = query(
-      collection(db, 'coffeeChapters'),
-      where('storyId', '==', storyId),
-      orderBy('orderNumber', 'asc')
-    );
-    
-    const querySnapshot = await getDocs(q);
-    
-    const chapters: Chapter[] = [];
-    querySnapshot.forEach((doc) => {
-      const data = doc.data() as Omit<Chapter, 'id'>;
-      chapters.push({ 
-        id: doc.id, 
-        ...data 
-      });
-    });
-    
-    return chapters;
-  } catch (error) {
-    console.error('Error getting chapters:', error);
     throw error;
   }
 };

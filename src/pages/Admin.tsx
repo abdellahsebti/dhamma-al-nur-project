@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -23,30 +22,236 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { useForm } from 'react-hook-form';
-import { Plus, BookPlus, Trash2, Edit, Coffee, BookOpen, FileText } from 'lucide-react';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { Plus, BookPlus, Trash2, Edit, Coffee, BookOpen, FileText, Headphones, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  addBenefit, 
-  getBenefits, 
-  deleteBenefit, 
-  updateBenefit,
-  Benefit 
-} from '@/services/benefitsService';
-import {
-  addCoffeeStory,
-  getCoffeeStories,
-  deleteCoffeeStory,
-  updateCoffeeStory,
-  uploadCoverImage,
-  addChapter,
-  getChapters,
-  updateChapter,
-  deleteChapter,
-  CoffeeStory,
-  Chapter
-} from '@/services/coffeeService';
-import { adminEmail, adminPassword } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, Timestamp, where } from 'firebase/firestore';
+
+// Mock data types
+interface Benefit {
+  id: string;
+  bookName: string;
+  volumeAndPage: string;
+  benefitText: string;
+  scholarComment?: string;
+  category: string;
+}
+
+interface CoffeeStory {
+  id: string;
+  title: string;
+  author: string;
+  summary: string;
+  cover?: string;
+  chaptersCount: number;
+}
+
+interface Chapter {
+  id: string;
+  storyId: string;
+  title: string;
+  orderNumber: number;
+  content: string;
+}
+
+interface Video {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  duration: string;
+  videoUrl: string;
+  thumbnailUrl: string;
+  featured: boolean;
+  views: number;
+}
+
+interface Podcast {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  duration: string;
+  episodeNumber: number;
+  season: number;
+  guests?: string[];
+  showNotes?: string;
+  audioUrl: string;
+  coverUrl: string;
+  listens: number;
+  featured: boolean;
+}
+
+// Add Contact Form interface
+interface ContactForm {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  createdAt: Timestamp;
+  status: 'new' | 'read' | 'replied';
+}
+
+// Mock data storage
+// let mockBenefits: Benefit[] = [];
+// let mockCoffeeStories: CoffeeStory[] = [];
+// let mockChapters: Chapter[] = [];
+// let mockVideos: Video[] = [];
+// let mockPodcasts: Podcast[] = [];
+
+// Mock service functions
+const mockServices = {
+  benefits: {
+    add: async (data: Omit<Benefit, 'id'>) => {
+      const benefitsRef = collection(db, 'benefits');
+      const docRef = await addDoc(benefitsRef, data);
+      return { id: docRef.id, ...data };
+    },
+    get: async () => {
+      const benefitsRef = collection(db, 'benefits');
+      const q = query(benefitsRef, orderBy('bookName'));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Benefit[];
+    },
+    delete: async (id: string) => {
+      const benefitRef = doc(db, 'benefits', id);
+      await deleteDoc(benefitRef);
+    },
+    update: async (id: string, data: Omit<Benefit, 'id'>) => {
+      const benefitRef = doc(db, 'benefits', id);
+      await updateDoc(benefitRef, data);
+      return { id, ...data };
+    }
+  },
+  coffee: {
+    addStory: async (data: Omit<CoffeeStory, 'id'>) => {
+      const storiesRef = collection(db, 'coffeeStories');
+      const docRef = await addDoc(storiesRef, data);
+      return { id: docRef.id, ...data };
+    },
+    getStories: async () => {
+      const storiesRef = collection(db, 'coffeeStories');
+      const q = query(storiesRef, orderBy('title'));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as CoffeeStory[];
+    },
+    deleteStory: async (id: string) => {
+      const storyRef = doc(db, 'coffeeStories', id);
+      await deleteDoc(storyRef);
+      // Delete associated chapters
+      const chaptersRef = collection(db, 'chapters');
+      const q = query(chaptersRef, where('storyId', '==', id));
+      const querySnapshot = await getDocs(q);
+      const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
+      await Promise.all(deletePromises);
+    },
+    updateStory: async (id: string, data: Omit<CoffeeStory, 'id'>) => {
+      const storyRef = doc(db, 'coffeeStories', id);
+      await updateDoc(storyRef, data);
+      return { id, ...data };
+    },
+    addChapter: async (data: Omit<Chapter, 'id'>) => {
+      const chaptersRef = collection(db, 'chapters');
+      const docRef = await addDoc(chaptersRef, data);
+      return { id: docRef.id, ...data };
+    },
+    getChapters: async (storyId: string) => {
+      const chaptersRef = collection(db, 'chapters');
+      const q = query(chaptersRef, where('storyId', '==', storyId), orderBy('orderNumber'));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Chapter[];
+    },
+    updateChapter: async (id: string, data: Omit<Chapter, 'id'>) => {
+      const chapterRef = doc(db, 'chapters', id);
+      await updateDoc(chapterRef, data);
+      return { id, ...data };
+    },
+    deleteChapter: async (id: string) => {
+      const chapterRef = doc(db, 'chapters', id);
+      await deleteDoc(chapterRef);
+    }
+  },
+  videos: {
+    add: async (data: Omit<Video, 'id'>) => {
+      const videosRef = collection(db, 'videos');
+      const docRef = await addDoc(videosRef, data);
+      return { id: docRef.id, ...data };
+    },
+    get: async () => {
+      const videosRef = collection(db, 'videos');
+      const q = query(videosRef, orderBy('title'));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Video[];
+    },
+    delete: async (id: string) => {
+      const videoRef = doc(db, 'videos', id);
+      await deleteDoc(videoRef);
+    },
+    update: async (id: string, data: Omit<Video, 'id'>) => {
+      const videoRef = doc(db, 'videos', id);
+      await updateDoc(videoRef, data);
+      return { id, ...data };
+    }
+  },
+  podcasts: {
+    add: async (data: Omit<Podcast, 'id'>) => {
+      const podcastsRef = collection(db, 'podcasts');
+      const docRef = await addDoc(podcastsRef, data);
+      return { id: docRef.id, ...data };
+    },
+    get: async () => {
+      const podcastsRef = collection(db, 'podcasts');
+      const q = query(podcastsRef, orderBy('title'));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Podcast[];
+    },
+    delete: async (id: string) => {
+      const podcastRef = doc(db, 'podcasts', id);
+      await deleteDoc(podcastRef);
+    },
+    update: async (id: string, data: Omit<Podcast, 'id'>) => {
+      const podcastRef = doc(db, 'podcasts', id);
+      await updateDoc(podcastRef, data);
+      return { id, ...data };
+    }
+  },
+  contact: {
+    get: async () => {
+      const formsRef = collection(db, 'contactForms');
+      const q = query(formsRef, orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as ContactForm[];
+    },
+    delete: async (id: string) => {
+      const formRef = doc(db, 'contactForms', id);
+      await deleteDoc(formRef);
+    },
+    updateStatus: async (id: string, status: ContactForm['status']) => {
+      const formRef = doc(db, 'contactForms', id);
+      await updateDoc(formRef, { status });
+      return { id, status };
+    }
+  }
+};
 
 // Benefit form type
 interface BenefitFormValues {
@@ -72,8 +277,31 @@ interface ChapterFormValues {
   content: string;
 }
 
+// Video form type
+interface VideoFormValues {
+  title: string;
+  description: string;
+  category: string;
+  duration: string;
+  youtubeUrl: string;
+}
+
+// Podcast form type
+interface PodcastFormValues {
+  title: string;
+  description: string;
+  category: string;
+  duration: string;
+  episodeNumber: number;
+  season: number;
+  guests?: string;
+  showNotes?: string;
+  spotifyUrl?: string;
+  youtubeUrl?: string;
+}
+
 const Admin: React.FC = () => {
-  const [email, setEmail] = useState(adminEmail);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [showAddBenefitDialog, setShowAddBenefitDialog] = useState(false);
   const [benefits, setBenefits] = useState<Benefit[]>([]);
@@ -89,11 +317,197 @@ const Admin: React.FC = () => {
   const [showAddChapterDialog, setShowAddChapterDialog] = useState(false);
   const [editingChapter, setEditingChapter] = useState<Chapter | null>(null);
   
+  // Video states
+  const [showAddVideoDialog, setShowAddVideoDialog] = useState(false);
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [editingVideo, setEditingVideo] = useState<Video | null>(null);
+  
+  // Podcast states
+  const [showAddPodcastDialog, setShowAddPodcastDialog] = useState(false);
+  const [podcasts, setPodcasts] = useState<Podcast[]>([]);
+  const [editingPodcast, setEditingPodcast] = useState<Podcast | null>(null);
+  
+  const [contactForms, setContactForms] = useState<ContactForm[]>([]);
+  const [selectedForm, setSelectedForm] = useState<ContactForm | null>(null);
+  const [showFormDialog, setShowFormDialog] = useState(false);
+  const [showViewFormDialog, setShowViewFormDialog] = useState(false);
+  
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Use our Firebase authentication hook
-  const { user, signIn, signOut, error: authError } = useFirebaseAuth();
+  // Mock authentication
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const correctPassword = "F9k#2pL$7xQz@5Jm!8Tb";
+    
+    if (password === correctPassword) {
+      setIsAuthenticated(true);
+      toast({
+        title: "تم تسجيل الدخول بنجاح",
+        description: "مرحباً بك في لوحة التحكم",
+      });
+    } else {
+      toast({
+        title: "خطأ في تسجيل الدخول",
+        description: "كلمة المرور غير صحيحة",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Handle logout
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    navigate('/admin');
+  };
+  
+  // Fetch benefits
+  const fetchBenefits = async () => {
+    try {
+      setLoading(true);
+      const fetchedBenefits = await mockServices.benefits.get();
+      setBenefits(fetchedBenefits);
+    } catch (error) {
+      console.error("Error fetching benefits:", error);
+      toast({
+        title: "خطأ في جلب البيانات",
+        description: "حدث خطأ أثناء جلب الفوائد",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Fetch coffee stories
+  const fetchCoffeeStories = async () => {
+    try {
+      setLoading(true);
+      const fetchedStories = await mockServices.coffee.getStories();
+      setCoffeeStories(fetchedStories);
+    } catch (error) {
+      console.error("Error fetching coffee stories:", error);
+      toast({
+        title: "خطأ في جلب البيانات",
+        description: "حدث خطأ أثناء جلب القصص",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Fetch chapters for a story
+  const fetchChapters = async (storyId: string) => {
+    try {
+      setLoading(true);
+      const fetchedChapters = await mockServices.coffee.getChapters(storyId);
+      setChapters(fetchedChapters);
+    } catch (error) {
+      console.error("Error fetching chapters:", error);
+      toast({
+        title: "خطأ في جلب البيانات",
+        description: "حدث خطأ أثناء جلب الفصول",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Fetch videos
+  const fetchVideos = async () => {
+    try {
+      setLoading(true);
+      const data = await mockServices.videos.get();
+      setVideos(data);
+    } catch (error) {
+      console.error("Error fetching videos:", error);
+      toast({
+        title: "خطأ في جلب البيانات",
+        description: "حدث خطأ أثناء جلب الفيديوهات",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Fetch podcasts
+  const fetchPodcasts = async () => {
+    try {
+      setLoading(true);
+      const data = await mockServices.podcasts.get();
+      setPodcasts(data);
+    } catch (error) {
+      console.error("Error fetching podcasts:", error);
+      toast({
+        title: "خطأ في جلب البيانات",
+        description: "حدث خطأ أثناء جلب البودكاست",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Update the fetchContactForms function
+  const fetchContactForms = async () => {
+    try {
+      console.log('Starting fetchContactForms...');
+      setLoading(true);
+      
+      const formsRef = collection(db, 'contactForms');
+      console.log('Created formsRef:', formsRef);
+      
+      const q = query(formsRef, orderBy('createdAt', 'desc'));
+      console.log('Created query:', q);
+      
+      const querySnapshot = await getDocs(q);
+      console.log('Got querySnapshot with', querySnapshot.size, 'documents');
+      
+      const fetchedForms = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as ContactForm[];
+      
+      console.log('Processed forms:', fetchedForms);
+      
+      if (fetchedForms.length > 0) {
+        console.log('Setting contact forms state with', fetchedForms.length, 'forms');
+        setContactForms(fetchedForms);
+      } else {
+        console.log('No forms received from service');
+        setContactForms([]);
+      }
+    } catch (error) {
+      console.error("Error in fetchContactForms:", error);
+      toast({
+        title: "خطأ في جلب البيانات",
+        description: "حدث خطأ أثناء جلب الرسائل",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Load data when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log('User authenticated, fetching data...');
+      fetchBenefits();
+      fetchCoffeeStories();
+      fetchVideos();
+      fetchPodcasts();
+      fetchContactForms();
+    }
+  }, [isAuthenticated]);
+  
+  // Add useEffect to monitor contactForms state
+  useEffect(() => {
+    console.log('Contact forms state updated:', contactForms);
+  }, [contactForms]);
   
   // Benefit form
   const benefitForm = useForm<BenefitFormValues>({
@@ -124,88 +538,30 @@ const Admin: React.FC = () => {
     }
   });
   
-  // Fetch benefits from Firestore
-  useEffect(() => {
-    if (user) {
-      fetchBenefits();
-      fetchCoffeeStories();
+  // Video form
+  const videoForm = useForm<VideoFormValues>({
+    defaultValues: {
+      title: '',
+      description: '',
+      category: '',
+      duration: '',
+      youtubeUrl: '',
     }
-  }, [user]);
+  });
   
-  // Fetch benefits function
-  const fetchBenefits = async () => {
-    try {
-      setLoading(true);
-      const fetchedBenefits = await getBenefits();
-      setBenefits(fetchedBenefits);
-    } catch (error) {
-      console.error("Error fetching benefits:", error);
-      toast({
-        title: "خطأ في جلب البيانات",
-        description: "حدث خطأ أثناء جلب الفوائد",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+  // Podcast form
+  const podcastForm = useForm<PodcastFormValues>({
+    defaultValues: {
+      title: '',
+      description: '',
+      category: '',
+      duration: '',
+      episodeNumber: 1,
+      season: 1,
+      guests: '',
+      showNotes: '',
     }
-  };
-  
-  // Fetch coffee stories function
-  const fetchCoffeeStories = async () => {
-    try {
-      setLoading(true);
-      const fetchedStories = await getCoffeeStories();
-      setCoffeeStories(fetchedStories);
-    } catch (error) {
-      console.error("Error fetching coffee stories:", error);
-      toast({
-        title: "خطأ في جلب البيانات",
-        description: "حدث خطأ أثناء جلب القصص",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Fetch chapters for a story
-  const fetchChapters = async (storyId: string) => {
-    try {
-      setLoading(true);
-      const fetchedChapters = await getChapters(storyId);
-      setChapters(fetchedChapters);
-    } catch (error) {
-      console.error("Error fetching chapters:", error);
-      toast({
-        title: "خطأ في جلب البيانات",
-        description: "حدث خطأ أثناء جلب الفصول",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Login with Firebase
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email && password) {
-      await signIn(email, password);
-      if (authError) {
-        toast({
-          title: "خطأ في تسجيل الدخول",
-          description: "يرجى التحقق من البريد الإلكتروني وكلمة المرور",
-          variant: "destructive",
-        });
-      }
-    }
-  };
-  
-  // Handle logout
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/admin');
-  };
+  });
   
   // Open dialog for adding a new benefit
   const handleAddBenefitClick = () => {
@@ -238,14 +594,14 @@ const Admin: React.FC = () => {
     try {
       if (editingBenefit?.id) {
         // Update existing benefit
-        await updateBenefit(editingBenefit.id, data);
+        await mockServices.benefits.update(editingBenefit.id, data);
         toast({
           title: "تم التحديث بنجاح",
           description: "تم تحديث الفائدة بنجاح",
         });
       } else {
         // Add new benefit
-        await addBenefit(data);
+        await mockServices.benefits.add(data);
         toast({
           title: "تمت الإضافة بنجاح",
           description: "تمت إضافة الفائدة بنجاح",
@@ -269,7 +625,7 @@ const Admin: React.FC = () => {
   const handleDeleteBenefit = async (id: string) => {
     if (confirm("هل أنت متأكد من حذف هذه الفائدة؟")) {
       try {
-        await deleteBenefit(id);
+        await mockServices.benefits.delete(id);
         toast({
           title: "تم الحذف بنجاح",
           description: "تم حذف الفائدة بنجاح",
@@ -313,31 +669,24 @@ const Admin: React.FC = () => {
   // Submit function for adding/editing a coffee story
   const onSubmitStory = async (data: CoffeeStoryFormValues) => {
     try {
-      let coverUrl = editingStory?.cover || '';
-      
-      // Upload cover image if provided
-      if (data.coverFile && data.coverFile.length > 0) {
-        coverUrl = await uploadCoverImage(data.coverFile[0]);
-      }
-      
       const storyData = {
         title: data.title,
         author: data.author,
         summary: data.summary,
-        cover: coverUrl,
+        cover: editingStory?.cover || '',
         chaptersCount: editingStory?.chaptersCount || 0,
       };
       
       if (editingStory?.id) {
         // Update existing story
-        await updateCoffeeStory(editingStory.id, storyData);
+        await mockServices.coffee.updateStory(editingStory.id, storyData);
         toast({
           title: "تم التحديث بنجاح",
           description: "تم تحديث القصة بنجاح",
         });
       } else {
         // Add new story
-        await addCoffeeStory(storyData);
+        await mockServices.coffee.addStory(storyData);
         toast({
           title: "تمت الإضافة بنجاح",
           description: "تمت إضافة القصة بنجاح",
@@ -359,10 +708,10 @@ const Admin: React.FC = () => {
   };
   
   // Delete a coffee story
-  const handleDeleteStory = async (id: string, coverUrl?: string) => {
+  const handleDeleteStory = async (id: string) => {
     if (confirm("هل أنت متأكد من حذف هذه القصة؟ سيتم حذف جميع الفصول المتعلقة بها أيضاً.")) {
       try {
-        await deleteCoffeeStory(id, coverUrl);
+        await mockServices.coffee.deleteStory(id);
         toast({
           title: "تم الحذف بنجاح",
           description: "تم حذف القصة بنجاح",
@@ -435,14 +784,14 @@ const Admin: React.FC = () => {
       
       if (editingChapter?.id) {
         // Update existing chapter
-        await updateChapter(editingChapter.id, chapterData);
+        await mockServices.coffee.updateChapter(editingChapter.id, chapterData);
         toast({
           title: "تم التحديث بنجاح",
           description: "تم تحديث الفصل بنجاح",
         });
       } else {
         // Add new chapter
-        await addChapter(chapterData);
+        await mockServices.coffee.addChapter(chapterData);
         toast({
           title: "تمت الإضافة بنجاح",
           description: "تمت إضافة الفصل بنجاح",
@@ -468,7 +817,7 @@ const Admin: React.FC = () => {
   const handleDeleteChapter = async (id: string, storyId: string) => {
     if (confirm("هل أنت متأكد من حذف هذا الفصل؟")) {
       try {
-        await deleteChapter(id, storyId);
+        await mockServices.coffee.deleteChapter(id);
         toast({
           title: "تم الحذف بنجاح",
           description: "تم حذف الفصل بنجاح",
@@ -487,7 +836,306 @@ const Admin: React.FC = () => {
     }
   };
   
-  if (!user) {
+  // Video functions
+  const handleAddVideoClick = () => {
+    setEditingVideo(null);
+    videoForm.reset({
+      title: '',
+      description: '',
+      category: '',
+      duration: '',
+      youtubeUrl: '',
+    });
+    setShowAddVideoDialog(true);
+  };
+  
+  const handleEditVideoClick = (video: Video) => {
+    setEditingVideo(video);
+    videoForm.reset({
+      title: video.title,
+      description: video.description,
+      category: video.category,
+      duration: video.duration,
+      youtubeUrl: video.videoUrl,
+    });
+    setShowAddVideoDialog(true);
+  };
+  
+  const handleDeleteVideo = async (id: string, videoUrl: string, thumbnailUrl: string) => {
+    if (confirm("هل أنت متأكد من حذف هذا الفيديو؟")) {
+      try {
+        await mockServices.videos.delete(id);
+        toast({
+          title: "تم الحذف بنجاح",
+          description: "تم حذف الفيديو بنجاح",
+        });
+        fetchVideos();
+      } catch (error) {
+        console.error("Error deleting video:", error);
+        toast({
+          title: "خطأ",
+          description: "حدث خطأ أثناء حذف الفيديو",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+  
+  const onSubmitVideo = async (data: VideoFormValues) => {
+    try {
+      // Extract video ID from YouTube URL
+      const videoId = extractYouTubeId(data.youtubeUrl);
+      if (!videoId) {
+        toast({
+          title: "خطأ",
+          description: "الرجاء إدخال رابط يوتيوب صحيح",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const videoData = {
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        duration: data.duration,
+        videoUrl: `https://www.youtube.com/watch?v=${videoId}`,
+        thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+        featured: false,
+        views: 0
+      };
+
+      if (editingVideo?.id) {
+        await mockServices.videos.update(editingVideo.id, videoData);
+        toast({
+          title: "تم التحديث بنجاح",
+          description: "تم تحديث الفيديو بنجاح",
+        });
+      } else {
+        await mockServices.videos.add(videoData);
+        toast({
+          title: "تمت الإضافة بنجاح",
+          description: "تمت إضافة الفيديو بنجاح",
+        });
+      }
+
+      fetchVideos();
+      setShowAddVideoDialog(false);
+      videoForm.reset();
+    } catch (error) {
+      console.error("Error submitting video:", error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء حفظ الفيديو",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Helper function to extract YouTube video ID
+  const extractYouTubeId = (url: string): string | null => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+  
+  // Podcast functions
+  const handleAddPodcastClick = () => {
+    setEditingPodcast(null);
+    podcastForm.reset({
+      title: '',
+      description: '',
+      category: '',
+      duration: '',
+      episodeNumber: 1,
+      season: 1,
+      guests: '',
+      showNotes: '',
+    });
+    setShowAddPodcastDialog(true);
+  };
+  
+  const handleEditPodcastClick = (podcast: Podcast) => {
+    setEditingPodcast(podcast);
+    podcastForm.reset({
+      title: podcast.title,
+      description: podcast.description,
+      category: podcast.category,
+      duration: podcast.duration,
+      episodeNumber: podcast.episodeNumber,
+      season: podcast.season,
+      guests: podcast.guests?.join(', ') || '',
+      showNotes: podcast.showNotes || '',
+    });
+    setShowAddPodcastDialog(true);
+  };
+  
+  const handleDeletePodcast = async (id: string, audioUrl: string, coverUrl: string) => {
+    if (confirm("هل أنت متأكد من حذف هذه الحلقة؟")) {
+      try {
+        await mockServices.podcasts.delete(id);
+        toast({
+          title: "تم الحذف بنجاح",
+          description: "تم حذف الحلقة بنجاح",
+        });
+        fetchPodcasts();
+      } catch (error) {
+        console.error("Error deleting podcast:", error);
+        toast({
+          title: "خطأ",
+          description: "حدث خطأ أثناء حذف الحلقة",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+  
+  const onSubmitPodcast = async (data: PodcastFormValues) => {
+    try {
+      let audioUrl = '';
+      let coverUrl = '';
+
+      // Handle Spotify URL
+      if (data.spotifyUrl) {
+        const spotifyId = extractSpotifyId(data.spotifyUrl);
+        if (!spotifyId) {
+          toast({
+            title: "خطأ",
+            description: "الرجاء إدخال رابط سبوتيفاي صحيح",
+            variant: "destructive",
+          });
+          return;
+        }
+        audioUrl = data.spotifyUrl;
+        // You can use Spotify's API to get the cover image, but for now we'll use a placeholder
+        coverUrl = `https://i.scdn.co/image/ab67616d0000b273${spotifyId}`;
+      }
+      // Handle YouTube URL
+      else if (data.youtubeUrl) {
+        const youtubeId = extractYouTubeId(data.youtubeUrl);
+        if (!youtubeId) {
+          toast({
+            title: "خطأ",
+            description: "الرجاء إدخال رابط يوتيوب صحيح",
+            variant: "destructive",
+          });
+          return;
+        }
+        audioUrl = data.youtubeUrl;
+        coverUrl = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
+      }
+      else {
+        toast({
+          title: "خطأ",
+          description: "الرجاء إدخال رابط سبوتيفاي أو يوتيوب",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const podcastData = {
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        duration: data.duration,
+        episodeNumber: data.episodeNumber,
+        season: data.season,
+        guests: data.guests ? data.guests.split(',').map(g => g.trim()) : [],
+        showNotes: data.showNotes,
+        audioUrl: audioUrl,
+        coverUrl: coverUrl,
+        featured: false,
+        listens: 0
+      };
+
+      if (editingPodcast?.id) {
+        await mockServices.podcasts.update(editingPodcast.id, podcastData);
+        toast({
+          title: "تم التحديث بنجاح",
+          description: "تم تحديث الحلقة بنجاح",
+        });
+      } else {
+        await mockServices.podcasts.add(podcastData);
+        toast({
+          title: "تمت الإضافة بنجاح",
+          description: "تمت إضافة الحلقة بنجاح",
+        });
+      }
+
+      fetchPodcasts();
+      setShowAddPodcastDialog(false);
+      podcastForm.reset();
+    } catch (error) {
+      console.error("Error submitting podcast:", error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء حفظ الحلقة",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Helper function to extract Spotify episode ID
+  const extractSpotifyId = (url: string): string | null => {
+    const regExp = /episode\/([a-zA-Z0-9]+)/;
+    const match = url.match(regExp);
+    return match ? match[1] : null;
+  };
+  
+  // Add contact form handlers
+  const handleViewForm = (form: ContactForm) => {
+    setSelectedForm(form);
+    setShowViewFormDialog(true);
+    
+    // Mark as read if it's new
+    if (form.status === 'new') {
+      const formRef = doc(db, 'contactForms', form.id);
+      updateDoc(formRef, { status: 'read' });
+      fetchContactForms();
+    }
+  };
+
+  const handleDeleteForm = async (id: string) => {
+    if (confirm("هل أنت متأكد من حذف هذه الرسالة؟")) {
+      try {
+        const formRef = doc(db, 'contactForms', id);
+        await deleteDoc(formRef);
+        toast({
+          title: "تم الحذف بنجاح",
+          description: "تم حذف الرسالة بنجاح",
+        });
+        fetchContactForms();
+      } catch (error) {
+        console.error("Error deleting contact form:", error);
+        toast({
+          title: "خطأ",
+          description: "حدث خطأ أثناء حذف الرسالة",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleUpdateFormStatus = async (id: string, status: ContactForm['status']) => {
+    try {
+      const formRef = doc(db, 'contactForms', id);
+      await updateDoc(formRef, { status });
+      toast({
+        title: "تم التحديث بنجاح",
+        description: "تم تحديث حالة الرسالة بنجاح",
+      });
+      fetchContactForms();
+    } catch (error) {
+      console.error("Error updating contact form status:", error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء تحديث حالة الرسالة",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen py-12">
         <div className="container mx-auto max-w-md">
@@ -499,21 +1147,6 @@ const Admin: React.FC = () => {
             </p>
             
             <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="email" className="block text-sm font-medium">
-                  البريد الإلكتروني
-                </label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="أدخل البريد الإلكتروني"
-                  className="w-full"
-                  required
-                />
-              </div>
-              
               <div className="space-y-2">
                 <label htmlFor="password" className="block text-sm font-medium">
                   كلمة المرور
@@ -577,16 +1210,160 @@ const Admin: React.FC = () => {
           
           {/* Videos Tab */}
           <TabsContent value="videos" className="bg-white rounded-2xl p-8 shadow-md border border-saudi-light">
-            <h2 className="text-2xl font-bold mb-6 text-saudi">إدارة الفيديوهات</h2>
-            <p className="text-gray-500">يمكنك هنا إضافة وتعديل وحذف الفيديوهات</p>
-            {/* Video management interface would go here */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-saudi">إدارة الفيديوهات</h2>
+              <Button 
+                onClick={handleAddVideoClick}
+                className="bg-saudi hover:bg-saudi-dark flex items-center gap-2"
+              >
+                <Plus size={18} />
+                إضافة فيديو جديد
+              </Button>
+            </div>
+            
+            <p className="text-gray-500 mb-8">يمكنك هنا إضافة وتعديل وحذف الفيديوهات</p>
+            
+            {loading ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">جاري تحميل البيانات...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {videos.map((video) => (
+                  <Card key={video.id}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>{video.title}</CardTitle>
+                          <CardDescription>{video.category}</CardDescription>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleEditVideoClick(video)}
+                            className="border-gray-300"
+                          >
+                            <Edit size={16} />
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            size="icon"
+                            className="border-destructive text-destructive"
+                            onClick={() => video.id && handleDeleteVideo(video.id, video.videoUrl, video.thumbnailUrl)}
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="aspect-video relative overflow-hidden rounded-md mb-4">
+                        <img 
+                          src={video.thumbnailUrl} 
+                          alt={video.title}
+                          className="object-cover w-full h-full"
+                        />
+                      </div>
+                      <p className="line-clamp-2 text-gray-600">{video.description}</p>
+                      <div className="mt-4 flex justify-between items-center text-sm text-gray-500">
+                        <span>{video.duration}</span>
+                        <span>{video.views} مشاهدة</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                
+                {videos.length === 0 && (
+                  <div className="text-center py-12 col-span-3">
+                    <p className="text-gray-500">لا توجد فيديوهات مضافة</p>
+                  </div>
+                )}
+              </div>
+            )}
           </TabsContent>
           
           {/* Podcasts Tab */}
           <TabsContent value="podcasts" className="bg-white rounded-2xl p-8 shadow-md border border-saudi-light">
-            <h2 className="text-2xl font-bold mb-6 text-saudi">إدارة البودكاست</h2>
-            <p className="text-gray-500">يمكنك هنا إضافة وتعديل وحذف البودكاست</p>
-            {/* Podcast management interface would go here */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-saudi">إدارة البودكاست</h2>
+              <Button 
+                onClick={handleAddPodcastClick}
+                className="bg-saudi hover:bg-saudi-dark flex items-center gap-2"
+              >
+                <Plus size={18} />
+                إضافة حلقة جديدة
+              </Button>
+            </div>
+            
+            <p className="text-gray-500 mb-8">يمكنك هنا إضافة وتعديل وحذف حلقات البودكاست</p>
+            
+            {loading ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">جاري تحميل البيانات...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {podcasts.map((podcast) => (
+                  <Card key={podcast.id}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>{podcast.title}</CardTitle>
+                          <CardDescription>
+                            الحلقة {podcast.episodeNumber} - الموسم {podcast.season}
+                          </CardDescription>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleEditPodcastClick(podcast)}
+                            className="border-gray-300"
+                          >
+                            <Edit size={16} />
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            size="icon"
+                            className="border-destructive text-destructive"
+                            onClick={() => podcast.id && handleDeletePodcast(podcast.id, podcast.audioUrl, podcast.coverUrl)}
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="aspect-square relative overflow-hidden rounded-md mb-4">
+                        <img 
+                          src={podcast.coverUrl} 
+                          alt={podcast.title}
+                          className="object-cover w-full h-full"
+                        />
+                      </div>
+                      <p className="line-clamp-2 text-gray-600">{podcast.description}</p>
+                      <div className="mt-4 flex justify-between items-center text-sm text-gray-500">
+                        <span>{podcast.duration}</span>
+                        <span>{podcast.listens} استماع</span>
+                      </div>
+                      {podcast.guests && podcast.guests.length > 0 && (
+                        <div className="mt-2 text-sm text-gray-500">
+                          <span className="font-medium">الضيوف:</span> {podcast.guests.join('، ')}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+                
+                {podcasts.length === 0 && (
+                  <div className="text-center py-12 col-span-3">
+                    <Headphones className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <p className="text-gray-500">لا توجد حلقات بودكاست مضافة</p>
+                  </div>
+                )}
+              </div>
+            )}
           </TabsContent>
           
           {/* Benefits Tab */}
@@ -742,7 +1519,7 @@ const Admin: React.FC = () => {
                                 variant="outline"
                                 size="icon"
                                 className="border-destructive text-destructive"
-                                onClick={() => story.id && handleDeleteStory(story.id, story.cover)}
+                                onClick={() => story.id && handleDeleteStory(story.id)}
                               >
                                 <Trash2 size={16} />
                               </Button>
@@ -851,9 +1628,86 @@ const Admin: React.FC = () => {
           
           {/* Contact Tab */}
           <TabsContent value="contact" className="bg-white rounded-2xl p-8 shadow-md border border-saudi-light">
-            <h2 className="text-2xl font-bold mb-6 text-saudi">الرسائل الواردة</h2>
-            <p className="text-gray-500">عرض الرسائل المرسلة من نموذج التواصل</p>
-            {/* Contact messages interface would go here */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-saudi">الرسائل الواردة</h2>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    console.log('Manual refresh clicked');
+                    fetchContactForms();
+                  }}
+                  className="border-saudi text-saudi"
+                >
+                  تحديث
+                </Button>
+              </div>
+            </div>
+            
+            {loading ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">جاري تحميل الرسائل...</p>
+              </div>
+            ) : contactForms && contactForms.length > 0 ? (
+              <div className="space-y-4">
+                {contactForms.map((form) => (
+                  <Card key={form.id} className="hover:shadow-md transition-all">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="flex items-center gap-2">
+                            {form.name}
+                            {form.status === 'new' && (
+                              <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                                جديد
+                              </span>
+                            )}
+                          </CardTitle>
+                          <CardDescription>{form.email}</CardDescription>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-500">
+                            {form.createdAt instanceof Timestamp 
+                              ? form.createdAt.toDate().toLocaleDateString('ar-SA')
+                              : new Date(form.createdAt).toLocaleDateString('ar-SA')}
+                          </span>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleViewForm(form)}
+                              className="border-gray-300"
+                            >
+                              <Eye size={16} />
+                            </Button>
+                            <Button 
+                              variant="outline"
+                              size="icon"
+                              className="border-destructive text-destructive"
+                              onClick={() => handleDeleteForm(form.id)}
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="font-medium mb-2">{form.subject}</p>
+                      <p className="text-gray-600 line-clamp-2">{form.message}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <p className="text-gray-500">لا توجد رسائل واردة</p>
+                <p className="text-sm text-gray-400 mt-2">
+                  تأكد من وجود رسائل في مجموعة 'contactForms' في قاعدة البيانات
+                </p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
@@ -1157,6 +2011,463 @@ const Admin: React.FC = () => {
               </DialogFooter>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialog for adding/editing a video */}
+      <Dialog open={showAddVideoDialog} onOpenChange={setShowAddVideoDialog}>
+        <DialogContent className="sm:max-w-[600px]" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-saudi">
+              {editingVideo ? 'تعديل فيديو' : 'إضافة فيديو جديد'}
+            </DialogTitle>
+          </DialogHeader>
+          <Form {...videoForm}>
+            <form onSubmit={videoForm.handleSubmit(onSubmitVideo)} className="space-y-6">
+              <FormField
+                control={videoForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>عنوان الفيديو</FormLabel>
+                    <FormControl>
+                      <Input placeholder="أدخل عنوان الفيديو" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={videoForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>وصف الفيديو</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="أدخل وصفاً مختصراً للفيديو" 
+                        className="min-h-[100px]"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={videoForm.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>التصنيف</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="اختر تصنيفاً" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="العقيدة">العقيدة</SelectItem>
+                          <SelectItem value="الفقه">الفقه</SelectItem>
+                          <SelectItem value="التاريخ الإسلامي">التاريخ الإسلامي</SelectItem>
+                          <SelectItem value="الحديث">الحديث</SelectItem>
+                          <SelectItem value="التفسير">التفسير</SelectItem>
+                          <SelectItem value="العلم">العلم</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={videoForm.control}
+                  name="duration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>المدة</FormLabel>
+                      <FormControl>
+                        <Input placeholder="مثال: 10:30" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={videoForm.control}
+                name="youtubeUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>رابط يوتيوب</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="أدخل رابط فيديو يوتيوب" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setShowAddVideoDialog(false)}>
+                  إلغاء
+                </Button>
+                <Button type="submit" className="bg-saudi hover:bg-saudi-dark">
+                  {editingVideo ? 'تحديث الفيديو' : 'إضافة الفيديو'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialog for adding/editing a podcast */}
+      <Dialog open={showAddPodcastDialog} onOpenChange={setShowAddPodcastDialog}>
+        <DialogContent className="sm:max-w-[600px]" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-saudi">
+              {editingPodcast ? 'تعديل حلقة' : 'إضافة حلقة جديدة'}
+            </DialogTitle>
+          </DialogHeader>
+          <Form {...podcastForm}>
+            <form onSubmit={podcastForm.handleSubmit(onSubmitPodcast)} className="space-y-6">
+              <FormField
+                control={podcastForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>عنوان الحلقة</FormLabel>
+                    <FormControl>
+                      <Input placeholder="أدخل عنوان الحلقة" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={podcastForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>وصف الحلقة</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="أدخل وصفاً مختصراً للحلقة" 
+                        className="min-h-[100px]"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={podcastForm.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>التصنيف</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="اختر تصنيفاً" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="العقيدة">العقيدة</SelectItem>
+                          <SelectItem value="الفقه">الفقه</SelectItem>
+                          <SelectItem value="التاريخ الإسلامي">التاريخ الإسلامي</SelectItem>
+                          <SelectItem value="الحديث">الحديث</SelectItem>
+                          <SelectItem value="التفسير">التفسير</SelectItem>
+                          <SelectItem value="العلم">العلم</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={podcastForm.control}
+                  name="duration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>المدة</FormLabel>
+                      <FormControl>
+                        <Input placeholder="مثال: 45:00" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={podcastForm.control}
+                  name="episodeNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>رقم الحلقة</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="1" 
+                          placeholder="رقم الحلقة"
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value))} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={podcastForm.control}
+                  name="season"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>الموسم</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="1" 
+                          placeholder="رقم الموسم"
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value))} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={podcastForm.control}
+                name="guests"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>الضيوف (اختياري)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="أدخل أسماء الضيوف مفصولة بفواصل" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={podcastForm.control}
+                name="showNotes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ملاحظات الحلقة (اختياري)</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="أدخل ملاحظات الحلقة" 
+                        className="min-h-[100px]"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="space-y-4">
+                <FormField
+                  control={podcastForm.control}
+                  name="spotifyUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>رابط سبوتيفاي (اختياري)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="أدخل رابط حلقة سبوتيفاي" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={podcastForm.control}
+                  name="youtubeUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>رابط يوتيوب (اختياري)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="أدخل رابط فيديو يوتيوب" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <DialogFooter className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setShowAddPodcastDialog(false)}>
+                  إلغاء
+                </Button>
+                <Button type="submit" className="bg-saudi hover:bg-saudi-dark">
+                  {editingPodcast ? 'تحديث الحلقة' : 'إضافة الحلقة'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add Contact Form Dialog */}
+      <Dialog open={showFormDialog} onOpenChange={setShowFormDialog}>
+        <DialogContent className="sm:max-w-[600px]" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-saudi">
+              تفاصيل الرسالة
+            </DialogTitle>
+          </DialogHeader>
+          {selectedForm && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-medium text-gray-500">الاسم</h3>
+                  <p>{selectedForm.name}</p>
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-500">البريد الإلكتروني</h3>
+                  <p>{selectedForm.email}</p>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="font-medium text-gray-500">الموضوع</h3>
+                <p>{selectedForm.subject}</p>
+              </div>
+              
+              <div>
+                <h3 className="font-medium text-gray-500">الرسالة</h3>
+                <p className="whitespace-pre-wrap">{selectedForm.message}</p>
+              </div>
+              
+              <div>
+                <h3 className="font-medium text-gray-500 mb-2">حالة الرسالة</h3>
+                <div className="flex gap-2">
+                  <Button
+                    variant={selectedForm.status === 'new' ? 'default' : 'outline'}
+                    onClick={() => handleUpdateFormStatus(selectedForm.id, 'new')}
+                    className={selectedForm.status === 'new' ? 'bg-green-600' : ''}
+                  >
+                    جديد
+                  </Button>
+                  <Button
+                    variant={selectedForm.status === 'read' ? 'default' : 'outline'}
+                    onClick={() => handleUpdateFormStatus(selectedForm.id, 'read')}
+                    className={selectedForm.status === 'read' ? 'bg-blue-600' : ''}
+                  >
+                    مقروء
+                  </Button>
+                  <Button
+                    variant={selectedForm.status === 'replied' ? 'default' : 'outline'}
+                    onClick={() => handleUpdateFormStatus(selectedForm.id, 'replied')}
+                    className={selectedForm.status === 'replied' ? 'bg-purple-600' : ''}
+                  >
+                    تم الرد
+                  </Button>
+                </div>
+              </div>
+              
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowFormDialog(false)}
+                >
+                  إغلاق
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* View Contact Form Dialog */}
+      <Dialog open={showViewFormDialog} onOpenChange={setShowViewFormDialog}>
+        <DialogContent className="sm:max-w-[600px]" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-saudi">
+              تفاصيل الرسالة
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedForm && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">المرسل</h3>
+                  <p className="mt-1">{selectedForm.name}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">البريد الإلكتروني</h3>
+                  <p className="mt-1">{selectedForm.email}</p>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">التاريخ</h3>
+                <p className="mt-1">
+                  {selectedForm.createdAt instanceof Timestamp 
+                    ? selectedForm.createdAt.toDate().toLocaleDateString('ar-SA')
+                    : new Date(selectedForm.createdAt).toLocaleDateString('ar-SA')}
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">الموضوع</h3>
+                <p className="mt-1">{selectedForm.subject}</p>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">الرسالة</h3>
+                <p className="mt-1 whitespace-pre-wrap">{selectedForm.message}</p>
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowViewFormDialog(false)}
+                >
+                  إغلاق
+                </Button>
+                {selectedForm.status !== 'replied' && (
+                  <Button 
+                    onClick={() => handleUpdateFormStatus(selectedForm.id, 'replied')}
+                    className="bg-saudi hover:bg-saudi-dark"
+                  >
+                    تم الرد
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

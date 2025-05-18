@@ -1,47 +1,65 @@
-
-import React from 'react';
-import PodcastCard from '@/components/PodcastCard';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, Headphones } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import PodcastCard from '@/components/PodcastCard';
+
+interface Podcast {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  duration: string;
+  episodeNumber: number;
+  season: number;
+  guests?: string[];
+  showNotes?: string;
+  audioUrl: string;
+  coverUrl: string;
+  listens: number;
+  featured: boolean;
+  externalLink: string;
+}
 
 const Podcasts: React.FC = () => {
-  const [searchTerm, setSearchTerm] = React.useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [podcasts, setPodcasts] = useState<Podcast[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
   
-  // Sample data (would come from Firebase in real implementation)
-  const podcasts = [
-    {
-      id: '1',
-      title: 'أهمية طلب العلم',
-      thumbnail: 'https://via.placeholder.com/400x300',
-      externalLink: 'https://example.com',
-      platform: 'سبوتيفاي',
-    },
-    {
-      id: '2',
-      title: 'منهج السلف في التعامل مع النوازل',
-      thumbnail: 'https://via.placeholder.com/400x300',
-      externalLink: 'https://example.com',
-      platform: 'ساوند كلاود',
-    },
-    {
-      id: '3',
-      title: 'سلسلة شرح كتاب التوحيد - الحلقة الأولى',
-      thumbnail: 'https://via.placeholder.com/400x300',
-      externalLink: 'https://example.com',
-      platform: 'أبل بودكاست',
-    },
-    {
-      id: '4',
-      title: 'حوار حول أهمية السنة النبوية',
-      thumbnail: 'https://via.placeholder.com/400x300',
-      externalLink: 'https://example.com',
-      platform: 'جوجل بودكاست',
-    },
-  ];
+  useEffect(() => {
+    fetchPodcasts();
+  }, []);
+  
+  const fetchPodcasts = async () => {
+    try {
+      setLoading(true);
+      const podcastsRef = collection(db, 'podcasts');
+      const q = query(podcastsRef, orderBy('title'));
+      const querySnapshot = await getDocs(q);
+      const fetchedPodcasts = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Podcast[];
+      setPodcasts(fetchedPodcasts);
+    } catch (error) {
+      console.error("Error fetching podcasts:", error);
+      toast({
+        title: "خطأ في جلب البيانات",
+        description: "حدث خطأ أثناء جلب البودكاست",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const filteredPodcasts = podcasts.filter((podcast) => 
-    podcast.title.includes(searchTerm) || 
-    podcast.platform.includes(searchTerm)
+    podcast.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    podcast.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    podcast.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -55,27 +73,36 @@ const Podcasts: React.FC = () => {
           </div>
           <Input
             className="pl-3 pr-10"
-            placeholder="ابحث عن بودكاست..."
+            placeholder="ابحث في البودكاست..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPodcasts.map((podcast) => (
-            <PodcastCard
-              key={podcast.id}
-              title={podcast.title}
-              thumbnail={podcast.thumbnail}
-              externalLink={podcast.externalLink}
-              platform={podcast.platform}
-            />
-          ))}
-        </div>
-        
-        {filteredPodcasts.length === 0 && (
+        {loading ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">لا توجد بودكاست مطابق للبحث</p>
+            <p className="text-gray-500">جاري تحميل البودكاست...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredPodcasts.map((podcast) => (
+              <PodcastCard
+                key={podcast.id}
+                id={podcast.id}
+                title={podcast.title}
+                thumbnail={podcast.coverUrl}
+                externalLink={podcast.externalLink}
+                platform={`الحلقة ${podcast.episodeNumber} - الموسم ${podcast.season}`}
+                listens={podcast.listens}
+              />
+            ))}
+            
+            {filteredPodcasts.length === 0 && (
+              <div className="text-center py-12 col-span-3">
+                <Headphones className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <p className="text-gray-500">لا توجد حلقات بودكاست مطابقة للبحث</p>
+              </div>
+            )}
           </div>
         )}
       </div>

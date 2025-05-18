@@ -1,10 +1,19 @@
-
 import React, { useState, useEffect } from 'react';
 import BenefitCard from '@/components/BenefitCard';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
-import { getBenefits, Benefit } from '@/services/benefitsService';
 import { useToast } from '@/hooks/use-toast';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+
+interface Benefit {
+  id: string;
+  bookName: string;
+  volumeAndPage: string;
+  benefitText: string;
+  scholarComment?: string;
+  category: string;
+}
 
 const AlQawlAlMufid: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,8 +28,14 @@ const AlQawlAlMufid: React.FC = () => {
   const fetchBenefits = async () => {
     try {
       setLoading(true);
-      const data = await getBenefits();
-      setBenefits(data);
+      const benefitsRef = collection(db, 'benefits');
+      const q = query(benefitsRef, orderBy('bookName'));
+      const querySnapshot = await getDocs(q);
+      const fetchedBenefits = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Benefit[];
+      setBenefits(fetchedBenefits);
     } catch (error) {
       console.error("Error fetching benefits:", error);
       toast({
@@ -34,9 +49,9 @@ const AlQawlAlMufid: React.FC = () => {
   };
   
   const filteredBenefits = benefits.filter((benefit) => 
-    benefit.bookName.includes(searchTerm) || 
-    benefit.benefitText.includes(searchTerm) || 
-    benefit.category.includes(searchTerm)
+    benefit.bookName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    benefit.benefitText.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    benefit.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (

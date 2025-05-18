@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import VideoCard from '@/components/VideoCard';
@@ -6,7 +5,7 @@ import PodcastCard from '@/components/PodcastCard';
 import BenefitCard from '@/components/BenefitCard';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Coffee } from 'lucide-react';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 // Define types for our data
@@ -15,6 +14,8 @@ interface Video {
   title: string;
   youtubeId: string;
   category: string;
+  thumbnailUrl: string;
+  views: number;
 }
 
 interface Podcast {
@@ -23,6 +24,9 @@ interface Podcast {
   thumbnail: string;
   externalLink: string;
   platform: string;
+  listens: number;
+  episodeNumber: number;
+  season: number;
 }
 
 interface Benefit {
@@ -41,61 +45,82 @@ const Index: React.FC = () => {
   const [benefits, setBenefits] = useState<Benefit[]>([]);
   const [loading, setLoading] = useState(true);
   
+  // Function to get random items from an array
+  const getRandomItems = <T,>(array: T[], count: number): T[] => {
+    const shuffled = [...array].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  };
+  
   // Fetch data from Firebase
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        console.log('Starting to fetch data...');
         
-        // Fetch videos
+        // Fetch all videos
         const videosQuery = query(
-          collection(db, 'videos'),
-          orderBy('createdAt', 'desc'),
-          limit(2)
+          collection(db, 'videos')
         );
         const videosSnapshot = await getDocs(videosQuery);
-        const videosData: Video[] = [];
+        console.log('Videos snapshot:', videosSnapshot.size, 'documents found');
+        const allVideos: Video[] = [];
         videosSnapshot.forEach((doc) => {
           const data = doc.data();
-          videosData.push({
+          console.log('Video data:', data);
+          allVideos.push({
             id: doc.id,
             title: data.title,
             youtubeId: data.youtubeId,
-            category: data.category
+            category: data.category,
+            thumbnailUrl: data.thumbnailUrl,
+            views: data.views || 0
           });
         });
-        setVideos(videosData);
+        console.log('All videos:', allVideos);
+        // Get 2 random videos
+        const randomVideos = getRandomItems(allVideos, 2);
+        console.log('Random videos:', randomVideos);
+        setVideos(randomVideos);
         
-        // Fetch podcasts
+        // Fetch all podcasts
         const podcastsQuery = query(
-          collection(db, 'podcasts'),
-          orderBy('createdAt', 'desc'),
-          limit(2)
+          collection(db, 'podcasts')
         );
         const podcastsSnapshot = await getDocs(podcastsQuery);
-        const podcastsData: Podcast[] = [];
+        console.log('Podcasts snapshot:', podcastsSnapshot.size, 'documents found');
+        const allPodcasts: Podcast[] = [];
         podcastsSnapshot.forEach((doc) => {
           const data = doc.data();
-          podcastsData.push({
+          console.log('Podcast data:', data);
+          allPodcasts.push({
             id: doc.id,
             title: data.title,
-            thumbnail: data.thumbnail,
+            thumbnail: data.coverUrl,
             externalLink: data.externalLink,
-            platform: data.platform
+            platform: `الحلقة ${data.episodeNumber} - الموسم ${data.season}`,
+            listens: data.listens || 0,
+            episodeNumber: data.episodeNumber,
+            season: data.season
           });
         });
-        setPodcasts(podcastsData);
+        console.log('All podcasts:', allPodcasts);
+        // Get 2 random podcasts
+        const randomPodcasts = getRandomItems(allPodcasts, 2);
+        console.log('Random podcasts:', randomPodcasts);
+        setPodcasts(randomPodcasts);
         
-        // Fetch benefits
+        // Fetch latest benefits
         const benefitsQuery = query(
           collection(db, 'benefits'),
-          orderBy('createdAt', 'desc'),
           limit(1)
         );
         const benefitsSnapshot = await getDocs(benefitsQuery);
+        console.log('Benefits snapshot:', benefitsSnapshot.size, 'documents found');
         const benefitsData: Benefit[] = [];
         benefitsSnapshot.forEach((doc) => {
           const data = doc.data();
+          console.log('Benefit data:', data);
           benefitsData.push({
             id: doc.id,
             bookName: data.bookName,
@@ -105,6 +130,7 @@ const Index: React.FC = () => {
             category: data.category
           });
         });
+        console.log('Benefits data:', benefitsData);
         setBenefits(benefitsData);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -115,55 +141,6 @@ const Index: React.FC = () => {
     
     fetchData();
   }, []);
-  
-  // Sample data as fallback if Firebase returns empty
-  const sampleVideos = [
-    {
-      id: '1',
-      title: 'شرح أصول السنة للإمام أحمد - الدرس الأول',
-      youtubeId: 'dQw4w9WgXcQ',
-      category: 'العقيدة',
-    },
-    {
-      id: '2',
-      title: 'تفسير سورة الفاتحة',
-      youtubeId: 'dQw4w9WgXcQ',
-      category: 'التفسير',
-    },
-  ];
-  
-  const samplePodcasts = [
-    {
-      id: '1',
-      title: 'أهمية طلب العلم',
-      thumbnail: 'https://via.placeholder.com/400x300',
-      externalLink: 'https://example.com',
-      platform: 'سبوتيفاي',
-    },
-    {
-      id: '2',
-      title: 'منهج السلف في التعامل مع النوازل',
-      thumbnail: 'https://via.placeholder.com/400x300',
-      externalLink: 'https://example.com',
-      platform: 'ساوند كلاود',
-    },
-  ];
-  
-  const sampleBenefits = [
-    {
-      id: '1',
-      bookName: 'البداية والنهاية - لابن كثير',
-      volumeAndPage: 'المجلد 9، صفحة 357',
-      benefitText: 'قال ابن كثير: "وكان عمر بن عبد العزيز من خيار خلفاء بني أمية، وكان عادلًا في رعيته، متبعًا للسنة، مجتهدًا في العبادة."',
-      scholarComment: 'قال الإمام الذهبي: "كان عمر بن عبد العزيز إمامًا عادلًا، مقتديًا بالخلفاء الراشدين، في زهده وورعه وعدله."',
-      category: 'التاريخ الإسلامي',
-    },
-  ];
-
-  // Use fetched data or sample data if not available
-  const displayVideos = videos.length > 0 ? videos : sampleVideos;
-  const displayPodcasts = podcasts.length > 0 ? podcasts : samplePodcasts;
-  const displayBenefits = benefits.length > 0 ? benefits : sampleBenefits;
 
   return (
     <div className="min-h-screen">
@@ -203,121 +180,111 @@ const Index: React.FC = () => {
         </div>
       </section>
 
-      {/* Featured Videos */}
-      <section className="py-16 bg-muted/50">
+      {/* Random Videos Section */}
+      <section className="py-16 bg-gray-50">
         <div className="container mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-saudi">أحدث الفيديوهات</h2>
-            <Button 
-              variant="ghost" 
-              className="text-saudi hover:bg-saudi-light flex items-center gap-2"
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold text-saudi">فيديوهات عشوائية</h2>
+            <Button
+              variant="ghost"
+              className="text-saudi hover:text-saudi-dark flex items-center gap-2"
               onClick={() => navigate('/videos')}
             >
               عرض المزيد
               <ArrowLeft size={16} />
             </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {displayVideos.map((video) => (
-              <VideoCard
-                key={video.id}
-                title={video.title}
-                youtubeId={video.youtubeId}
-                category={video.category}
-              />
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500">جاري تحميل الفيديوهات...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {videos.map((video) => (
+                <VideoCard
+                  key={video.id}
+                  id={video.id}
+                  title={video.title}
+                  youtubeId={video.youtubeId}
+                  category={video.category}
+                  views={video.views}
+                  thumbnail={video.thumbnailUrl}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Featured Podcasts */}
+      {/* Random Podcasts Section */}
       <section className="py-16">
         <div className="container mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-saudi">أحدث البودكاست</h2>
-            <Button 
-              variant="ghost" 
-              className="text-saudi hover:bg-saudi-light flex items-center gap-2"
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold text-saudi">بودكاست عشوائي</h2>
+            <Button
+              variant="ghost"
+              className="text-saudi hover:text-saudi-dark flex items-center gap-2"
               onClick={() => navigate('/podcasts')}
             >
               عرض المزيد
               <ArrowLeft size={16} />
             </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {displayPodcasts.map((podcast) => (
-              <PodcastCard
-                key={podcast.id}
-                title={podcast.title}
-                thumbnail={podcast.thumbnail}
-                externalLink={podcast.externalLink}
-                platform={podcast.platform}
-              />
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500">جاري تحميل البودكاست...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {podcasts.map((podcast) => (
+                <PodcastCard
+                  key={podcast.id}
+                  id={podcast.id}
+                  title={podcast.title}
+                  thumbnail={podcast.thumbnail}
+                  externalLink={podcast.externalLink}
+                  platform={podcast.platform}
+                  listens={podcast.listens}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Featured Benefits */}
-      <section className="py-16 bg-muted/50">
+      {/* Latest Benefit Section */}
+      <section className="py-16 bg-gray-50">
         <div className="container mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-saudi">من القول المفيد</h2>
-            <Button 
-              variant="ghost" 
-              className="text-saudi hover:bg-saudi-light flex items-center gap-2"
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold text-saudi">القول المفيد</h2>
+            <Button
+              variant="ghost"
+              className="text-saudi hover:text-saudi-dark flex items-center gap-2"
               onClick={() => navigate('/al-qawl-al-mufid')}
             >
               عرض المزيد
               <ArrowLeft size={16} />
             </Button>
           </div>
-          <div className="grid grid-cols-1 gap-6">
-            {displayBenefits.map((benefit) => (
-              <BenefitCard
-                key={benefit.id}
-                bookName={benefit.bookName}
-                volumeAndPage={benefit.volumeAndPage}
-                benefitText={benefit.benefitText}
-                scholarComment={benefit.scholarComment}
-                category={benefit.category}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Coffee Eyes Section */}
-      <section className="py-16" style={{ backgroundColor: "#F5F1EB" }}>
-        <div className="container mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold" style={{ color: "#6F4E37" }}>عيون القهوة</h2>
-            <Button 
-              variant="ghost" 
-              style={{ color: "#6F4E37" }}
-              className="hover:bg-[#6F4E37]/10 flex items-center gap-2"
-              onClick={() => navigate('/coffee-eyes')}
-            >
-              عرض المزيد
-              <ArrowLeft size={16} />
-            </Button>
-          </div>
-          <div className="bg-white rounded-2xl p-8 shadow-md border border-[#D2B48C]/30 relative overflow-hidden">
-            <div className="absolute inset-0 arabesque-bg opacity-5"></div>
-            <div className="relative z-10 flex flex-col items-center justify-center text-center py-8">
-              <Coffee className="w-16 h-16 text-[#6F4E37] mb-6" />
-              <h3 className="text-2xl font-bold text-[#6F4E37] mb-2">الروايات والقصص</h3>
-              <p className="text-lg mb-6 max-w-2xl text-[#6F4E37]/80">
-                استمتع بمجموعة مختارة من الروايات والقصص الممتعة والهادفة، مع تصميم مميز للقراءة
-              </p>
-              <Button
-                className="bg-[#6F4E37] hover:bg-[#5A3E2B] text-white"
-                onClick={() => navigate('/coffee-eyes')}
-              >
-                استكشاف عيون القهوة
-              </Button>
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500">جاري تحميل الفوائد...</p>
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6">
+              {benefits.map((benefit) => (
+                <BenefitCard
+                  key={benefit.id}
+                  id={benefit.id}
+                  bookName={benefit.bookName}
+                  volumeAndPage={benefit.volumeAndPage}
+                  benefitText={benefit.benefitText}
+                  scholarComment={benefit.scholarComment}
+                  category={benefit.category}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>

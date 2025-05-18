@@ -19,7 +19,7 @@ const Footer: React.FC = () => {
             {/* Social Media Links */}
             <div className="flex space-x-4 space-x-reverse mt-4">
               <a 
-                href="https://instagram.com" 
+                href="https://www.instagram.com/dhamma.productions/" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="hover:text-white/80 transition-colors"

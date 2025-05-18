@@ -1,0 +1,50 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow public read access to all content
+    match /videos/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    match /podcasts/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    match /benefits/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    match /coffeeStories/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    match /coffeeChapters/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Allow only authenticated users to write contact messages and join requests
+    match /contactMessages/{document=**} {
+      allow read: if request.auth != null;
+      allow create: if true;
+      allow update, delete: if request.auth != null;
+    }
+    
+    match /joinRequests/{document=**} {
+      allow read: if request.auth != null;
+      allow create: if true;
+      allow update, delete: if request.auth != null;
+    }
+
+    // User profiles
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+} 

@@ -26,6 +26,8 @@ import { Plus, BookPlus, Trash2, Edit, Coffee, BookOpen, FileText, Headphones, E
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, Timestamp, where } from 'firebase/firestore';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 // Mock data types
 interface Benefit {
@@ -338,7 +340,7 @@ const Admin: React.FC = () => {
   // Mock authentication
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const correctPassword = "F9k#2pL$7xQz@5Jm!8Tb";
+    const correctPassword = import.meta.env.VITE_ADMIN_PASSWORD;
     
     if (password === correctPassword) {
       setIsAuthenticated(true);
@@ -538,8 +540,18 @@ const Admin: React.FC = () => {
     }
   });
   
+  // Video form validation schema
+  const videoFormSchema = z.object({
+    title: z.string().min(1, 'العنوان مطلوب'),
+    description: z.string().min(1, 'الوصف مطلوب'),
+    category: z.string().min(1, 'التصنيف مطلوب'),
+    duration: z.string().min(1, 'المدة مطلوبة'),
+    youtubeUrl: z.string().min(1, 'رابط يوتيوب مطلوب').url('الرجاء إدخال رابط صحيح')
+  });
+  
   // Video form
   const videoForm = useForm<VideoFormValues>({
+    resolver: zodResolver(videoFormSchema),
     defaultValues: {
       title: '',
       description: '',
@@ -895,14 +907,15 @@ const Admin: React.FC = () => {
       }
 
       const videoData = {
-        title: data.title,
-        description: data.description,
+        title: data.title.trim(),
+        description: data.description.trim(),
         category: data.category,
-        duration: data.duration,
+        duration: data.duration.trim(),
         videoUrl: `https://www.youtube.com/watch?v=${videoId}`,
         thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
         featured: false,
-        views: 0
+        views: 0,
+        createdAt: Timestamp.now()
       };
 
       if (editingVideo?.id) {
@@ -926,7 +939,7 @@ const Admin: React.FC = () => {
       console.error("Error submitting video:", error);
       toast({
         title: "خطأ",
-        description: "حدث خطأ أثناء حفظ الفيديو",
+        description: error instanceof Error ? error.message : "حدث خطأ أثناء حفظ الفيديو",
         variant: "destructive",
       });
     }

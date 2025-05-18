@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,9 +31,11 @@ const Contact: React.FC = () => {
 
     try {
       // Send data to Firebase
-      await addDoc(collection(db, "contacts"), {
+      await addDoc(collection(db, "contactForms"), {
         ...formData,
-        timestamp: serverTimestamp(),
+        subject: "New Contact Form Submission",
+        status: 'new',
+        createdAt: serverTimestamp(),
       });
 
       toast({

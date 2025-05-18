@@ -28,6 +28,8 @@ import { db } from '@/lib/firebase';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, Timestamp, where } from 'firebase/firestore';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+// Add Firebase Auth imports
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from "firebase/auth";
 
 // Mock data types
 interface Benefit {
@@ -305,8 +307,13 @@ interface PodcastFormValues {
 }
 
 const Admin: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
+  // const [isAuthenticated, setIsAuthenticated] = useState(false); // Remove old auth state
+  // const [password, setPassword] = useState(''); // Remove old password state
+  const [user, setUser] = useState<User | null>(null); // Firebase user state
+  const [authLoading, setAuthLoading] = useState(true); // Auth loading state
+  const [email, setEmail] = useState(''); // Email state for login
+  const [password, setPassword] = useState(''); // Password state for login
+
   const [showAddBenefitDialog, setShowAddBenefitDialog] = useState(false);
   const [benefits, setBenefits] = useState<Benefit[]>([]);
   const [loading, setLoading] = useState(false);
@@ -339,30 +346,100 @@ const Admin: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Mock authentication
-  const handleLogin = async (e: React.FormEvent) => {
+  // Remove old mock authentication
+  // const handleLogin = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   const correctPassword = import.meta.env.VITE_ADMIN_PASSWORD;
+  
+  //   if (password === correctPassword) {
+  //     setIsAuthenticated(true);
+  //     toast({
+  //       title: "تم تسجيل الدخول بنجاح",
+  //       description: "مرحباً بك في لوحة التحكم",
+  //     });
+  //   } else {
+  //     toast({
+  //       title: "خطأ في تسجيل الدخول",
+  //       description: "كلمة المرور غير صحيحة",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
+  
+  // Remove old handle logout
+  // const handleLogout = () => {
+  //   setIsAuthenticated(false);
+  //   navigate('/admin');
+  // };
+
+  // Firebase Auth state observer
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setAuthLoading(false);
+      if (currentUser) {
+        console.log('Firebase User authenticated:', currentUser.uid);
+        toast({
+          title: "تم تسجيل الدخول بنجاح",
+          description: "مرحباً بك في لوحة التحكم",
+        });
+      } else {
+        console.log('Firebase User logged out');
+      }
+    });
+
+    // Clean up observer on unmount
+    return () => unsubscribe();
+  }, []);
+
+  // Handle Firebase Login
+  const handleFirebaseLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const correctPassword = import.meta.env.VITE_ADMIN_PASSWORD;
-    
-    if (password === correctPassword) {
-      setIsAuthenticated(true);
-      toast({
-        title: "تم تسجيل الدخول بنجاح",
-        description: "مرحباً بك في لوحة التحكم",
-      });
-    } else {
+    setAuthLoading(true);
+    const auth = getAuth();
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      // User state updated by onAuthStateChanged
+    } catch (error: any) {
+      console.error("Firebase Login Error:", error);
+      let errorMessage = "حدث خطأ في تسجيل الدخول. يرجى المحاولة مرة أخرى.";
+      if (error.code === 'auth/invalid-email') {
+        errorMessage = "البريد الإلكتروني غير صالح.";
+      } else if (error.code === 'auth/user-disabled') {
+        errorMessage = "تم تعطيل حساب المستخدم.";
+      } else if (error.code === 'auth/user-not-found') {
+        errorMessage = "المستخدم غير موجود.";
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = "كلمة المرور غير صحيحة.";
+      }
       toast({
         title: "خطأ في تسجيل الدخول",
-        description: "كلمة المرور غير صحيحة",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // Handle Firebase Logout
+  const handleFirebaseLogout = async () => {
+    const auth = getAuth();
+    try {
+      await signOut(auth);
+      toast({
+        title: "تم تسجيل الخروج",
+        description: "تم تسجيل الخروج بنجاح",
+      });
+    } catch (error) {
+      console.error("Firebase Logout Error:", error);
+      toast({
+        title: "خطأ في تسجيل الخروج",
+        description: "حدث خطأ أثناء تسجيل الخروج.",
         variant: "destructive",
       });
     }
-  };
-  
-  // Handle logout
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    navigate('/admin');
   };
   
   // Fetch benefits
@@ -496,17 +573,24 @@ const Admin: React.FC = () => {
     }
   };
   
-  // Load data when authenticated
+  // Load data when authenticated (Firebase user is available)
   useEffect(() => {
-    if (isAuthenticated) {
-      console.log('User authenticated, fetching data...');
+    if (user) {
+      console.log('Firebase user is authenticated, fetching data...');
       fetchBenefits();
       fetchCoffeeStories();
       fetchVideos();
       fetchPodcasts();
       fetchContactForms();
+    } else {
+       // Clear data if user logs out
+      setBenefits([]);
+      setCoffeeStories([]);
+      setVideos([]);
+      setPodcasts([]);
+      setContactForms([]);
     }
-  }, [isAuthenticated]);
+  }, [user]); // Depend on user state
   
   // Add useEffect to monitor contactForms state
   useEffect(() => {
@@ -981,7 +1065,7 @@ const Admin: React.FC = () => {
     setShowAddPodcastDialog(true);
   };
   
-  const handleDeletePodcast = async (id: string, audioUrl: string, coverUrl: string) => {
+  const handleDeletePodcast = async (id: string) => {
     if (confirm("هل أنت متأكد من حذف هذه الحلقة؟")) {
       try {
         await mockServices.podcasts.delete(id);
@@ -1149,7 +1233,17 @@ const Admin: React.FC = () => {
     }
   };
   
-  if (!isAuthenticated) {
+  if (authLoading) {
+    // Show a loading indicator while checking auth state
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500">جاري التحقق من حالة المصادقة...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    // Show Firebase login form if not authenticated
     return (
       <div className="min-h-screen py-12">
         <div className="container mx-auto max-w-md">
@@ -1157,10 +1251,24 @@ const Admin: React.FC = () => {
           
           <div className="bg-white rounded-2xl p-8 shadow-md border border-saudi-light">
             <p className="mb-6 text-center">
-              يرجى تسجيل الدخول للوصول إلى لوحة التحكم
+              يرجى تسجيل الدخول بحساب Firebase للوصول إلى لوحة التحكم
             </p>
             
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleFirebaseLogin} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="email" className="block text-sm font-medium">
+                  البريد الإلكتروني
+                </label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="أدخل البريد الإلكتروني"
+                  className="w-full"
+                  required
+                />
+              </div>
               <div className="space-y-2">
                 <label htmlFor="password" className="block text-sm font-medium">
                   كلمة المرور
@@ -1179,8 +1287,9 @@ const Admin: React.FC = () => {
               <Button 
                 className="bg-saudi hover:bg-saudi-dark w-full"
                 type="submit"
+                disabled={authLoading} // Disable button while authenticating
               >
-                تسجيل الدخول
+                {authLoading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
               </Button>
             </form>
             
@@ -1199,6 +1308,7 @@ const Admin: React.FC = () => {
     );
   }
   
+  // Render admin panel if authenticated
   return (
     <div className="min-h-screen py-12">
       <div className="container mx-auto">
@@ -1207,7 +1317,7 @@ const Admin: React.FC = () => {
           <Button 
             variant="outline" 
             className="border-saudi text-saudi hover:bg-saudi-light"
-            onClick={handleLogout}
+            onClick={handleFirebaseLogout} // Use Firebase logout
           >
             تسجيل الخروج
           </Button>
@@ -1349,7 +1459,7 @@ const Admin: React.FC = () => {
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => handleDeletePodcast(podcast.id, podcast.audioUrl, podcast.coverUrl)}
+                            onClick={() => handleDeletePodcast(podcast.id)}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
                             حذف
@@ -1901,15 +2011,15 @@ const Admin: React.FC = () => {
               <FormField
                 control={storyForm.control}
                 name="coverFile"
-                render={({ field: { onChange, value, ...rest } }) => (
+                render={({ field }) => (
                   <FormItem>
                     <FormLabel>صورة الغلاف</FormLabel>
                     <FormControl>
                       <Input 
                         type="file" 
                         accept="image/*"
-                        onChange={(e) => onChange(e.target.files)}
-                        {...rest}
+                        onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)} // Access files[0] and handle null
+                        // Do not spread field.value or field.rest onto file input
                       />
                     </FormControl>
                     <FormMessage />

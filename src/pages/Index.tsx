@@ -97,11 +97,11 @@ const Index: React.FC = () => {
             id: doc.id,
             title: data.title,
             thumbnail: data.coverUrl,
-            externalLink: data.externalLink,
-            platform: `الحلقة ${data.episodeNumber} - الموسم ${data.season}`,
+            externalLink: data.youtubeUrl || data.spotifyUrl || data.audioUrl || '',
+            platform: `الحلقة ${data.episodeNumber || ''} - الموسم ${data.season || ''}`,
             listens: data.listens || 0,
-            episodeNumber: data.episodeNumber,
-            season: data.season
+            episodeNumber: data.episodeNumber || 0,
+            season: data.season || 0
           });
         });
         console.log('All podcasts:', allPodcasts);

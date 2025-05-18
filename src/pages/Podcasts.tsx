@@ -21,6 +21,8 @@ interface Podcast {
   listens: number;
   featured: boolean;
   externalLink: string;
+  youtubeUrl?: string;
+  spotifyUrl?: string;
 }
 
 const Podcasts: React.FC = () => {
@@ -39,10 +41,15 @@ const Podcasts: React.FC = () => {
       const podcastsRef = collection(db, 'podcasts');
       const q = query(podcastsRef, orderBy('title'));
       const querySnapshot = await getDocs(q);
-      const fetchedPodcasts = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Podcast[];
+      const fetchedPodcasts = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        console.log('Raw podcast data from Firestore:', data);
+        return {
+          id: doc.id,
+          ...data
+        };
+      }) as Podcast[];
+      console.log('Processed podcasts:', fetchedPodcasts);
       setPodcasts(fetchedPodcasts);
     } catch (error) {
       console.error("Error fetching podcasts:", error);
@@ -85,17 +92,24 @@ const Podcasts: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPodcasts.map((podcast) => (
-              <PodcastCard
-                key={podcast.id}
-                id={podcast.id}
-                title={podcast.title}
-                thumbnail={podcast.coverUrl}
-                externalLink={podcast.externalLink}
-                platform={`الحلقة ${podcast.episodeNumber} - الموسم ${podcast.season}`}
-                listens={podcast.listens}
-              />
-            ))}
+            {filteredPodcasts.map((podcast) => {
+              console.log('Rendering podcast:', podcast);
+              // Get the first available URL, supporting older data structure
+              const externalLink = podcast.youtubeUrl || podcast.spotifyUrl || podcast.audioUrl;
+              console.log('External link for podcast:', podcast.title, externalLink);
+              
+              return (
+                <PodcastCard
+                  key={podcast.id}
+                  id={podcast.id}
+                  title={podcast.title}
+                  thumbnail={podcast.coverUrl}
+                  externalLink={externalLink || ''}
+                  platform={`الحلقة ${podcast.episodeNumber || ''} - الموسم ${podcast.season || ''}`}
+                  listens={podcast.listens || 0}
+                />
+              );
+            })}
             
             {filteredPodcasts.length === 0 && (
               <div className="text-center py-12 col-span-3">

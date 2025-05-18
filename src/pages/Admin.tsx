@@ -82,6 +82,8 @@ interface Podcast {
   coverUrl: string;
   listens: number;
   featured: boolean;
+  youtubeUrl?: string;
+  spotifyUrl?: string;
 }
 
 // Add Contact Form interface
@@ -294,8 +296,8 @@ interface PodcastFormValues {
   description: string;
   category: string;
   duration: string;
-  episodeNumber: number;
-  season: number;
+  episodeNumber?: number;
+  season?: number;
   guests?: string;
   showNotes?: string;
   spotifyUrl?: string;
@@ -568,8 +570,6 @@ const Admin: React.FC = () => {
       description: '',
       category: '',
       duration: '',
-      episodeNumber: 1,
-      season: 1,
       guests: '',
       showNotes: '',
     }
@@ -960,8 +960,6 @@ const Admin: React.FC = () => {
       description: '',
       category: '',
       duration: '',
-      episodeNumber: 1,
-      season: 1,
       guests: '',
       showNotes: '',
     });
@@ -1005,7 +1003,7 @@ const Admin: React.FC = () => {
   
   const onSubmitPodcast = async (data: PodcastFormValues) => {
     try {
-      let audioUrl = '';
+      console.log('Submitting podcast data:', data);
       let coverUrl = '';
 
       // Handle Spotify URL
@@ -1019,7 +1017,6 @@ const Admin: React.FC = () => {
           });
           return;
         }
-        audioUrl = data.spotifyUrl;
         // You can use Spotify's API to get the cover image, but for now we'll use a placeholder
         coverUrl = `https://i.scdn.co/image/ab67616d0000b273${spotifyId}`;
       }
@@ -1058,8 +1055,12 @@ const Admin: React.FC = () => {
         audioUrl: audioUrl,
         coverUrl: coverUrl,
         featured: false,
-        listens: 0
+        listens: 0,
+        youtubeUrl: data.youtubeUrl,
+        spotifyUrl: data.spotifyUrl
       };
+
+      console.log('Final podcast data to save:', podcastData);
 
       if (editingPodcast?.id) {
         await mockServices.podcasts.update(editingPodcast.id, podcastData);
@@ -1318,53 +1319,53 @@ const Admin: React.FC = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {podcasts.map((podcast) => (
-                  <Card key={podcast.id}>
+                  <Card key={podcast.id} className="mb-4">
                     <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle>{podcast.title}</CardTitle>
-                          <CardDescription>
-                            الحلقة {podcast.episodeNumber} - الموسم {podcast.season}
-                          </CardDescription>
+                      <CardTitle>{podcast.title}</CardTitle>
+                      <CardDescription>
+                        {podcast.description}
+                        <div className="mt-2">
+                          <span className="text-sm text-gray-500">المدة: {podcast.duration}</span>
+                          {podcast.episodeNumber && (
+                            <span className="text-sm text-gray-500 mr-4">الحلقة: {podcast.episodeNumber}</span>
+                          )}
+                          {podcast.season && (
+                            <span className="text-sm text-gray-500 mr-4">الموسم: {podcast.season}</span>
+                          )}
                         </div>
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex justify-between items-center">
                         <div className="flex gap-2">
                           <Button
                             variant="outline"
-                            size="icon"
+                            size="sm"
                             onClick={() => handleEditPodcastClick(podcast)}
-                            className="border-gray-300"
                           >
-                            <Edit size={16} />
+                            <Edit className="h-4 w-4 mr-2" />
+                            تعديل
                           </Button>
-                          <Button 
-                            variant="outline"
-                            size="icon"
-                            className="border-destructive text-destructive"
-                            onClick={() => podcast.id && handleDeletePodcast(podcast.id, podcast.audioUrl, podcast.coverUrl)}
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeletePodcast(podcast.id, podcast.audioUrl, podcast.coverUrl)}
                           >
-                            <Trash2 size={16} />
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            حذف
                           </Button>
                         </div>
+                        {(podcast.spotifyUrl || podcast.youtubeUrl) && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => window.open(podcast.spotifyUrl || podcast.youtubeUrl, '_blank')}
+                          >
+                            <Headphones className="h-4 w-4 mr-2" />
+                            تشغيل
+                          </Button>
+                        )}
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="aspect-square relative overflow-hidden rounded-md mb-4">
-                        <img 
-                          src={podcast.coverUrl} 
-                          alt={podcast.title}
-                          className="object-cover w-full h-full"
-                        />
-                      </div>
-                      <p className="line-clamp-2 text-gray-600">{podcast.description}</p>
-                      <div className="mt-4 flex justify-between items-center text-sm text-gray-500">
-                        <span>{podcast.duration}</span>
-                        <span>{podcast.listens} استماع</span>
-                      </div>
-                      {podcast.guests && podcast.guests.length > 0 && (
-                        <div className="mt-2 text-sm text-gray-500">
-                          <span className="font-medium">الضيوف:</span> {podcast.guests.join('، ')}
-                        </div>
-                      )}
                     </CardContent>
                   </Card>
                 ))}

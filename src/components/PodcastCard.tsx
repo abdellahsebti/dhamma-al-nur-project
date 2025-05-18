@@ -24,6 +24,20 @@ const PodcastCard: React.FC<PodcastCardProps> = ({
 }) => {
   const handleListen = async () => {
     try {
+      console.log('Opening external link:', externalLink);
+      
+      // Validate URL
+      if (!externalLink) {
+        console.error('No external link provided');
+        return;
+      }
+
+      // Ensure URL has proper protocol
+      let url = externalLink;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+
       // Update listen count in Firestore
       const podcastRef = doc(db, 'podcasts', id);
       await updateDoc(podcastRef, {
@@ -31,9 +45,10 @@ const PodcastCard: React.FC<PodcastCardProps> = ({
       });
       
       // Open podcast in new tab
-      window.open(externalLink, '_blank');
+      console.log('Opening URL:', url);
+      window.open(url, '_blank', 'noopener,noreferrer');
     } catch (error) {
-      console.error('Error updating listen count:', error);
+      console.error('Error in handleListen:', error);
     }
   };
 

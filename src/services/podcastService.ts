@@ -26,6 +26,8 @@ export interface Podcast {
   season: number;
   guests?: string[];
   showNotes?: string;
+  youtubeUrl?: string;
+  spotifyUrl?: string;
 }
 
 // Add a new podcast

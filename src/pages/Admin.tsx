@@ -2018,8 +2018,7 @@ const Admin: React.FC = () => {
                       <Input 
                         type="file" 
                         accept="image/*"
-                        onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)} // Access files[0] and handle null
-                        // Do not spread field.value or field.rest onto file input
+                        onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)} // Correct way to handle file input with react-hook-form
                       />
                     </FormControl>
                     <FormMessage />

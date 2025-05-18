@@ -1,17 +1,123 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import VideoCard from '@/components/VideoCard';
 import PodcastCard from '@/components/PodcastCard';
 import BenefitCard from '@/components/BenefitCard';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Coffee } from 'lucide-react';
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+// Define types for our data
+interface Video {
+  id: string;
+  title: string;
+  youtubeId: string;
+  category: string;
+}
+
+interface Podcast {
+  id: string;
+  title: string;
+  thumbnail: string;
+  externalLink: string;
+  platform: string;
+}
+
+interface Benefit {
+  id: string;
+  bookName: string;
+  volumeAndPage: string;
+  benefitText: string;
+  scholarComment?: string;
+  category: string;
+}
 
 const Index: React.FC = () => {
   const navigate = useNavigate();
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [podcasts, setPodcasts] = useState<Podcast[]>([]);
+  const [benefits, setBenefits] = useState<Benefit[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  // Sample data (would come from Firebase in real implementation)
-  const featuredVideos = [
+  // Fetch data from Firebase
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch videos
+        const videosQuery = query(
+          collection(db, 'videos'),
+          orderBy('createdAt', 'desc'),
+          limit(2)
+        );
+        const videosSnapshot = await getDocs(videosQuery);
+        const videosData: Video[] = [];
+        videosSnapshot.forEach((doc) => {
+          const data = doc.data();
+          videosData.push({
+            id: doc.id,
+            title: data.title,
+            youtubeId: data.youtubeId,
+            category: data.category
+          });
+        });
+        setVideos(videosData);
+        
+        // Fetch podcasts
+        const podcastsQuery = query(
+          collection(db, 'podcasts'),
+          orderBy('createdAt', 'desc'),
+          limit(2)
+        );
+        const podcastsSnapshot = await getDocs(podcastsQuery);
+        const podcastsData: Podcast[] = [];
+        podcastsSnapshot.forEach((doc) => {
+          const data = doc.data();
+          podcastsData.push({
+            id: doc.id,
+            title: data.title,
+            thumbnail: data.thumbnail,
+            externalLink: data.externalLink,
+            platform: data.platform
+          });
+        });
+        setPodcasts(podcastsData);
+        
+        // Fetch benefits
+        const benefitsQuery = query(
+          collection(db, 'benefits'),
+          orderBy('createdAt', 'desc'),
+          limit(1)
+        );
+        const benefitsSnapshot = await getDocs(benefitsQuery);
+        const benefitsData: Benefit[] = [];
+        benefitsSnapshot.forEach((doc) => {
+          const data = doc.data();
+          benefitsData.push({
+            id: doc.id,
+            bookName: data.bookName,
+            volumeAndPage: data.volumeAndPage,
+            benefitText: data.benefitText,
+            scholarComment: data.scholarComment,
+            category: data.category
+          });
+        });
+        setBenefits(benefitsData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+  
+  // Sample data as fallback if Firebase returns empty
+  const sampleVideos = [
     {
       id: '1',
       title: 'شرح أصول السنة للإمام أحمد - الدرس الأول',
@@ -26,7 +132,7 @@ const Index: React.FC = () => {
     },
   ];
   
-  const featuredPodcasts = [
+  const samplePodcasts = [
     {
       id: '1',
       title: 'أهمية طلب العلم',
@@ -43,7 +149,7 @@ const Index: React.FC = () => {
     },
   ];
   
-  const featuredBenefits = [
+  const sampleBenefits = [
     {
       id: '1',
       bookName: 'البداية والنهاية - لابن كثير',
@@ -53,6 +159,11 @@ const Index: React.FC = () => {
       category: 'التاريخ الإسلامي',
     },
   ];
+
+  // Use fetched data or sample data if not available
+  const displayVideos = videos.length > 0 ? videos : sampleVideos;
+  const displayPodcasts = podcasts.length > 0 ? podcasts : samplePodcasts;
+  const displayBenefits = benefits.length > 0 ? benefits : sampleBenefits;
 
   return (
     <div className="min-h-screen">
@@ -79,6 +190,15 @@ const Index: React.FC = () => {
             >
               القول المفيد
             </Button>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-[#6F4E37] text-[#6F4E37] hover:bg-[#6F4E37]/10 flex items-center gap-2"
+              onClick={() => navigate('/coffee-eyes')}
+            >
+              <Coffee size={18} />
+              عيون القهوة
+            </Button>
           </div>
         </div>
       </section>
@@ -98,7 +218,7 @@ const Index: React.FC = () => {
             </Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {featuredVideos.map((video) => (
+            {displayVideos.map((video) => (
               <VideoCard
                 key={video.id}
                 title={video.title}
@@ -125,7 +245,7 @@ const Index: React.FC = () => {
             </Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {featuredPodcasts.map((podcast) => (
+            {displayPodcasts.map((podcast) => (
               <PodcastCard
                 key={podcast.id}
                 title={podcast.title}
@@ -153,7 +273,7 @@ const Index: React.FC = () => {
             </Button>
           </div>
           <div className="grid grid-cols-1 gap-6">
-            {featuredBenefits.map((benefit) => (
+            {displayBenefits.map((benefit) => (
               <BenefitCard
                 key={benefit.id}
                 bookName={benefit.bookName}
@@ -163,6 +283,40 @@ const Index: React.FC = () => {
                 category={benefit.category}
               />
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Coffee Eyes Section */}
+      <section className="py-16" style={{ backgroundColor: "#F5F1EB" }}>
+        <div className="container mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold" style={{ color: "#6F4E37" }}>عيون القهوة</h2>
+            <Button 
+              variant="ghost" 
+              style={{ color: "#6F4E37" }}
+              className="hover:bg-[#6F4E37]/10 flex items-center gap-2"
+              onClick={() => navigate('/coffee-eyes')}
+            >
+              عرض المزيد
+              <ArrowLeft size={16} />
+            </Button>
+          </div>
+          <div className="bg-white rounded-2xl p-8 shadow-md border border-[#D2B48C]/30 relative overflow-hidden">
+            <div className="absolute inset-0 arabesque-bg opacity-5"></div>
+            <div className="relative z-10 flex flex-col items-center justify-center text-center py-8">
+              <Coffee className="w-16 h-16 text-[#6F4E37] mb-6" />
+              <h3 className="text-2xl font-bold text-[#6F4E37] mb-2">الروايات والقصص</h3>
+              <p className="text-lg mb-6 max-w-2xl text-[#6F4E37]/80">
+                استمتع بمجموعة مختارة من الروايات والقصص الممتعة والهادفة، مع تصميم مميز للقراءة
+              </p>
+              <Button
+                className="bg-[#6F4E37] hover:bg-[#5A3E2B] text-white"
+                onClick={() => navigate('/coffee-eyes')}
+              >
+                استكشاف عيون القهوة
+              </Button>
+            </div>
           </div>
         </div>
       </section>

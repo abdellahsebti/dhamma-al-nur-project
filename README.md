@@ -1,73 +1,189 @@
-# Welcome to your Lovable project
 
-## Project info
+# مشروع ضمة - Dummah Project
 
-**URL**: https://lovable.dev/projects/ef123ed4-9e5a-4a8b-93c5-cffa341659f7
+![ضمة](https://via.placeholder.com/1200x300/006C35/FFFFFF?text=مشروع+ضمة)
 
-## How can I edit this code?
+## نبذة عن المشروع
+مشروع ضمة هو منصة إسلامية متكاملة تهدف إلى نشر الوعي السلفي والبحث العلمي من خلال عدة وسائط تعليمية متنوعة.
 
-There are several ways of editing your application.
+## المميزات الرئيسية
 
-**Use Lovable**
+- **الفيديوهات التعليمية**: دروس فيديو في العقيدة والفقه والتفسير وغيرها
+- **البودكاست**: محتوى صوتي متميز ودروس مسموعة
+- **القول المفيد**: فوائد علمية منتقاة من كتب أهل العلم
+- **عيون القهوة**: روايات وقصص هادفة للقراءة بتصميم مريح للعين
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/ef123ed4-9e5a-4a8b-93c5-cffa341659f7) and start prompting.
+## التقنيات المستخدمة
 
-Changes made via Lovable will be committed automatically to this repo.
+- **واجهة المستخدم**: React, TypeScript, Tailwind CSS
+- **حالة التطبيق**: TanStack React Query
+- **قاعدة البيانات**: Firebase Firestore
+- **المصادقة**: Firebase Authentication
+- **التخزين**: Firebase Storage
+- **مكتبة واجهات الاستخدام**: shadcn/ui
 
-**Use your preferred IDE**
+## التنصيب والتشغيل محلياً
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### المتطلبات الأساسية
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- Node.js (النسخة 16.x أو أعلى)
+- NPM (النسخة 8.x أو أعلى)
 
-Follow these steps:
+### خطوات التنصيب
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1. استنساخ المشروع:
+   ```bash
+   git clone https://github.com/yourusername/dummah-project.git
+   cd dummah-project
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2. تثبيت الاعتمادات:
+   ```bash
+   npm install
+   ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+3. تكوين Firebase:
+   - أنشئ مشروع Firebase جديد من [لوحة تحكم Firebase](https://console.firebase.google.com/)
+   - قم بإضافة تطبيق ويب للمشروع
+   - قم بنسخ تكوين Firebase واستبداله في ملف `src/lib/firebase.ts`
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+4. تشغيل التطبيق محلياً:
+   ```bash
+   npm run dev
+   ```
+
+5. افتح متصفحك على العنوان: `http://localhost:5173`
+
+## هيكل المشروع
+
+```
+src/
+  ├── components/       # مكونات واجهة المستخدم المشتركة
+  ├── hooks/           # React Hooks المخصصة
+  ├── lib/            # مكتبات ووظائف مساعدة
+  ├── pages/          # صفحات التطبيق
+  ├── services/       # خدمات الاتصال بقاعدة البيانات
+  ├── App.tsx         # المكون الرئيسي للتطبيق
+  └── main.tsx        # نقطة الدخول للتطبيق
 ```
 
-**Edit a file directly in GitHub**
+## بيانات الدخول للوحة التحكم
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- **البريد الإلكتروني**: abdellahsebti001@gmail.com
+- **كلمة المرور**: F9k#2pL$7xQz@5Jm!8Tb
 
-**Use GitHub Codespaces**
+## النشر والاستضافة
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+يمكن نشر هذا المشروع على خدمات الاستضافة المختلفة مثل:
+- Firebase Hosting
+- Vercel
+- Netlify
+- GitHub Pages
 
-## What technologies are used for this project?
+### خطوات النشر على Firebase Hosting
 
-This project is built with:
+1. تثبيت أدوات Firebase CLI:
+   ```bash
+   npm install -g firebase-tools
+   ```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+2. تسجيل الدخول إلى Firebase:
+   ```bash
+   firebase login
+   ```
 
-## How can I deploy this project?
+3. بدء مشروع Firebase:
+   ```bash
+   firebase init
+   ```
 
-Simply open [Lovable](https://lovable.dev/projects/ef123ed4-9e5a-4a8b-93c5-cffa341659f7) and click on Share -> Publish.
+4. بناء المشروع:
+   ```bash
+   npm run build
+   ```
 
-## Can I connect a custom domain to my Lovable project?
+5. نشر المشروع:
+   ```bash
+   firebase deploy
+   ```
 
-Yes, you can!
+## المساهمة في المشروع
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+نرحب بالمساهمات في تطوير المشروع، يرجى اتباع الخطوات التالية:
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+1. انشئ Fork للمشروع
+2. أنشئ Branch جديد للميزة الجديدة: `git checkout -b feature/amazing-feature`
+3. قم بإجراء التغييرات اللازمة وحفظها: `git commit -m 'Add amazing feature'`
+4. ارسل التغييرات إلى Fork الخاص بك: `git push origin feature/amazing-feature`
+5. أنشئ طلب دمج (Pull Request)
+
+## تكوين Firebase
+
+يجب تكوين مشروع Firebase الخاص بك مع الخدمات التالية:
+
+1. **Firebase Authentication**: تمكين المصادقة بالبريد الإلكتروني وكلمة المرور
+2. **Firestore Database**: إنشاء قواعد البيانات التالية:
+   - `videos`: لتخزين مقاطع الفيديو
+   - `podcasts`: لتخزين البودكاست
+   - `benefits`: لتخزين الفوائد العلمية
+   - `coffeeStories`: لتخزين القصص والروايات
+   - `coffeeChapters`: لتخزين فصول القصص
+   - `joinRequests`: لتخزين طلبات الانضمام للمشروع
+   - `contactMessages`: لتخزين رسائل التواصل
+3. **Firebase Storage**: لتخزين صور أغلفة الكتب والصور الأخرى
+
+### قواعد الأمان المقترحة لـ Firestore
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow public read access to all content
+    match /videos/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    match /podcasts/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    match /benefits/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    match /coffeeStories/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    match /coffeeChapters/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Allow only authenticated users to write contact messages and join requests
+    match /contactMessages/{document=**} {
+      allow read: if request.auth != null;
+      allow create: if true;
+      allow update, delete: if request.auth != null;
+    }
+    
+    match /joinRequests/{document=**} {
+      allow read: if request.auth != null;
+      allow create: if true;
+      allow update, delete: if request.auth != null;
+    }
+  }
+}
+```
+
+## الترخيص
+
+هذا المشروع مرخص تحت [MIT License](LICENSE).
+
+---
+
+تم تطويره بواسطة فريق مشروع ضمة © 2023-2024

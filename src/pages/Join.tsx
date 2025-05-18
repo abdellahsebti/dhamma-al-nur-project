@@ -5,7 +5,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { toast } from 'sonner';
-import { Facebook, Instagram, Linkedin, Youtube } from 'lucide-react';
+import { Facebook, Instagram, Linkedin, Youtube, ArrowLeft } from 'lucide-react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 import {
   Form,
@@ -65,11 +67,13 @@ const Join: React.FC = () => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
-    // Here we would send the data to Firebase
-    // For now, we'll just simulate a delay
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Save to Firebase
+      await addDoc(collection(db, "joinRequests"), {
+        ...values,
+        createdAt: serverTimestamp()
+      });
+      
       toast.success('تم إرسال طلبك بنجاح! سنتواصل معك قريباً');
       form.reset();
     } catch (error) {
@@ -83,7 +87,18 @@ const Join: React.FC = () => {
   return (
     <div className="min-h-screen py-12">
       <div className="container mx-auto px-4">
-        <h1 className="text-4xl font-bold mb-6 text-center text-saudi">انضم إلى مشروع ضمة</h1>
+        {/* Add back button at the top left */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-4xl font-bold text-center text-saudi">انضم إلى مشروع ضمة</h1>
+          <Button 
+            variant="outline" 
+            className="border-saudi text-saudi hover:bg-saudi-light flex items-center gap-2"
+            onClick={() => navigate('/')}
+          >
+            <ArrowLeft size={16} />
+            العودة للصفحة الرئيسية
+          </Button>
+        </div>
         
         {/* Social Media Links */}
         <div className="flex justify-center space-x-6 space-x-reverse mb-10">

@@ -13,6 +13,7 @@ import Contact from "./pages/Contact";
 import Admin from "./pages/Admin";
 import Join from "./pages/Join";
 import NotFound from "./pages/NotFound";
+import CoffeeEyes from "./pages/CoffeeEyes";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/videos" element={<Videos />} />
               <Route path="/podcasts" element={<Podcasts />} />
               <Route path="/al-qawl-al-mufid" element={<AlQawlAlMufid />} />
+              <Route path="/coffee-eyes" element={<CoffeeEyes />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/join" element={<Join />} />

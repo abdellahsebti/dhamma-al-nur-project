@@ -67,6 +67,18 @@
     --input: 142 30% 15%;
     --ring: 142 40% 40%;
   }
+  
+  /* Coffee Theme Variables */
+  body.coffee-theme {
+    --coffee-bg: 25 38% 96%;
+    --coffee-text: 25 25% 25%;
+    --coffee-primary: 25 60% 35%;
+    --coffee-secondary: 25 40% 60%;
+    --coffee-muted: 25 20% 65%;
+    --coffee-card: 0 0% 100%;
+    --coffee-card-border: 25 30% 90%;
+    --coffee-dark: 25 70% 20%;
+  }
 }
 
 @layer base {
@@ -82,6 +94,22 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Tajawal', sans-serif;
+  }
+  
+  /* Coffee theme specific styles */
+  body.coffee-theme {
+    background-color: hsl(var(--coffee-bg));
+    color: hsl(var(--coffee-text));
+  }
+}
+
+@layer components {
+  .coffee-card {
+    @apply bg-white border border-[hsl(var(--coffee-card-border))] rounded-xl shadow-sm;
+  }
+  
+  .coffee-chapter-container .prose {
+    @apply text-[hsl(var(--coffee-text))] text-lg;
   }
 }
 
@@ -138,4 +166,9 @@
 
 .category-badge {
   @apply text-xs px-3 py-1 rounded-full bg-saudi-light text-saudi font-semibold inline-block;
+}
+
+/* Coffee theme specific badges */
+body.coffee-theme .category-badge {
+  @apply bg-[hsl(var(--coffee-secondary)/0.2)] text-[hsl(var(--coffee-primary))];
 }

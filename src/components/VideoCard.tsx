@@ -1,7 +1,5 @@
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Play, Eye } from 'lucide-react';
+import { Play, Eye, Tag } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { doc, updateDoc, increment } from 'firebase/firestore';
 
@@ -31,35 +29,42 @@ const VideoCard: React.FC<VideoCardProps> = ({ id, title, youtubeId, category, v
   };
 
   return (
-    <Card className="overflow-hidden border-saudi-light">
-      <div className="relative pb-[56.25%] h-0">
+    <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-gray-100">
+      {/* Thumbnail with Play Button */}
+      <div className="relative pb-[56.25%] h-0 group">
         <img
-          className="absolute top-0 right-0 w-full h-full object-cover"
+          className="absolute top-0 right-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           src={thumbnail}
           alt={title}
         />
-        <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-          <Button
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+          <button
             onClick={handleView}
-            className="bg-saudi hover:bg-saudi-dark rounded-full p-4"
+            className="bg-saudi hover:bg-saudi-dark rounded-full p-4 transform scale-90 group-hover:scale-100 transition-transform duration-300"
           >
             <Play size={24} className="text-white" />
-          </Button>
+          </button>
         </div>
       </div>
-      <CardContent className="p-4">
-        <h3 className="font-bold text-lg mb-2">{title}</h3>
+
+      {/* Content */}
+      <div className="p-6">
+        <h3 className="font-bold text-lg text-gray-900 mb-3 line-clamp-2">{title}</h3>
+        
         <div className="flex items-center justify-between">
           {category && (
-            <div className="category-badge">{category}</div>
+            <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-saudi/10 text-saudi text-sm">
+              <Tag className="w-4 h-4" />
+              <span>{category}</span>
+            </div>
           )}
-          <div className="flex items-center gap-1 text-gray-500">
-            <Eye size={16} />
-            <span>{views} مشاهدة</span>
+          <div className="flex items-center gap-2 text-gray-600">
+            <Eye className="w-4 h-4" />
+            <span className="text-sm">{views.toLocaleString()} مشاهدة</span>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

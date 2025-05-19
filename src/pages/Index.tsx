@@ -4,7 +4,7 @@ import VideoCard from '@/components/VideoCard';
 import PodcastCard from '@/components/PodcastCard';
 import BenefitCard from '@/components/BenefitCard';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Coffee } from 'lucide-react';
+import { ArrowLeft, Coffee, BookOpen, Play, Headphones, Youtube, Linkedin, Instagram, Facebook } from 'lucide-react';
 import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -113,7 +113,7 @@ const Index: React.FC = () => {
         // Fetch latest benefits
         const benefitsQuery = query(
           collection(db, 'benefits'),
-          limit(1)
+          limit(10)
         );
         const benefitsSnapshot = await getDocs(benefitsQuery);
         console.log('Benefits snapshot:', benefitsSnapshot.size, 'documents found');
@@ -131,7 +131,9 @@ const Index: React.FC = () => {
           });
         });
         console.log('Benefits data:', benefitsData);
-        setBenefits(benefitsData);
+        // Get 3 random benefits
+        const randomBenefits = getRandomItems(benefitsData, 3);
+        setBenefits(randomBenefits);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -151,52 +153,104 @@ const Index: React.FC = () => {
           <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto">
             منصة إسلامية تهدف إلى نشر الوعي السلفي والبحث العلمي من خلال مقاطع الفيديو والبودكاست والفوائد العلمية
           </p>
-          <div className="flex flex-wrap gap-4 justify-center">
+          <div className="flex flex-wrap gap-4 justify-center mb-8">
             <Button 
               size="lg" 
-              className="bg-saudi hover:bg-saudi-dark"
+              className="bg-saudi hover:bg-saudi-dark transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl relative overflow-hidden group"
               onClick={() => navigate('/videos')}
             >
-              استعراض الفيديوهات
+              <span className="relative z-10">استعراض الفيديوهات</span>
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
             </Button>
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-saudi text-saudi hover:bg-saudi-light"
+              className="border-saudi text-saudi hover:bg-saudi-light transform hover:scale-105 transition-all duration-300 relative overflow-hidden group"
               onClick={() => navigate('/al-qawl-al-mufid')}
             >
-              القول المفيد
+              <span className="relative z-10">القول المفيد</span>
+              <div className="absolute inset-0 bg-saudi/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
             </Button>
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-[#6F4E37] text-[#6F4E37] hover:bg-[#6F4E37]/10 flex items-center gap-2"
+              className="border-[#6F4E37] text-[#6F4E37] hover:bg-[#6F4E37]/10 transform hover:scale-105 transition-all duration-300 flex items-center gap-2 relative overflow-hidden group"
               onClick={() => navigate('/coffee-eyes')}
             >
-              <Coffee size={18} />
-              عيون القهوة
+              <Coffee size={18} className="relative z-10" />
+              <span className="relative z-10">عيون القهوة</span>
+              <div className="absolute inset-0 bg-[#6F4E37]/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
             </Button>
+          </div>
+
+          {/* Social Media Links */}
+          <div className="flex justify-center items-center gap-4">
+            <a
+              href="https://youtube.com/@dhamma"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transform hover:scale-110 transition-all duration-300 group"
+            >
+              <Youtube className="w-6 h-6 text-saudi group-hover:text-saudi-dark transition-colors duration-300" />
+              <span className="sr-only">YouTube</span>
+            </a>
+            <a
+              href="https://linkedin.com/company/dhamma"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transform hover:scale-110 transition-all duration-300 group"
+            >
+              <Linkedin className="w-6 h-6 text-saudi group-hover:text-saudi-dark transition-colors duration-300" />
+              <span className="sr-only">LinkedIn</span>
+            </a>
+            <a
+              href="https://instagram.com/dhamma"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transform hover:scale-110 transition-all duration-300 group"
+            >
+              <Instagram className="w-6 h-6 text-saudi group-hover:text-saudi-dark transition-colors duration-300" />
+              <span className="sr-only">Instagram</span>
+            </a>
+            <a
+              href="https://facebook.com/dhamma"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transform hover:scale-110 transition-all duration-300 group"
+            >
+              <Facebook className="w-6 h-6 text-saudi group-hover:text-saudi-dark transition-colors duration-300" />
+              <span className="sr-only">Facebook</span>
+            </a>
           </div>
         </div>
       </section>
 
       {/* Random Videos Section */}
       <section className="py-16 bg-gray-50">
-        <div className="container mx-auto">
+        <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold text-saudi">فيديوهات عشوائية</h2>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-saudi/10 rounded-lg">
+                <Play className="w-6 h-6 text-saudi" />
+              </div>
+              <h2 className="text-3xl font-bold text-saudi">فيديوهات عشوائية</h2>
+            </div>
             <Button
               variant="ghost"
-              className="text-saudi hover:text-saudi-dark flex items-center gap-2"
+              className="text-saudi hover:text-saudi-dark hover:bg-saudi/10 flex items-center gap-2 relative overflow-hidden group"
               onClick={() => navigate('/videos')}
             >
-              عرض المزيد
-              <ArrowLeft size={16} />
+              <span className="relative z-10">عرض المزيد</span>
+              <ArrowLeft size={16} className="relative z-10 transform group-hover:-translate-x-1 transition-transform duration-300" />
+              <div className="absolute inset-0 bg-saudi/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
             </Button>
           </div>
           {loading ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">جاري تحميل الفيديوهات...</p>
+              <div className="animate-pulse flex flex-col items-center gap-4">
+                <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                <div className="h-4 w-48 bg-gray-200 rounded"></div>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -218,21 +272,30 @@ const Index: React.FC = () => {
 
       {/* Random Podcasts Section */}
       <section className="py-16">
-        <div className="container mx-auto">
+        <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold text-saudi">بودكاست عشوائي</h2>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-saudi/10 rounded-lg">
+                <Headphones className="w-6 h-6 text-saudi" />
+              </div>
+              <h2 className="text-3xl font-bold text-saudi">بودكاست عشوائي</h2>
+            </div>
             <Button
               variant="ghost"
-              className="text-saudi hover:text-saudi-dark flex items-center gap-2"
+              className="text-saudi hover:text-saudi-dark hover:bg-saudi/10 flex items-center gap-2 relative overflow-hidden group"
               onClick={() => navigate('/podcasts')}
             >
-              عرض المزيد
-              <ArrowLeft size={16} />
+              <span className="relative z-10">عرض المزيد</span>
+              <ArrowLeft size={16} className="relative z-10 transform group-hover:-translate-x-1 transition-transform duration-300" />
+              <div className="absolute inset-0 bg-saudi/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
             </Button>
           </div>
           {loading ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">جاري تحميل البودكاست...</p>
+              <div className="animate-pulse flex flex-col items-center gap-4">
+                <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                <div className="h-4 w-48 bg-gray-200 rounded"></div>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -252,26 +315,35 @@ const Index: React.FC = () => {
         </div>
       </section>
 
-      {/* Latest Benefit Section */}
+      {/* Random Benefits Section */}
       <section className="py-16 bg-gray-50">
-        <div className="container mx-auto">
+        <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold text-saudi">القول المفيد</h2>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-saudi/10 rounded-lg">
+                <BookOpen className="w-6 h-6 text-saudi" />
+              </div>
+              <h2 className="text-3xl font-bold text-saudi">القول المفيد</h2>
+            </div>
             <Button
               variant="ghost"
-              className="text-saudi hover:text-saudi-dark flex items-center gap-2"
+              className="text-saudi hover:text-saudi-dark hover:bg-saudi/10 flex items-center gap-2 relative overflow-hidden group"
               onClick={() => navigate('/al-qawl-al-mufid')}
             >
-              عرض المزيد
-              <ArrowLeft size={16} />
+              <span className="relative z-10">عرض المزيد</span>
+              <ArrowLeft size={16} className="relative z-10 transform group-hover:-translate-x-1 transition-transform duration-300" />
+              <div className="absolute inset-0 bg-saudi/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
             </Button>
           </div>
           {loading ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">جاري تحميل الفوائد...</p>
+              <div className="animate-pulse flex flex-col items-center gap-4">
+                <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                <div className="h-4 w-48 bg-gray-200 rounded"></div>
+              </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {benefits.map((benefit) => (
                 <BenefitCard
                   key={benefit.id}

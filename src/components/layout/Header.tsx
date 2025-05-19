@@ -1,11 +1,31 @@
-
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+const NavLink: React.FC<{ to: string; children: React.ReactNode }> = ({ to, children }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isActive = location.pathname === to;
+
+  return (
+    <div
+      className="relative cursor-pointer text-muted-foreground hover:text-foreground transition-colors group"
+      onClick={() => navigate(to)}
+    >
+      {children}
+      <span
+        className={`absolute -bottom-1 left-0 h-0.5 bg-saudi transition-all duration-300 ${
+          isActive ? 'w-full' : 'w-0 group-hover:w-full'
+        }`}
+      />
+    </div>
+  );
+};
+
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
 
   const navItems = [
@@ -17,9 +37,20 @@ const Header: React.FC = () => {
     { name: 'تواصل معنا', path: '/contact' },
   ];
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
-      <div className="container flex h-16 items-center justify-between">
+    <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+      isScrolled ? 'bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm' : 'bg-background'
+    } border-b border-border`}>
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -39,13 +70,9 @@ const Header: React.FC = () => {
         
         <nav className="hidden md:flex gap-6">
           {navItems.map((item) => (
-            <div
-              key={item.path}
-              className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
-              onClick={() => navigate(item.path)}
-            >
+            <NavLink key={item.path} to={item.path}>
               {item.name}
-            </div>
+            </NavLink>
           ))}
         </nav>
         

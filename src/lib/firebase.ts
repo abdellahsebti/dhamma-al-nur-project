@@ -5,6 +5,8 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 // Firebase configuration using environment variables
+// Note: These environment variables should be set in your .env file
+// and should never be committed to version control
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -25,9 +27,5 @@ export const db = getFirestore(app);
 
 // Initialize Firebase Storage and get a reference to the service
 export const storage = getStorage(app);
-
-// Admin credentials from environment variables
-export const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
-export const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
 
 export default app;

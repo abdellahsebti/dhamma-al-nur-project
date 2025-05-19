@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import VideoCard from '@/components/VideoCard';
+import { api } from '@/lib/api';
 
 interface Video {
   id: string;
@@ -32,14 +31,8 @@ const Videos: React.FC = () => {
   const fetchVideos = async () => {
     try {
       setLoading(true);
-      const videosRef = collection(db, 'videos');
-      const q = query(videosRef, orderBy('title'));
-      const querySnapshot = await getDocs(q);
-      const fetchedVideos = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Video[];
-      setVideos(fetchedVideos);
+      const data = await api.videos.get();
+      setVideos(data);
     } catch (error) {
       console.error("Error fetching videos:", error);
       toast({

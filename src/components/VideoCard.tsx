@@ -1,16 +1,15 @@
 import React from 'react';
-import { Play, Eye, Tag } from 'lucide-react';
-import { db } from '@/lib/firebase';
-import { doc, updateDoc, increment } from 'firebase/firestore';
+import { Play } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { api } from '@/lib/api';
 
 interface VideoCardProps {
   id: string;
   title: string;
-  videoUrl: string;
   category: string;
   views: number;
   thumbnail: string;
+  videoUrl: string;
 }
 
 const VideoCard: React.FC<VideoCardProps> = ({ 
@@ -23,11 +22,8 @@ const VideoCard: React.FC<VideoCardProps> = ({
 }) => {
   const handleView = async () => {
     try {
-      // Try to update view count in Firestore
-      const videoRef = doc(db, 'videos', id);
-      await updateDoc(videoRef, {
-        views: increment(1)
-      });
+      // Update view count through the API
+      await api.videos.update(id, { views: views + 1 });
     } catch (error) {
       // Silently handle the error - we still want to open the video
       console.error('Error updating view count:', error);
@@ -53,16 +49,10 @@ const VideoCard: React.FC<VideoCardProps> = ({
           </div>
         </div>
         <div className="p-4">
-          <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">{title}</h3>
-          <div className="flex items-center justify-between">
-            <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-saudi/10 text-saudi text-sm">
-              <Tag className="w-4 h-4" />
-              <span>{category}</span>
-            </div>
-            <div className="flex items-center gap-2 text-gray-600">
-              <Eye className="w-4 h-4" />
-              <span className="text-sm">{views.toLocaleString()} مشاهدة</span>
-            </div>
+          <h3 className="font-semibold text-lg mb-1">{title}</h3>
+          <div className="flex justify-between text-sm text-gray-500">
+            <span>{category}</span>
+            <span>{views} مشاهدة</span>
           </div>
         </div>
       </CardContent>

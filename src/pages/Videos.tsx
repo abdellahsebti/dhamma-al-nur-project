@@ -86,7 +86,7 @@ const Videos: React.FC = () => {
                 key={video.id}
                 id={video.id}
                 title={video.title}
-                youtubeId={video.youtubeId}
+                videoUrl={video.videoUrl}
                 category={video.category}
                 views={video.views}
                 thumbnail={video.thumbnailUrl}

@@ -15,12 +15,34 @@ service cloud.firestore {
 
     // Rate limiting functions
     function getRecentSubmissions(collection) {
-      return collection.where('createdAt', '>', timestamp.date(timestamp.now().toMillis() - 3600000));
+      return collection.where('createdAt', '>', request.time.toMillis() - 3600000);
     }
 
     function isRateLimited(collection, limit) {
       let recentSubmissions = getRecentSubmissions(collection);
       return recentSubmissions.size() >= limit;
+    }
+
+    function getRecentReads(collection, identifier) {
+      return collection.where('identifier', '==', identifier)
+                     .where('readAt', '>', request.time.toMillis() - 3600000);
+    }
+
+    function isReadRateLimited(collection, identifier, limit) {
+      let recentReads = getRecentReads(collection, identifier);
+      return recentReads.size() >= limit;
+    }
+
+    function recordRead(collection, identifier) {
+      return collection.add({
+        identifier: identifier,
+        readAt: request.time
+      });
+    }
+
+    // Get identifier for rate limiting (either user ID or IP)
+    function getRateLimitIdentifier() {
+      return request.auth != null ? request.auth.uid : request.ip;
     }
 
     // Spam prevention functions
@@ -140,7 +162,7 @@ service cloud.firestore {
 
     // Benefits Collection
     match /benefits/{benefitId} {
-      // Anyone can read benefits
+      // Allow public reads
       allow read: if true;
       // Only admins can write benefits
       allow write: if isAdmin();
@@ -148,7 +170,7 @@ service cloud.firestore {
 
     // Coffee Stories Collection
     match /coffeeStories/{storyId} {
-      // Anyone can read stories
+      // Allow public reads
       allow read: if true;
       // Only admins can write stories
       allow write: if isAdmin();
@@ -156,7 +178,7 @@ service cloud.firestore {
 
     // Chapters Collection
     match /chapters/{chapterId} {
-      // Anyone can read chapters
+      // Allow public reads
       allow read: if true;
       // Only admins can write chapters
       allow write: if isAdmin();
@@ -164,7 +186,7 @@ service cloud.firestore {
 
     // Videos Collection
     match /videos/{videoId} {
-      // Anyone can read videos
+      // Allow public reads
       allow read: if true;
       // Only admins can write videos with strict validation
       allow create: if isAdmin() && 
@@ -178,6 +200,9 @@ service cloud.firestore {
         request.resource.data.uploadDate is timestamp &&
         request.resource.data.createdBy == request.auth.uid &&
         request.resource.data.updatedAt is timestamp;
+      // Allow any user to increment the views count (simplified rule)
+      allow update: if request.resource.data.keys().hasOnly(['views']);
+      // Allow admins to perform other updates (like editing video details)
       allow update: if isAdmin() && 
         request.resource.data.updatedAt is timestamp &&
         request.resource.data.updatedAt > resource.data.updatedAt;
@@ -186,10 +211,18 @@ service cloud.firestore {
 
     // Podcasts Collection
     match /podcasts/{podcastId} {
-      // Anyone can read podcasts
+      // Allow public reads
       allow read: if true;
       // Only admins can write podcasts
       allow write: if isAdmin();
+    }
+
+    // Read Logs Collection
+    match /readLogs/{logId} {
+      // Only allow creation of read logs
+      allow create: if true;
+      // Only admins can read or delete logs
+      allow read, delete: if isAdmin();
     }
 
     // Default deny all

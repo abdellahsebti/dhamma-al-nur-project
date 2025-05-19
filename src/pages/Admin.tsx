@@ -1100,6 +1100,7 @@ const Admin: React.FC = () => {
         duration: data.duration.trim(),
         videoUrl: `https://www.youtube.com/watch?v=${videoId}`,
         thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+        youtubeId: videoId,
         featured: false,
         views: 0,
         uploadDate: Timestamp.now()
@@ -1164,6 +1165,40 @@ const Admin: React.FC = () => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
+  };
+
+  // Function to update existing videos with YouTube IDs
+  const updateExistingVideos = async () => {
+    try {
+      const videosRef = collection(db, 'videos');
+      const querySnapshot = await getDocs(videosRef);
+      
+      const updatePromises = querySnapshot.docs.map(async (doc) => {
+        const videoData = doc.data();
+        if (!videoData.youtubeId && videoData.videoUrl) {
+          const youtubeId = extractYouTubeId(videoData.videoUrl);
+          if (youtubeId) {
+            console.log(`Updating video ${doc.id} with YouTube ID: ${youtubeId}`);
+            return updateDoc(doc.ref, { youtubeId });
+          }
+        }
+        return Promise.resolve();
+      });
+
+      await Promise.all(updatePromises);
+      toast({
+        title: "تم التحديث بنجاح",
+        description: "تم تحديث جميع الفيديوهات بنجاح",
+      });
+      fetchVideos();
+    } catch (error) {
+      console.error("Error updating videos:", error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء تحديث الفيديوهات",
+        variant: "destructive",
+      });
+    }
   };
   
   // Podcast functions
@@ -1465,14 +1500,22 @@ const Admin: React.FC = () => {
           {/* Videos Tab */}
           <TabsContent value="videos" className="bg-white rounded-2xl p-8 shadow-md border border-saudi-light">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-saudi">إدارة الفيديوهات</h2>
-              <Button 
-                onClick={handleAddVideoClick}
-                className="bg-saudi hover:bg-saudi-dark flex items-center gap-2"
-              >
-                <Plus size={18} />
-                إضافة فيديو جديد
-              </Button>
+              <h2 className="text-2xl font-bold text-saudi">الفيديوهات</h2>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={updateExistingVideos}
+                  className="text-saudi hover:text-saudi-dark hover:bg-saudi/10"
+                >
+                  تحديث روابط يوتيوب
+                </Button>
+                <Button
+                  onClick={handleAddVideoClick}
+                  className="bg-saudi hover:bg-saudi-dark text-white"
+                >
+                  إضافة فيديو
+                </Button>
+              </div>
             </div>
             
             <p className="text-gray-500 mb-8">يمكنك هنا إضافة وتعديل وحذف الفيديوهات</p>

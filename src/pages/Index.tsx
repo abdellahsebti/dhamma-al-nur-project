@@ -16,6 +16,7 @@ interface Video {
   category: string;
   thumbnailUrl: string;
   views: number;
+  videoUrl: string;
 }
 
 interface Podcast {
@@ -74,7 +75,8 @@ const Index: React.FC = () => {
             youtubeId: data.youtubeId,
             category: data.category,
             thumbnailUrl: data.thumbnailUrl,
-            views: data.views || 0
+            views: data.views || 0,
+            videoUrl: data.videoUrl || ''
           });
         });
         console.log('All videos:', allVideos);
@@ -259,7 +261,7 @@ const Index: React.FC = () => {
                   key={video.id}
                   id={video.id}
                   title={video.title}
-                  youtubeId={video.youtubeId}
+                  videoUrl={video.videoUrl}
                   category={video.category}
                   views={video.views}
                   thumbnail={video.thumbnailUrl}

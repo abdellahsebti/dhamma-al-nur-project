@@ -1,13 +1,12 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { toast } from 'sonner';
 import { Facebook, Instagram, Linkedin, Youtube, ArrowLeft } from 'lucide-react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 import {
   Form,
@@ -51,8 +50,62 @@ const formSchema = z.object({
 
 const Join: React.FC = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRateLimited, setIsRateLimited] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(0);
   
+  // Check rate limit on component mount
+  useEffect(() => {
+    checkRateLimit();
+  }, []);
+
+  // Update countdown timer
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (timeRemaining > 0) {
+      timer = setInterval(() => {
+        setTimeRemaining(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [timeRemaining]);
+
+  const checkRateLimit = async () => {
+    try {
+      console.log('Checking rate limit...');
+      const joinRequestsRef = collection(db, 'joinRequests');
+      const oneHourAgo = Timestamp.fromMillis(Date.now() - 3600000);
+      
+      // Get all requests from the last hour
+      const q = query(
+        joinRequestsRef,
+        where('createdAt', '>', oneHourAgo)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      console.log('Recent submissions:', querySnapshot.size);
+      
+      if (querySnapshot.size >= 2) {
+        const oldestSubmission = querySnapshot.docs
+          .sort((a, b) => a.data().createdAt.seconds - b.data().createdAt.seconds)[0];
+        const timeRemaining = oldestSubmission.data().createdAt.seconds + 3600 - Math.floor(Date.now() / 1000);
+        setIsRateLimited(true);
+        setTimeRemaining(timeRemaining);
+        return true;
+      }
+      
+      setIsRateLimited(false);
+      setTimeRemaining(0);
+      return false;
+    } catch (error) {
+      console.error('Error checking rate limit:', error);
+      // If there's an error checking rate limit, allow the submission
+      // but log the error for monitoring
+      return false;
+    }
+  };
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -66,19 +119,113 @@ const Join: React.FC = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (isRateLimited) {
+      toast({
+        title: "تم تجاوز الحد المسموح",
+        description: `يرجى الانتظار ${Math.ceil(timeRemaining / 3600)} ساعة قبل المحاولة مرة أخرى`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      // Save to Firebase
-      await addDoc(collection(db, "joinRequests"), {
-        ...values,
-        createdAt: serverTimestamp()
+      // Check rate limit before submitting
+      const isLimited = await checkRateLimit();
+      
+      if (isLimited) {
+        toast({
+          title: "تم تجاوز الحد المسموح",
+          description: `يرجى الانتظار ${Math.ceil(timeRemaining / 3600)} ساعة قبل المحاولة مرة أخرى`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Sanitize and validate data
+      const sanitizedData = {
+        name: values.name.trim().replace(/[<>]/g, ''), // Remove potential HTML tags
+        email: values.email.trim().toLowerCase(),
+        phone: values.phone.trim(),
+        specialization: values.specialization.trim().replace(/[<>]/g, ''),
+        message: values.message.trim().replace(/[<>]/g, ''),
+        status: 'pending',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      // Validate data lengths
+      if (sanitizedData.name.length > 50 ||
+          sanitizedData.email.length > 100 ||
+          sanitizedData.phone.length > 15 ||
+          sanitizedData.specialization.length > 100 ||
+          sanitizedData.message.length > 1000) {
+        throw new Error('Data exceeds maximum length limits');
+      }
+
+      // Validate email format
+      const emailRegex = /^[^@]+@[^@]+\.[^@]+$/;
+      if (!emailRegex.test(sanitizedData.email)) {
+        throw new Error('Invalid email format');
+      }
+
+      // Validate phone format
+      const phoneRegex = /^[+]?[0-9]{8,15}$/;
+      if (!phoneRegex.test(sanitizedData.phone)) {
+        throw new Error('Invalid phone format');
+      }
+
+      // Check for spam keywords
+      const spamKeywords = ['casino', 'viagra', 'lottery', 'winner', 'prize', 'free money', 'click here', 'buy now', 'limited time'];
+      const containsSpam = spamKeywords.some(keyword => 
+        sanitizedData.message.toLowerCase().includes(keyword) ||
+        sanitizedData.name.toLowerCase().includes(keyword)
+      );
+      
+      if (containsSpam) {
+        throw new Error('Message contains spam content');
+      }
+
+      // Log submission attempt (without sensitive data)
+      console.log('Submitting join request:', {
+        name: sanitizedData.name,
+        email: sanitizedData.email,
+        phone: sanitizedData.phone,
+        specialization: sanitizedData.specialization,
+        message: '[REDACTED]',
+        status: sanitizedData.status,
+        timestamp: new Date().toISOString()
+      });
+
+      await addDoc(collection(db, "joinRequests"), sanitizedData);
+      
+      toast({
+        title: "تم الإرسال بنجاح",
+        description: "سنتواصل معكم قريباً إن شاء الله",
       });
       
-      toast.success('تم إرسال طلبك بنجاح! سنتواصل معك قريباً');
       form.reset();
     } catch (error) {
-      toast.error('حدث خطأ أثناء إرسال الطلب، يرجى المحاولة مرة أخرى');
-      console.error(error);
+      console.error('Error submitting form:', error);
+      let errorMessage = 'حدث خطأ أثناء إرسال الطلب، يرجى المحاولة مرة أخرى';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('permission-denied')) {
+          errorMessage = 'حدث خطأ في الصلاحيات. يرجى المحاولة مرة أخرى';
+        } else if (error.message.includes('invalid-argument')) {
+          errorMessage = 'البيانات المدخلة غير صحيحة';
+        } else if (error.message.includes('maximum length')) {
+          errorMessage = 'البيانات المدخلة تتجاوز الحد المسموح به';
+        } else if (error.message.includes('spam content')) {
+          errorMessage = 'يحتوي المحتوى على كلمات غير مسموح بها';
+        }
+      }
+      
+      toast({
+        title: "حدث خطأ",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -178,7 +325,7 @@ const Join: React.FC = () => {
                     <FormItem>
                       <FormLabel>الاسم الكامل</FormLabel>
                       <FormControl>
-                        <Input placeholder="أدخل اسمك الكامل" {...field} />
+                        <Input placeholder="أدخل اسمك الكامل" {...field} disabled={isRateLimited} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -192,7 +339,7 @@ const Join: React.FC = () => {
                     <FormItem>
                       <FormLabel>البريد الإلكتروني</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="example@domain.com" {...field} />
+                        <Input type="email" placeholder="example@domain.com" {...field} disabled={isRateLimited} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -206,7 +353,7 @@ const Join: React.FC = () => {
                     <FormItem>
                       <FormLabel>رقم الهاتف</FormLabel>
                       <FormControl>
-                        <Input placeholder="+966 5XXXXXXXX" {...field} />
+                        <Input placeholder="+966 5XXXXXXXX" {...field} disabled={isRateLimited} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -220,7 +367,7 @@ const Join: React.FC = () => {
                     <FormItem>
                       <FormLabel>التخصص</FormLabel>
                       <FormControl>
-                        <Input placeholder="مثال: العقيدة، الفقه، التفسير..." {...field} />
+                        <Input placeholder="مثال: العقيدة، الفقه، التفسير..." {...field} disabled={isRateLimited} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -238,6 +385,7 @@ const Join: React.FC = () => {
                           placeholder="اكتب هنا نبذة مختصرة عن نفسك وخبراتك ودوافعك للانضمام للمشروع..." 
                           className="min-h-[120px]"
                           {...field} 
+                          disabled={isRateLimited}
                         />
                       </FormControl>
                       <FormMessage />
@@ -269,7 +417,7 @@ const Join: React.FC = () => {
                 <Button 
                   type="submit" 
                   className="w-full bg-saudi hover:bg-saudi-dark"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isRateLimited}
                 >
                   {isSubmitting ? 'جاري إرسال الطلب...' : 'إرسال طلب الانضمام'}
                 </Button>

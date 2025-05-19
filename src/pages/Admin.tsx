@@ -25,7 +25,7 @@ import { useForm } from 'react-hook-form';
 import { Plus, BookPlus, Trash2, Edit, Coffee, BookOpen, FileText, Headphones, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, Timestamp, where } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, Timestamp, where, getDoc, setDoc } from 'firebase/firestore';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 // Add Firebase Auth imports
@@ -189,27 +189,50 @@ const mockServices = {
   },
   videos: {
     add: async (data: Omit<Video, 'id'>) => {
-      const videosRef = collection(db, 'videos');
-      const docRef = await addDoc(videosRef, data);
-      return { id: docRef.id, ...data };
+      try {
+        const videosRef = collection(db, 'videos');
+        const docRef = await addDoc(videosRef, {
+          ...data,
+          uploadDate: Timestamp.now()
+        });
+        return { id: docRef.id, ...data };
+      } catch (error) {
+        console.error('Error adding video:', error);
+        throw error;
+      }
     },
     get: async () => {
-      const videosRef = collection(db, 'videos');
-      const q = query(videosRef, orderBy('title'));
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Video[];
+      try {
+        const videosRef = collection(db, 'videos');
+        const q = query(videosRef, orderBy('uploadDate', 'desc'));
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Video[];
+      } catch (error) {
+        console.error('Error getting videos:', error);
+        throw error;
+      }
     },
     delete: async (id: string) => {
-      const videoRef = doc(db, 'videos', id);
-      await deleteDoc(videoRef);
+      try {
+        const videoRef = doc(db, 'videos', id);
+        await deleteDoc(videoRef);
+      } catch (error) {
+        console.error('Error deleting video:', error);
+        throw error;
+      }
     },
     update: async (id: string, data: Omit<Video, 'id'>) => {
-      const videoRef = doc(db, 'videos', id);
-      await updateDoc(videoRef, data);
-      return { id, ...data };
+      try {
+        const videoRef = doc(db, 'videos', id);
+        await updateDoc(videoRef, data);
+        return { id, ...data };
+      } catch (error) {
+        console.error('Error updating video:', error);
+        throw error;
+      }
     }
   },
   podcasts: {
@@ -372,14 +395,85 @@ const Admin: React.FC = () => {
   //   navigate('/admin');
   // };
 
-  // Firebase Auth state observer
+  // Add this function after the handleFirebaseLogout function
+  const checkAndAddAdminStatus = async (user: User) => {
+    try {
+      console.log('Checking admin status for user:', user.uid);
+      const adminRef = doc(db, 'admins', user.uid);
+      
+      // First try to get the existing admin document
+      const adminDoc = await getDoc(adminRef);
+      
+      if (!adminDoc.exists()) {
+        console.log('User not found in admins collection, adding...');
+        // Add user as admin if they don't exist in admins collection
+        const adminData = {
+          email: user.email,
+          role: 'admin',
+          addedAt: Timestamp.now(),
+          uid: user.uid
+        };
+        console.log('Adding admin data:', adminData);
+        
+        try {
+          await setDoc(adminRef, adminData);
+          console.log('Successfully added user as admin');
+        } catch (error) {
+          console.error('Error adding admin document:', error);
+          throw new Error('Failed to create admin document');
+        }
+      } else {
+        console.log('User already exists in admins collection');
+        // Update the document to ensure it has all required fields
+        const adminData = {
+          email: user.email,
+          role: 'admin',
+          uid: user.uid,
+          updatedAt: Timestamp.now()
+        };
+        console.log('Updating admin data:', adminData);
+        
+        try {
+          await updateDoc(adminRef, adminData);
+          console.log('Successfully updated admin document');
+        } catch (error) {
+          console.error('Error updating admin document:', error);
+          throw new Error('Failed to update admin document');
+        }
+      }
+
+      // Verify admin status after update
+      const verifyDoc = await getDoc(adminRef);
+      if (!verifyDoc.exists()) {
+        throw new Error('Admin document verification failed');
+      }
+      
+      const adminData = verifyDoc.data();
+      console.log('Verification - Admin document exists:', verifyDoc.exists());
+      console.log('Verification - Admin data:', adminData);
+      
+      if (adminData?.role !== 'admin') {
+        throw new Error('Admin role verification failed');
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error checking/adding admin status:', error);
+      // Don't throw the error, just log it and return false
+      return false;
+    }
+  };
+
+  // Update the useEffect hook that handles auth state
   useEffect(() => {
     const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
       if (currentUser) {
         console.log('Firebase User authenticated:', currentUser.uid);
+        // Check and add admin status
+        await checkAndAddAdminStatus(currentUser);
         toast({
           title: "تم تسجيل الدخول بنجاح",
           description: "مرحباً بك في لوحة التحكم",
@@ -979,6 +1073,14 @@ const Admin: React.FC = () => {
   
   const onSubmitVideo = async (data: VideoFormValues) => {
     try {
+      console.log('Starting video submission...');
+      console.log('Current user:', user?.uid);
+      
+      // Check if user is authenticated
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       // Extract video ID from YouTube URL
       const videoId = extractYouTubeId(data.youtubeUrl);
       if (!videoId) {
@@ -990,6 +1092,7 @@ const Admin: React.FC = () => {
         return;
       }
 
+      console.log('Creating video data...');
       const videoData = {
         title: data.title.trim(),
         description: data.description.trim(),
@@ -999,31 +1102,58 @@ const Admin: React.FC = () => {
         thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
         featured: false,
         views: 0,
-        createdAt: Timestamp.now()
+        uploadDate: Timestamp.now()
       };
 
+      console.log('Submitting video data:', videoData);
+
       if (editingVideo?.id) {
+        console.log('Updating existing video...');
         await mockServices.videos.update(editingVideo.id, videoData);
         toast({
           title: "تم التحديث بنجاح",
           description: "تم تحديث الفيديو بنجاح",
         });
       } else {
-        await mockServices.videos.add(videoData);
+        console.log('Adding new video...');
+        // Try to add the video directly to Firestore first
+        const videosRef = collection(db, 'videos');
+        const docRef = await addDoc(videosRef, videoData);
+        console.log('Video added successfully with ID:', docRef.id);
+        
         toast({
           title: "تمت الإضافة بنجاح",
           description: "تمت إضافة الفيديو بنجاح",
         });
       }
 
+      console.log('Video submission successful');
       fetchVideos();
       setShowAddVideoDialog(false);
       videoForm.reset();
     } catch (error) {
       console.error("Error submitting video:", error);
+      let errorMessage = "حدث خطأ أثناء حفظ الفيديو";
+      
+      if (error instanceof Error) {
+        console.log('Error details:', {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        });
+        
+        if (error.message.includes('permission-denied')) {
+          errorMessage = "ليس لديك صلاحية لإضافة أو تعديل الفيديوهات. يرجى التأكد من تسجيل الدخول كمسؤول.";
+        } else if (error.message.includes('invalid-argument')) {
+          errorMessage = "البيانات المدخلة غير صحيحة. يرجى التحقق من جميع الحقول.";
+        } else if (error.message.includes('already-exists')) {
+          errorMessage = "هذا الفيديو موجود مسبقاً.";
+        }
+      }
+      
       toast({
         title: "خطأ",
-        description: error instanceof Error ? error.message : "حدث خطأ أثناء حفظ الفيديو",
+        description: errorMessage,
         variant: "destructive",
       });
     }

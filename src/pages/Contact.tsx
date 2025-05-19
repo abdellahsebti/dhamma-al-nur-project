@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 const Contact: React.FC = () => {
@@ -14,6 +14,58 @@ const Contact: React.FC = () => {
     message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRateLimited, setIsRateLimited] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+
+  // Check rate limit on component mount
+  useEffect(() => {
+    checkRateLimit();
+  }, []);
+
+  // Update countdown timer
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (timeRemaining > 0) {
+      timer = setInterval(() => {
+        setTimeRemaining(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [timeRemaining]);
+
+  const checkRateLimit = async () => {
+    try {
+      console.log('Checking rate limit...');
+      const contactFormsRef = collection(db, 'contactForms');
+      const oneHourAgo = Timestamp.fromMillis(Date.now() - 3600000);
+      
+      const q = query(
+        contactFormsRef,
+        where('createdAt', '>', oneHourAgo)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      console.log('Recent submissions:', querySnapshot.size);
+      
+      if (querySnapshot.size >= 3) {
+        const oldestSubmission = querySnapshot.docs
+          .sort((a, b) => a.data().createdAt.seconds - b.data().createdAt.seconds)[0];
+        const timeRemaining = oldestSubmission.data().createdAt.seconds + 3600 - Math.floor(Date.now() / 1000);
+        setIsRateLimited(true);
+        setTimeRemaining(timeRemaining);
+        return true;
+      }
+      
+      setIsRateLimited(false);
+      setTimeRemaining(0);
+      return false;
+    } catch (error) {
+      console.error('Error checking rate limit:', error);
+      // If there's an error checking rate limit, allow the submission
+      // but log the error for monitoring
+      return false;
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -27,16 +79,64 @@ const Contact: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isRateLimited) {
+      toast({
+        title: "تم تجاوز الحد المسموح",
+        description: `يرجى الانتظار ${Math.ceil(timeRemaining / 60)} دقيقة قبل المحاولة مرة أخرى`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
+      // Check rate limit before submitting
+      const isLimited = await checkRateLimit();
+      
+      if (isLimited) {
+        toast({
+          title: "تم تجاوز الحد المسموح",
+          description: `يرجى الانتظار ${Math.ceil(timeRemaining / 60)} دقيقة قبل المحاولة مرة أخرى`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate form data
+      if (!formData.name || !formData.email || !formData.message) {
+        toast({
+          title: "خطأ في البيانات",
+          description: "يرجى ملء جميع الحقول المطلوبة",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        toast({
+          title: "خطأ في البريد الإلكتروني",
+          description: "يرجى إدخال بريد إلكتروني صحيح",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Send data to Firebase
-      await addDoc(collection(db, "contactForms"), {
-        ...formData,
+      const contactFormData = {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        message: formData.message.trim(),
         subject: "New Contact Form Submission",
         status: 'new',
         createdAt: serverTimestamp(),
-      });
+      };
+
+      console.log('Submitting contact form:', contactFormData);
+      await addDoc(collection(db, "contactForms"), contactFormData);
 
       toast({
         title: "تم الإرسال بنجاح",
@@ -50,9 +150,19 @@ const Contact: React.FC = () => {
       });
     } catch (error) {
       console.error("Error submitting form: ", error);
+      let errorMessage = "يرجى المحاولة مرة أخرى";
+      
+      if (error instanceof Error) {
+        if (error.message.includes('permission-denied')) {
+          errorMessage = "حدث خطأ في الصلاحيات. يرجى المحاولة مرة أخرى";
+        } else if (error.message.includes('invalid-argument')) {
+          errorMessage = "البيانات المدخلة غير صحيحة";
+        }
+      }
+      
       toast({
         title: "حدث خطأ",
-        description: "يرجى المحاولة مرة أخرى",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -70,6 +180,14 @@ const Contact: React.FC = () => {
             يسعدنا تواصلكم واستقبال استفساراتكم واقتراحاتكم. يرجى ملء النموذج أدناه وسنقوم بالرد عليكم في أقرب وقت ممكن.
           </p>
           
+          {isRateLimited && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600">
+                تم تجاوز الحد المسموح من الرسائل. يرجى الانتظار {Math.ceil(timeRemaining / 60)} دقيقة قبل المحاولة مرة أخرى.
+              </p>
+            </div>
+          )}
+          
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="name" className="block mb-2 font-medium">
@@ -82,6 +200,7 @@ const Contact: React.FC = () => {
                 onChange={handleChange}
                 required
                 className="border-saudi-light"
+                disabled={isRateLimited}
               />
             </div>
             
@@ -97,6 +216,7 @@ const Contact: React.FC = () => {
                 onChange={handleChange}
                 required
                 className="border-saudi-light"
+                disabled={isRateLimited}
               />
             </div>
             
@@ -111,13 +231,14 @@ const Contact: React.FC = () => {
                 onChange={handleChange}
                 required
                 className="min-h-[150px] border-saudi-light"
+                disabled={isRateLimited}
               />
             </div>
             
             <Button 
               type="submit" 
               className="bg-saudi hover:bg-saudi-dark w-full"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isRateLimited}
             >
               {isSubmitting ? 'جاري الإرسال...' : 'إرسال'}
             </Button>

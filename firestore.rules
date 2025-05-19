@@ -2,59 +2,199 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow public read access to all content
-    match /videos/{document=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
     }
     
+    function isAdmin() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Rate limiting functions
+    function getRecentSubmissions(collection) {
+      return collection.where('createdAt', '>', timestamp.date(timestamp.now().toMillis() - 3600000));
+    }
+
+    function isRateLimited(collection, limit) {
+      let recentSubmissions = getRecentSubmissions(collection);
+      return recentSubmissions.size() >= limit;
+    }
+
+    // Spam prevention functions
+    function containsSpamKeywords(text) {
+      let spamKeywords = ['casino', 'viagra', 'lottery', 'winner', 'prize', 'free money', 'click here', 'buy now', 'limited time'];
+      return spamKeywords.hasAny(text.lower());
+    }
+
+    function isValidEmail(email) {
+      return email.matches('^[^@]+@[^@]+\\.[^@]+$') && 
+             !email.matches('.*@(temp|spam|fake|test)\\.com$') &&
+             email.size() <= 100;
+    }
+
+    function isValidPhone(phone) {
+      return phone.matches('^[+]?[0-9]{8,15}$');
+    }
+
+    function isValidName(name) {
+      return name.size() >= 2 && name.size() <= 50 && 
+             !name.matches('.*[0-9].*') &&
+             !containsSpamKeywords(name);
+    }
+
+    function isValidMessage(message) {
+      return message.size() >= 10 && message.size() <= 1000 &&
+             !containsSpamKeywords(message);
+    }
+    
+    function isValidContactForm() {
+      let form = request.resource.data;
+      return form.keys().hasAll(['name', 'email', 'subject', 'message', 'createdAt', 'status']) &&
+        isValidName(form.name) &&
+        isValidEmail(form.email) &&
+        form.subject is string && form.subject.size() >= 3 && form.subject.size() <= 100 &&
+        isValidMessage(form.message) &&
+        form.createdAt is timestamp &&
+        form.status in ['new', 'read', 'replied'];
+    }
+    
+    function isValidJoinRequest() {
+      let request = request.resource.data;
+      return request.keys().hasAll(['name', 'email', 'phone', 'message', 'createdAt', 'status']) &&
+        isValidName(request.name) &&
+        isValidEmail(request.email) &&
+        isValidPhone(request.phone) &&
+        isValidMessage(request.message) &&
+        request.createdAt is timestamp &&
+        request.status in ['pending', 'approved', 'rejected'];
+    }
+
+    // Video validation function
+    function isValidVideo() {
+      let video = request.resource.data;
+      return video.keys().hasAll(['title', 'description', 'category', 'duration', 'videoUrl', 'thumbnailUrl', 'uploadDate']) &&
+        video.title is string && video.title.size() > 0 && video.title.size() <= 200 &&
+        video.description is string && video.description.size() > 0 && video.description.size() <= 1000 &&
+        video.category is string && video.category.size() > 0 &&
+        video.duration is string && video.duration.size() > 0 &&
+        video.videoUrl is string && video.videoUrl.size() > 0 &&
+        video.thumbnailUrl is string && video.thumbnailUrl.size() > 0 &&
+        video.uploadDate is timestamp;
+    }
+
+    // Contact Forms Collection
+    match /contactForms/{formId} {
+      // Only allow creation with strict validation and rate limiting
+      allow create: if isAuthenticated() && 
+        !isRateLimited(collection('contactForms'), 3) &&
+        request.resource.data.keys().hasAll(['name', 'email', 'message', 'subject', 'status', 'createdAt']) &&
+        isValidName(request.resource.data.name) &&
+        isValidEmail(request.resource.data.email) &&
+        isValidMessage(request.resource.data.message) &&
+        request.resource.data.subject is string && request.resource.data.subject.size() >= 3 && request.resource.data.subject.size() <= 100 &&
+        request.resource.data.status == 'new' &&
+        request.resource.data.createdAt is timestamp;
+      
+      // Only admins can read, update, or delete
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Join Requests Collection
+    match /joinRequests/{requestId} {
+      // Only allow creation with strict validation and rate limiting
+      allow create: if isAuthenticated() && 
+        !isRateLimited(collection('joinRequests'), 2) &&
+        request.resource.data.keys().hasAll(['name', 'email', 'phone', 'specialization', 'message', 'createdAt', 'status']) &&
+        isValidName(request.resource.data.name) &&
+        isValidEmail(request.resource.data.email) &&
+        isValidPhone(request.resource.data.phone) &&
+        request.resource.data.specialization is string && request.resource.data.specialization.size() >= 2 && request.resource.data.specialization.size() <= 100 &&
+        isValidMessage(request.resource.data.message) &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.createdAt is timestamp;
+      
+      // Only admins can read, update, or delete
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Admins Collection
+    match /admins/{userId} {
+      // Only allow reading own admin status
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Only allow creating/updating own admin document with strict validation
+      allow create, update: if isAuthenticated() && 
+        request.auth.uid == userId &&
+        request.resource.data.keys().hasAll(['email', 'role', 'uid', 'createdAt', 'updatedAt']) &&
+        request.resource.data.role == 'admin' &&
+        request.resource.data.uid == userId &&
+        request.resource.data.createdAt is timestamp &&
+        request.resource.data.updatedAt is timestamp;
+        
+      // Only allow deleting own admin document
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Benefits Collection
+    match /benefits/{benefitId} {
+      // Anyone can read benefits
+      allow read: if true;
+      // Only admins can write benefits
+      allow write: if isAdmin();
+    }
+
+    // Coffee Stories Collection
+    match /coffeeStories/{storyId} {
+      // Anyone can read stories
+      allow read: if true;
+      // Only admins can write stories
+      allow write: if isAdmin();
+    }
+
+    // Chapters Collection
+    match /chapters/{chapterId} {
+      // Anyone can read chapters
+      allow read: if true;
+      // Only admins can write chapters
+      allow write: if isAdmin();
+    }
+
+    // Videos Collection
+    match /videos/{videoId} {
+      // Anyone can read videos
+      allow read: if true;
+      // Only admins can write videos with strict validation
+      allow create: if isAdmin() && 
+        request.resource.data.keys().hasAll(['title', 'description', 'category', 'duration', 'videoUrl', 'thumbnailUrl', 'uploadDate', 'createdBy', 'updatedAt']) &&
+        request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 200 &&
+        request.resource.data.description is string && request.resource.data.description.size() > 0 && request.resource.data.description.size() <= 1000 &&
+        request.resource.data.category is string && request.resource.data.category.size() > 0 &&
+        request.resource.data.duration is string && request.resource.data.duration.size() > 0 &&
+        request.resource.data.videoUrl is string && request.resource.data.videoUrl.matches('^https://www\\.youtube\\.com/watch\\?v=[\\w-]+$') &&
+        request.resource.data.thumbnailUrl is string && request.resource.data.thumbnailUrl.matches('^https://img\\.youtube\\.com/vi/[\\w-]+/[\\w-]+\\.jpg$') &&
+        request.resource.data.uploadDate is timestamp &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.updatedAt is timestamp;
+      allow update: if isAdmin() && 
+        request.resource.data.updatedAt is timestamp &&
+        request.resource.data.updatedAt > resource.data.updatedAt;
+      allow delete: if isAdmin();
+    }
+
+    // Podcasts Collection
     match /podcasts/{podcastId} {
+      // Anyone can read podcasts
       allow read: if true;
-      // Allow authenticated users full write access
-      allow write: if request.auth != null;
-      // Allow unauthenticated users to only update the 'listens' field using increment
-      allow update: if request.auth == null 
-                      && request.resource.data.size() == resource.data.size()
-                      && request.resource.data.listens == resource.data.listens + 1;
-    }
-    
-    match /benefits/{document=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    match /coffeeStories/{document=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    match /coffeeChapters/{document=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    // Allow only authenticated users to write contact messages and join requests
-    match /contactMessages/{document=**} {
-      allow read: if request.auth != null;
-      allow create: if true;
-      allow update, delete: if request.auth != null;
-    }
-    
-    match /joinRequests/{document=**} {
-      allow read: if request.auth != null;
-      allow create: if true;
-      allow update, delete: if request.auth != null;
+      // Only admins can write podcasts
+      allow write: if isAdmin();
     }
 
-    // User profiles
-    match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-
-    match /contactForms/{contactFormId} {
-      allow create: if true;
-      allow read, update, delete: if request.auth != null;
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 } 

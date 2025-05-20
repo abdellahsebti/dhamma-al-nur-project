@@ -46,18 +46,21 @@ export async function GET(request: Request) {
         console.log('Session cookie created');
 
         // Set the session cookie
-        cookiesStore.set({
+        const options = {
           name: 'session',
           value: sessionCookie,
-          maxAge: expiresIn,
+          maxAge: expiresIn / 1000,
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
+          sameSite: 'lax' as const,
           path: '/',
-        });
-        console.log('Session cookie set');
+          domain: process.env.NODE_ENV === 'production' ? process.env.NEXT_PUBLIC_DOMAIN : undefined
+        };
 
-        return NextResponse.json({ 
+        cookiesStore.set(options);
+
+        // Create the response
+        const response = NextResponse.json({ 
           success: true,
           user: {
             uid: decodedToken.uid,
@@ -66,6 +69,11 @@ export async function GET(request: Request) {
             picture: decodedToken.picture
           }
         });
+
+        // Set the cookie in the response headers
+        response.cookies.set(options);
+
+        return response;
       } catch (error) {
         console.error('Error verifying ID token:', error);
         return NextResponse.json(

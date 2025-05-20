@@ -1,38 +1,36 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/firebase-admin';
 import { cookies } from 'next/headers';
-import { logger } from '@/lib/logger';
 
 export async function GET(
   request: Request,
   context: { params: Promise<{ uid: string }> }
 ) {
   try {
-    const { uid } = await context.params;
-    logger.info('Admin route called', { uid });
+    const { uid } = await context.params; // ✅ Await params
+    console.log('Admin route called for UID:', uid);
 
-    const cookiesStore = await cookies();
+    const cookiesStore = await cookies(); // ✅ Await cookies()
     const sessionCookie = cookiesStore.get('session')?.value;
-    logger.debug('Session cookie check', { hasSessionCookie: !!sessionCookie });
+    console.log('Session cookie exists:', !!sessionCookie);
 
     let decodedToken;
 
     if (sessionCookie) {
       try {
         decodedToken = await auth.verifySessionCookie(sessionCookie, true);
-        logger.info('Session cookie verified', { uid: decodedToken.uid });
+        console.log('Session cookie verified successfully for user:', decodedToken.uid);
       } catch (error) {
-        logger.error('Error verifying session cookie', { error });
+        console.error('Error verifying session cookie:', error);
       }
     }
 
     if (!decodedToken) {
-      logger.debug('No valid session cookie, trying ID token');
+      console.log('No valid session cookie, trying ID token');
       const authHeader = request.headers.get('Authorization');
-      logger.debug('Auth header check', { hasAuthHeader: !!authHeader });
+      console.log('Auth header:', authHeader);
 
       if (!authHeader) {
-        logger.warn('Missing Authorization header');
         return NextResponse.json(
           {
             error: 'No Authorization header provided',
@@ -46,7 +44,6 @@ export async function GET(
       const idToken = authHeader.split('Bearer ')[1];
 
       if (!idToken) {
-        logger.warn('Missing Bearer token');
         return NextResponse.json(
           {
             error: 'No Bearer token found in Authorization header',
@@ -59,7 +56,7 @@ export async function GET(
 
       try {
         decodedToken = await auth.verifyIdToken(idToken);
-        logger.info('ID token verified', { uid: decodedToken.uid });
+        console.log('ID token verified for:', decodedToken.uid);
 
         const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
         const newSessionCookie = await auth.createSessionCookie(idToken, { expiresIn });
@@ -74,9 +71,8 @@ export async function GET(
           path: '/',
         });
 
-        logger.info('Session cookie created and set');
+        console.log('Session cookie created and set');
       } catch (error) {
-        logger.error('Error verifying ID token', { error });
         return NextResponse.json(
           {
             error: 'Invalid or expired ID token',
@@ -122,7 +118,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    logger.error('Server error', { error });
+    console.error('Server error:', error);
     return NextResponse.json(
       {
         error: 'Server error',

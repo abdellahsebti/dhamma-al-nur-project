@@ -18,7 +18,9 @@ import { api } from '@/lib/api';
 const videoSchema = z.object({
   title: z.string().min(1, 'عنوان الفيديو مطلوب'),
   description: z.string().min(1, 'وصف الفيديو مطلوب'),
-  category: z.string().min(1, 'التصنيف مطلوب'),
+  category: z.string().min(1, 'التصنيف مطلوب').refine(value => ['عقيدة', 'فقه', 'حديث', 'محاضرات', 'دروس', 'علم'].includes(value), {
+    message: "الرجاء اختيار تصنيف صحيح",
+  }),
   duration: z.string().min(1, 'مدة الفيديو مطلوبة'),
   videoUrl: z.string().min(1, 'رابط الفيديو مطلوب').url('الرجاء إدخال رابط صحيح'),
   thumbnailUrl: z.string().min(1, 'رابط الصورة المصغرة مطلوب').url('الرجاء إدخال رابط صحيح'),
@@ -44,6 +46,28 @@ const Videos: React.FC = () => {
       featured: false,
     },
   });
+
+  const getYouTubeVideoId = (url: string): string | null => {
+    const regex = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})|(?:youtu\.be\/|youtube\.com\/embed\/|v\/|watch\?v=|watch\?.+&v=)((?!videoseries)[a-zA-Z0-9_-]{11})/;
+    const match = url.match(regex);
+    return match ? match[1] || match[3] : null;
+  };
+
+  const getYouTubeThumbnailUrl = (videoId: string): string => {
+    return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  };
+
+  const handleVideoUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const videoUrl = e.target.value;
+    form.setValue('videoUrl', videoUrl);
+    
+    const youtubeId = getYouTubeVideoId(videoUrl);
+    if (youtubeId) {
+      form.setValue('thumbnailUrl', getYouTubeThumbnailUrl(youtubeId));
+    } else {
+      form.setValue('thumbnailUrl', '');
+    }
+  };
 
   useEffect(() => {
     fetchVideos();
@@ -200,10 +224,10 @@ const Videos: React.FC = () => {
         ))}
       </div>
 
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+      <Dialog open={isAddDialogOpen || isEditDialogOpen} onOpenChange={selectedVideo ? setIsEditDialogOpen : setIsAddDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>إضافة فيديو جديد</DialogTitle>
+            <DialogTitle>{selectedVideo ? 'تعديل الفيديو' : 'إضافة فيديو جديد'}</DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmitVideo)} className="space-y-4">
@@ -246,10 +270,12 @@ const Videos: React.FC = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="عقيدة">عقيدة</SelectItem>
+                        <SelectItem value="فقه">فقه</SelectItem>
+                        <SelectItem value="حديث">حديث</SelectItem>
                         <SelectItem value="محاضرات">محاضرات</SelectItem>
                         <SelectItem value="دروس">دروس</SelectItem>
-                        <SelectItem value="ندوات">ندوات</SelectItem>
-                        <SelectItem value="حوارات">حوارات</SelectItem>
+                        <SelectItem value="علم">علم</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -263,7 +289,7 @@ const Videos: React.FC = () => {
                   <FormItem>
                     <FormLabel>مدة الفيديو</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="مثال: 45:30" />
+                      <Input {...field} placeholder="مثال: 10:30" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -274,9 +300,13 @@ const Videos: React.FC = () => {
                 name="videoUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>رابط الفيديو</FormLabel>
+                    <FormLabel>رابط الفيديو (YouTube, etc.)</FormLabel>
                     <FormControl>
-                      <Input {...field} type="url" />
+                      <Input 
+                        {...field} 
+                        placeholder="https://www.youtube.com/watch?v=..." 
+                        onChange={handleVideoUrlChange}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -289,7 +319,7 @@ const Videos: React.FC = () => {
                   <FormItem>
                     <FormLabel>رابط الصورة المصغرة</FormLabel>
                     <FormControl>
-                      <Input {...field} type="url" />
+                      <Input {...field} placeholder="سيتم إنشاءه تلقائياً لروابط يوتيوب" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -299,12 +329,11 @@ const Videos: React.FC = () => {
                 control={form.control}
                 name="featured"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <FormLabel>فيديو مميز</FormLabel>
-                      <p className="text-sm text-muted-foreground">
-                        سيظهر هذا الفيديو في الصفحة الرئيسية
-                      </p>
+                      <FormLabel className="text-base">
+                        فيديو مميز
+                      </FormLabel>
                     </div>
                     <FormControl>
                       <Switch
@@ -316,130 +345,9 @@ const Videos: React.FC = () => {
                 )}
               />
               <DialogFooter>
-                <Button type="submit">حفظ</Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>تعديل الفيديو</DialogTitle>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmitVideo)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>عنوان الفيديو</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>وصف الفيديو</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>التصنيف</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="اختر التصنيف" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="محاضرات">محاضرات</SelectItem>
-                        <SelectItem value="دروس">دروس</SelectItem>
-                        <SelectItem value="ندوات">ندوات</SelectItem>
-                        <SelectItem value="حوارات">حوارات</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="duration"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>مدة الفيديو</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="مثال: 45:30" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="videoUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>رابط الفيديو</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="url" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="thumbnailUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>رابط الصورة المصغرة</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="url" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="featured"
-                render={({ field }) => (
-                  <FormItem className="flex items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel>فيديو مميز</FormLabel>
-                      <p className="text-sm text-muted-foreground">
-                        سيظهر هذا الفيديو في الصفحة الرئيسية
-                      </p>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button type="submit">حفظ التغييرات</Button>
+                <Button type="submit" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting ? 'جاري الحفظ...' : selectedVideo ? 'حفظ التغييرات' : 'إضافة فيديو'}
+                </Button>
               </DialogFooter>
             </form>
           </Form>

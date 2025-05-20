@@ -22,18 +22,24 @@ export async function POST(request: Request) {
     const options = {
       name: 'session',
       value: sessionCookie,
-      maxAge: expiresIn,
+      maxAge: expiresIn / 1000, // Convert to seconds
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
+      domain: process.env.NODE_ENV === 'production' ? process.env.NEXT_PUBLIC_DOMAIN : undefined
     };
 
     const cookiesStore = await cookies();
-
     cookiesStore.set(options);
 
-    return NextResponse.json({ status: 'success' });
+    // Create the response
+    const response = NextResponse.json({ status: 'success' });
+
+    // Set the cookie in the response headers
+    response.cookies.set(options);
+
+    return response;
   } catch (error) {
     console.error('Error creating session cookie:', error);
     return NextResponse.json(

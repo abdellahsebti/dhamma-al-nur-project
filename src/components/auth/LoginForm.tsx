@@ -14,12 +14,19 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const sanitizeInput = (input: string) => {
+    return input.replace(/[<>]/g, '');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
+    const sanitizedEmail = sanitizeInput(email);
+    const sanitizedPassword = sanitizeInput(password);
+
     try {
-      await login(email, password);
+      await login(sanitizedEmail, sanitizedPassword);
       toast({
         title: "تم تسجيل الدخول بنجاح",
         description: "تم تسجيل دخولك بنجاح",
@@ -64,7 +71,7 @@ const LoginForm = () => {
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(sanitizeInput(e.target.value))}
               placeholder="أدخل بريدك الإلكتروني"
               required
               className="w-full text-right"
@@ -76,7 +83,7 @@ const LoginForm = () => {
               id="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => setPassword(sanitizeInput(e.target.value))}
               placeholder="أدخل كلمة المرور"
               required
               className="w-full text-right"

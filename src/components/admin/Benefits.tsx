@@ -22,6 +22,10 @@ const benefitSchema = z.object({
   category: z.string().min(1, 'التصنيف مطلوب'),
 });
 
+const sanitizeInput = (input: string) => {
+  return input.replace(/[<>]/g, '');
+};
+
 const Benefits: React.FC = () => {
   const [benefits, setBenefits] = useState<Benefit[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -66,25 +70,34 @@ const Benefits: React.FC = () => {
   const handleEditBenefitClick = (benefit: Benefit) => {
     setSelectedBenefit(benefit);
     form.reset({
-      bookName: benefit.bookName,
-      volumeAndPage: benefit.volumeAndPage,
-      benefitText: benefit.benefitText,
-      scholarComment: benefit.scholarComment,
-      category: benefit.category,
+      bookName: sanitizeInput(benefit.bookName),
+      volumeAndPage: sanitizeInput(benefit.volumeAndPage),
+      benefitText: sanitizeInput(benefit.benefitText),
+      scholarComment: benefit.scholarComment ? sanitizeInput(benefit.scholarComment) : '',
+      category: sanitizeInput(benefit.category),
     });
     setIsEditDialogOpen(true);
   };
 
   const onSubmitBenefit = async (data: BenefitFormValues) => {
+    const sanitizedData = {
+      ...data,
+      bookName: sanitizeInput(data.bookName),
+      volumeAndPage: sanitizeInput(data.volumeAndPage),
+      benefitText: sanitizeInput(data.benefitText),
+      scholarComment: data.scholarComment ? sanitizeInput(data.scholarComment) : '',
+      category: sanitizeInput(data.category),
+    };
+
     try {
       if (selectedBenefit) {
-        await adminServices.benefits.update(selectedBenefit.id, data);
+        await adminServices.benefits.update(selectedBenefit.id, sanitizedData);
         toast({
           title: 'تم التحديث',
           description: 'تم تحديث الفائدة بنجاح',
         });
       } else {
-        await adminServices.benefits.add(data);
+        await adminServices.benefits.add(sanitizedData);
         toast({
           title: 'تمت الإضافة',
           description: 'تمت إضافة الفائدة بنجاح',
@@ -139,7 +152,7 @@ const Benefits: React.FC = () => {
           <Card key={benefit.id}>
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
-                <span>{benefit.bookName}</span>
+                <span>{sanitizeInput(benefit.bookName)}</span>
                 <div className="flex gap-2">
                   <Button
                     variant="ghost"
@@ -160,16 +173,16 @@ const Benefits: React.FC = () => {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-2">
-                {benefit.volumeAndPage}
+                {sanitizeInput(benefit.volumeAndPage)}
               </p>
-              <p className="mb-2">{benefit.benefitText}</p>
+              <p className="mb-2">{sanitizeInput(benefit.benefitText)}</p>
               {benefit.scholarComment && (
                 <p className="text-sm text-muted-foreground">
-                  تعليق الشيخ: {benefit.scholarComment}
+                  تعليق الشيخ: {sanitizeInput(benefit.scholarComment)}
                 </p>
               )}
               <p className="text-sm text-muted-foreground mt-2">
-                التصنيف: {benefit.category}
+                التصنيف: {sanitizeInput(benefit.category)}
               </p>
             </CardContent>
           </Card>
@@ -190,7 +203,7 @@ const Benefits: React.FC = () => {
                   <FormItem>
                     <FormLabel>اسم الكتاب</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} onChange={(e) => field.onChange(sanitizeInput(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -203,7 +216,7 @@ const Benefits: React.FC = () => {
                   <FormItem>
                     <FormLabel>الجزء والصفحة</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} onChange={(e) => field.onChange(sanitizeInput(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -216,7 +229,7 @@ const Benefits: React.FC = () => {
                   <FormItem>
                     <FormLabel>نص الفائدة</FormLabel>
                     <FormControl>
-                      <Textarea {...field} />
+                      <Textarea {...field} onChange={(e) => field.onChange(sanitizeInput(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -229,7 +242,7 @@ const Benefits: React.FC = () => {
                   <FormItem>
                     <FormLabel>تعليق الشيخ (اختياري)</FormLabel>
                     <FormControl>
-                      <Textarea {...field} />
+                      <Textarea {...field} onChange={(e) => field.onChange(sanitizeInput(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -241,18 +254,19 @@ const Benefits: React.FC = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>التصنيف</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={(value) => field.onChange(sanitizeInput(value))} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="اختر التصنيف" />
+                          <SelectValue placeholder="اختر تصنيفاً" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="عقيدة">عقيدة</SelectItem>
                         <SelectItem value="فقه">فقه</SelectItem>
                         <SelectItem value="حديث">حديث</SelectItem>
-                        <SelectItem value="تفسير">تفسير</SelectItem>
-                        <SelectItem value="أخلاق">أخلاق</SelectItem>
+                        <SelectItem value="محاضرات">محاضرات</SelectItem>
+                        <SelectItem value="دروس">دروس</SelectItem>
+                        <SelectItem value="علم">علم</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -281,7 +295,7 @@ const Benefits: React.FC = () => {
                   <FormItem>
                     <FormLabel>اسم الكتاب</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} onChange={(e) => field.onChange(sanitizeInput(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -294,7 +308,7 @@ const Benefits: React.FC = () => {
                   <FormItem>
                     <FormLabel>الجزء والصفحة</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} onChange={(e) => field.onChange(sanitizeInput(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -307,7 +321,7 @@ const Benefits: React.FC = () => {
                   <FormItem>
                     <FormLabel>نص الفائدة</FormLabel>
                     <FormControl>
-                      <Textarea {...field} />
+                      <Textarea {...field} onChange={(e) => field.onChange(sanitizeInput(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -320,7 +334,7 @@ const Benefits: React.FC = () => {
                   <FormItem>
                     <FormLabel>تعليق الشيخ (اختياري)</FormLabel>
                     <FormControl>
-                      <Textarea {...field} />
+                      <Textarea {...field} onChange={(e) => field.onChange(sanitizeInput(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -332,18 +346,19 @@ const Benefits: React.FC = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>التصنيف</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={(value) => field.onChange(sanitizeInput(value))} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="اختر التصنيف" />
+                          <SelectValue placeholder="اختر تصنيفاً" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="عقيدة">عقيدة</SelectItem>
                         <SelectItem value="فقه">فقه</SelectItem>
                         <SelectItem value="حديث">حديث</SelectItem>
-                        <SelectItem value="تفسير">تفسير</SelectItem>
-                        <SelectItem value="أخلاق">أخلاق</SelectItem>
+                        <SelectItem value="محاضرات">محاضرات</SelectItem>
+                        <SelectItem value="دروس">دروس</SelectItem>
+                        <SelectItem value="علم">علم</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

@@ -27,6 +27,10 @@ const videoSchema = z.object({
   featured: z.boolean().default(false),
 });
 
+const sanitizeInput = (input: string) => {
+  return input.replace(/[<>]/g, '');
+};
+
 const Videos: React.FC = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -58,7 +62,7 @@ const Videos: React.FC = () => {
   };
 
   const handleVideoUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const videoUrl = e.target.value;
+    const videoUrl = sanitizeInput(e.target.value);
     form.setValue('videoUrl', videoUrl);
     
     const youtubeId = getYouTubeVideoId(videoUrl);
@@ -95,27 +99,37 @@ const Videos: React.FC = () => {
   const handleEditVideoClick = (video: Video) => {
     setSelectedVideo(video);
     form.reset({
-      title: video.title,
-      description: video.description,
-      category: video.category,
-      duration: video.duration,
-      videoUrl: video.videoUrl,
-      thumbnailUrl: video.thumbnailUrl,
+      title: sanitizeInput(video.title),
+      description: sanitizeInput(video.description),
+      category: sanitizeInput(video.category),
+      duration: sanitizeInput(video.duration),
+      videoUrl: sanitizeInput(video.videoUrl),
+      thumbnailUrl: sanitizeInput(video.thumbnailUrl),
       featured: video.featured,
     });
     setIsEditDialogOpen(true);
   };
 
   const onSubmitVideo = async (data: VideoFormValues) => {
+    const sanitizedData = {
+      ...data,
+      title: sanitizeInput(data.title),
+      description: sanitizeInput(data.description),
+      category: sanitizeInput(data.category),
+      duration: sanitizeInput(data.duration),
+      videoUrl: sanitizeInput(data.videoUrl),
+      thumbnailUrl: sanitizeInput(data.thumbnailUrl),
+    };
+
     try {
       if (selectedVideo) {
-        await api.videos.update(selectedVideo.id, data);
+        await api.videos.update(selectedVideo.id, sanitizedData);
         toast({
           title: 'تم التحديث',
           description: 'تم تحديث الفيديو بنجاح',
         });
       } else {
-        await api.videos.add(data);
+        await api.videos.add(sanitizedData);
         toast({
           title: 'تمت الإضافة',
           description: 'تمت إضافة الفيديو بنجاح',
@@ -170,12 +184,12 @@ const Videos: React.FC = () => {
           <Card key={video.id}>
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
-                <span>{video.title}</span>
+                <span>{sanitizeInput(video.title)}</span>
                 <div className="flex gap-2">
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => window.open(video.videoUrl, '_blank')}
+                    onClick={() => window.open(sanitizeInput(video.videoUrl), '_blank')}
                   >
                     <Play className="h-4 w-4" />
                   </Button>
@@ -199,35 +213,29 @@ const Videos: React.FC = () => {
             <CardContent>
               <div className="aspect-video mb-4">
                 <img
-                  src={video.thumbnailUrl}
-                  alt={video.title}
-                  className="w-full h-full object-cover rounded-lg"
+                  src={sanitizeInput(video.thumbnailUrl)}
+                  alt={sanitizeInput(video.title)}
+                  className="w-full h-full object-cover rounded"
                 />
               </div>
               <p className="text-sm text-muted-foreground mb-2">
-                التصنيف: {video.category}
+                {sanitizeInput(video.description)}
               </p>
-              <p className="text-sm text-muted-foreground mb-2">
-                المدة: {video.duration}
+              <p className="text-sm text-muted-foreground">
+                التصنيف: {sanitizeInput(video.category)}
               </p>
-              <p className="text-sm text-muted-foreground mb-2">
-                المشاهدات: {video.views}
+              <p className="text-sm text-muted-foreground">
+                المدة: {sanitizeInput(video.duration)}
               </p>
-              <p className="mb-2">{video.description}</p>
-              {video.featured && (
-                <span className="inline-block px-2 py-1 text-xs font-semibold bg-primary text-primary-foreground rounded">
-                  مميز
-                </span>
-              )}
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <Dialog open={isAddDialogOpen || isEditDialogOpen} onOpenChange={selectedVideo ? setIsEditDialogOpen : setIsAddDialogOpen}>
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{selectedVideo ? 'تعديل الفيديو' : 'إضافة فيديو جديد'}</DialogTitle>
+            <DialogTitle>إضافة فيديو جديد</DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmitVideo)} className="space-y-4">
@@ -238,7 +246,7 @@ const Videos: React.FC = () => {
                   <FormItem>
                     <FormLabel>عنوان الفيديو</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} onChange={(e) => field.onChange(sanitizeInput(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -251,7 +259,7 @@ const Videos: React.FC = () => {
                   <FormItem>
                     <FormLabel>وصف الفيديو</FormLabel>
                     <FormControl>
-                      <Textarea {...field} />
+                      <Textarea {...field} onChange={(e) => field.onChange(sanitizeInput(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -263,10 +271,10 @@ const Videos: React.FC = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>التصنيف</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={(value) => field.onChange(sanitizeInput(value))} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="اختر التصنيف" />
+                          <SelectValue placeholder="اختر تصنيفاً" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -289,7 +297,7 @@ const Videos: React.FC = () => {
                   <FormItem>
                     <FormLabel>مدة الفيديو</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="مثال: 10:30" />
+                      <Input {...field} onChange={(e) => field.onChange(sanitizeInput(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -300,13 +308,9 @@ const Videos: React.FC = () => {
                 name="videoUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>رابط الفيديو (YouTube, etc.)</FormLabel>
+                    <FormLabel>رابط الفيديو</FormLabel>
                     <FormControl>
-                      <Input 
-                        {...field} 
-                        placeholder="https://www.youtube.com/watch?v=..." 
-                        onChange={handleVideoUrlChange}
-                      />
+                      <Input {...field} onChange={handleVideoUrlChange} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -319,7 +323,7 @@ const Videos: React.FC = () => {
                   <FormItem>
                     <FormLabel>رابط الصورة المصغرة</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="سيتم إنشاءه تلقائياً لروابط يوتيوب" />
+                      <Input {...field} onChange={(e) => field.onChange(sanitizeInput(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -331,9 +335,7 @@ const Videos: React.FC = () => {
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-base">
-                        فيديو مميز
-                      </FormLabel>
+                      <FormLabel className="text-base">مميز</FormLabel>
                     </div>
                     <FormControl>
                       <Switch
@@ -345,9 +347,7 @@ const Videos: React.FC = () => {
                 )}
               />
               <DialogFooter>
-                <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? 'جاري الحفظ...' : selectedVideo ? 'حفظ التغييرات' : 'إضافة فيديو'}
-                </Button>
+                <Button type="submit">حفظ</Button>
               </DialogFooter>
             </form>
           </Form>

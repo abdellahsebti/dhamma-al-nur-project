@@ -20,6 +20,10 @@ const storySchema = z.object({
   coverFile: z.any().optional(),
 });
 
+const sanitizeInput = (input: string) => {
+  return input.replace(/[<>]/g, '');
+};
+
 const CoffeeStories: React.FC = () => {
   const [stories, setStories] = useState<CoffeeStory[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -62,23 +66,30 @@ const CoffeeStories: React.FC = () => {
   const handleEditStoryClick = (story: CoffeeStory) => {
     setSelectedStory(story);
     form.reset({
-      title: story.title,
-      author: story.author,
-      summary: story.summary,
+      title: sanitizeInput(story.title),
+      author: sanitizeInput(story.author),
+      summary: sanitizeInput(story.summary),
     });
     setIsEditDialogOpen(true);
   };
 
   const onSubmitStory = async (data: CoffeeStoryFormValues) => {
+    const sanitizedData = {
+      ...data,
+      title: sanitizeInput(data.title),
+      author: sanitizeInput(data.author),
+      summary: sanitizeInput(data.summary),
+    };
+
     try {
       if (selectedStory) {
-        await adminServices.coffee.updateStory(selectedStory.id, data);
+        await adminServices.coffee.updateStory(selectedStory.id, sanitizedData);
         toast({
           title: 'تم التحديث',
           description: 'تم تحديث القصة بنجاح',
         });
       } else {
-        await adminServices.coffee.addStory(data);
+        await adminServices.coffee.addStory(sanitizedData);
         toast({
           title: 'تمت الإضافة',
           description: 'تمت إضافة القصة بنجاح',
@@ -133,7 +144,7 @@ const CoffeeStories: React.FC = () => {
           <Card key={story.id}>
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
-                <span>{story.title}</span>
+                <span>{sanitizeInput(story.title)}</span>
                 <div className="flex gap-2">
                   <Button
                     variant="ghost"
@@ -154,9 +165,9 @@ const CoffeeStories: React.FC = () => {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-2">
-                الكاتب: {story.author}
+                الكاتب: {sanitizeInput(story.author)}
               </p>
-              <p className="mb-2">{story.summary}</p>
+              <p className="mb-2">{sanitizeInput(story.summary)}</p>
               <p className="text-sm text-muted-foreground">
                 عدد الفصول: {story.chaptersCount}
               </p>
@@ -179,7 +190,7 @@ const CoffeeStories: React.FC = () => {
                   <FormItem>
                     <FormLabel>عنوان القصة</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} onChange={(e) => field.onChange(sanitizeInput(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -192,7 +203,7 @@ const CoffeeStories: React.FC = () => {
                   <FormItem>
                     <FormLabel>اسم الكاتب</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} onChange={(e) => field.onChange(sanitizeInput(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -205,7 +216,7 @@ const CoffeeStories: React.FC = () => {
                   <FormItem>
                     <FormLabel>ملخص القصة</FormLabel>
                     <FormControl>
-                      <Textarea {...field} />
+                      <Textarea {...field} onChange={(e) => field.onChange(sanitizeInput(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

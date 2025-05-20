@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { auth } from '@/lib/firebase-admin';
+import { cookies } from 'next/headers';
 
 export async function GET() {
   try {
@@ -23,13 +24,67 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = await auth.verifySessionCookie(
-      request.headers.get('Authorization')?.split('Bearer ')[1] || ''
-    );
+    // First try to get the session cookie
+    const cookiesStore = await cookies();
+    const sessionCookie = cookiesStore.get('session')?.value;
+    let decodedToken;
 
-    if (!session) {
+    if (sessionCookie) {
+      try {
+        decodedToken = await auth.verifySessionCookie(sessionCookie, true);
+        console.log('Session cookie verified successfully for user:', decodedToken.uid);
+      } catch (error) {
+        console.error('Error verifying session cookie:', error);
+        // Continue to try ID token if session cookie fails
+      }
+    }
+
+    // If no valid session cookie, try ID token
+    if (!decodedToken) {
+      const authHeader = request.headers.get('Authorization');
+      if (!authHeader) {
+        return NextResponse.json(
+          { error: 'No Authorization header provided' },
+          { status: 401 }
+        );
+      }
+
+      const idToken = authHeader.split('Bearer ')[1];
+      if (!idToken) {
+        return NextResponse.json(
+          { error: 'No Bearer token found in Authorization header' },
+          { status: 401 }
+        );
+      }
+
+      try {
+        decodedToken = await auth.verifyIdToken(idToken);
+        console.log('ID token verified successfully for user:', decodedToken.uid);
+
+        // Create a session cookie for future requests
+        const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
+        const newSessionCookie = await auth.createSessionCookie(idToken, { expiresIn });
+        cookiesStore.set({
+          name: 'session',
+          value: newSessionCookie,
+          maxAge: expiresIn / 1000,
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+        });
+      } catch (error) {
+        console.error('Error verifying ID token:', error);
+        return NextResponse.json(
+          { error: 'Invalid or expired ID token' },
+          { status: 401 }
+        );
+      }
+    }
+
+    if (!decodedToken) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Authentication required' },
         { status: 401 }
       );
     }
@@ -38,7 +93,8 @@ export async function POST(request: Request) {
     const videosRef = adminDb.collection('videos');
     const docRef = await videosRef.add({
       ...data,
-      uploadDate: new Date()
+      uploadDate: new Date(),
+      uploadedBy: decodedToken.uid
     });
 
     return NextResponse.json({ id: docRef.id, ...data });
@@ -53,6 +109,58 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    // First try to get the session cookie
+    const cookiesStore = await cookies();
+    const sessionCookie = cookiesStore.get('session')?.value;
+    let decodedToken;
+
+    if (sessionCookie) {
+      try {
+        decodedToken = await auth.verifySessionCookie(sessionCookie, true);
+        console.log('Session cookie verified successfully for user:', decodedToken.uid);
+      } catch (error) {
+        console.error('Error verifying session cookie:', error);
+        // Continue to try ID token if session cookie fails
+      }
+    }
+
+    // If no valid session cookie, try ID token
+    if (!decodedToken) {
+      const authHeader = request.headers.get('Authorization');
+      if (!authHeader) {
+        return NextResponse.json(
+          { error: 'No Authorization header provided' },
+          { status: 401 }
+        );
+      }
+
+      const idToken = authHeader.split('Bearer ')[1];
+      if (!idToken) {
+        return NextResponse.json(
+          { error: 'No Bearer token found in Authorization header' },
+          { status: 401 }
+        );
+      }
+
+      try {
+        decodedToken = await auth.verifyIdToken(idToken);
+        console.log('ID token verified successfully for user:', decodedToken.uid);
+      } catch (error) {
+        console.error('Error verifying ID token:', error);
+        return NextResponse.json(
+          { error: 'Invalid or expired ID token' },
+          { status: 401 }
+        );
+      }
+    }
+
+    if (!decodedToken) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const { id, ...data } = await request.json();
     const videoRef = adminDb.collection('videos').doc(id);
 
@@ -62,19 +170,12 @@ export async function PUT(request: Request) {
       return NextResponse.json({ id, ...data });
     }
 
-    // For other updates, require authentication
-    const session = await auth.verifySessionCookie(
-      request.headers.get('Authorization')?.split('Bearer ')[1] || ''
-    );
+    await videoRef.update({
+      ...data,
+      updatedBy: decodedToken.uid,
+      updatedAt: new Date()
+    });
 
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    await videoRef.update(data);
     return NextResponse.json({ id, ...data });
   } catch (error) {
     console.error('Error updating video:', error);
@@ -87,13 +188,54 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const session = await auth.verifySessionCookie(
-      request.headers.get('Authorization')?.split('Bearer ')[1] || ''
-    );
+    // First try to get the session cookie
+    const cookiesStore = await cookies();
+    const sessionCookie = cookiesStore.get('session')?.value;
+    let decodedToken;
 
-    if (!session) {
+    if (sessionCookie) {
+      try {
+        decodedToken = await auth.verifySessionCookie(sessionCookie, true);
+        console.log('Session cookie verified successfully for user:', decodedToken.uid);
+      } catch (error) {
+        console.error('Error verifying session cookie:', error);
+        // Continue to try ID token if session cookie fails
+      }
+    }
+
+    // If no valid session cookie, try ID token
+    if (!decodedToken) {
+      const authHeader = request.headers.get('Authorization');
+      if (!authHeader) {
+        return NextResponse.json(
+          { error: 'No Authorization header provided' },
+          { status: 401 }
+        );
+      }
+
+      const idToken = authHeader.split('Bearer ')[1];
+      if (!idToken) {
+        return NextResponse.json(
+          { error: 'No Bearer token found in Authorization header' },
+          { status: 401 }
+        );
+      }
+
+      try {
+        decodedToken = await auth.verifyIdToken(idToken);
+        console.log('ID token verified successfully for user:', decodedToken.uid);
+      } catch (error) {
+        console.error('Error verifying ID token:', error);
+        return NextResponse.json(
+          { error: 'Invalid or expired ID token' },
+          { status: 401 }
+        );
+      }
+    }
+
+    if (!decodedToken) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Authentication required' },
         { status: 401 }
       );
     }

@@ -188,7 +188,7 @@ const Index: React.FC = () => {
           {/* Social Media Links */}
           <div className="flex justify-center items-center gap-4">
             <a
-              href="https://youtube.com/@dhamma"
+              href="#"
               target="_blank"
               rel="noopener noreferrer"
               className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transform hover:scale-110 transition-all duration-300 group"
@@ -197,7 +197,7 @@ const Index: React.FC = () => {
               <span className="sr-only">YouTube</span>
             </a>
             <a
-              href="https://linkedin.com/company/dhamma"
+              href="#"
               target="_blank"
               rel="noopener noreferrer"
               className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transform hover:scale-110 transition-all duration-300 group"
@@ -206,7 +206,7 @@ const Index: React.FC = () => {
               <span className="sr-only">LinkedIn</span>
             </a>
             <a
-              href="https://instagram.com/dhamma"
+              href="https://www.instagram.com/dhamma.productions/"
               target="_blank"
               rel="noopener noreferrer"
               className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transform hover:scale-110 transition-all duration-300 group"
@@ -215,7 +215,7 @@ const Index: React.FC = () => {
               <span className="sr-only">Instagram</span>
             </a>
             <a
-              href="https://facebook.com/dhamma"
+              href="#"
               target="_blank"
               rel="noopener noreferrer"
               className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transform hover:scale-110 transition-all duration-300 group"

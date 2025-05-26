@@ -1,7 +1,5 @@
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Headphones, Play } from 'lucide-react';
+import { Headphones, Play, Tag } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { doc, updateDoc, increment } from 'firebase/firestore';
 
@@ -24,28 +22,21 @@ const PodcastCard: React.FC<PodcastCardProps> = ({
 }) => {
   const handleListen = async () => {
     try {
-      console.log('Opening external link:', externalLink);
-      
-      // Validate URL
       if (!externalLink) {
         console.error('No external link provided');
         return;
       }
 
-      // Ensure URL has proper protocol
       let url = externalLink;
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
         url = 'https://' + url;
       }
 
-      // Update listen count in Firestore
       const podcastRef = doc(db, 'podcasts', id);
       await updateDoc(podcastRef, {
         listens: increment(1)
       });
       
-      // Open podcast in new tab
-      console.log('Opening URL:', url);
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (error) {
       console.error('Error in handleListen:', error);
@@ -53,39 +44,40 @@ const PodcastCard: React.FC<PodcastCardProps> = ({
   };
 
   return (
-    <Card className="overflow-hidden border-saudi-light">
-      <div className="relative aspect-[3/2] overflow-hidden">
+    <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-gray-100">
+      {/* Thumbnail with Play Button */}
+      <div className="relative aspect-[3/2] group">
         <img
           src={thumbnail}
           alt={title}
-          className="object-cover w-full h-full"
+          className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-          <Button
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+          <button
             onClick={handleListen}
-            className="bg-saudi hover:bg-saudi-dark rounded-full p-4"
+            className="bg-saudi hover:bg-saudi-dark rounded-full p-4 transform scale-90 group-hover:scale-100 transition-transform duration-300"
           >
             <Play size={24} className="text-white" />
-          </Button>
+          </button>
         </div>
       </div>
-      <CardContent className="p-4">
-        <h3 className="font-bold text-lg mb-2">{title}</h3>
+
+      {/* Content */}
+      <div className="p-6">
+        <h3 className="font-bold text-lg text-gray-900 mb-3 line-clamp-2">{title}</h3>
+        
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1 text-gray-500">
-            <Headphones size={16} />
-            <span>{listens} استماع</span>
-          </div>
-          <Button 
-            onClick={handleListen}
-            className="bg-saudi hover:bg-saudi-dark flex items-center gap-2"
-          >
-            <Headphones size={16} />
+          <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-saudi/10 text-saudi text-sm">
+            <Headphones className="w-4 h-4" />
             <span>{platform}</span>
-          </Button>
+          </div>
+          <div className="flex items-center gap-2 text-gray-600">
+            <Headphones className="w-4 h-4" />
+            <span className="text-sm">{listens.toLocaleString()} استماع</span>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

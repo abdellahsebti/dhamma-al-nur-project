@@ -15,7 +15,8 @@ service cloud.firestore {
 
     // Rate limiting functions
     function getRecentSubmissions(collection) {
-      return collection.where('createdAt', '>', request.time.toMillis() - 3600000);
+      return collection.where('ipAddress', '==', request.ip)
+                     .where('createdAt', '>', request.time.toMillis() - 3600000);
     }
 
     function isRateLimited(collection, limit) {
@@ -109,16 +110,23 @@ service cloud.firestore {
 
     // Contact Forms Collection
     match /contactForms/{formId} {
-      // Only allow creation with strict validation and rate limiting
-      allow create: if isAuthenticated() && 
-        !isRateLimited(collection('contactForms'), 3) &&
-        request.resource.data.keys().hasAll(['name', 'email', 'message', 'subject', 'status', 'createdAt']) &&
-        isValidName(request.resource.data.name) &&
-        isValidEmail(request.resource.data.email) &&
-        isValidMessage(request.resource.data.message) &&
-        request.resource.data.subject is string && request.resource.data.subject.size() >= 3 && request.resource.data.subject.size() <= 100 &&
+      // Allow public creation with basic validation
+      allow create: if 
+        request.resource.data.keys().hasAll(['name', 'email', 'message', 'subject', 'status', 'createdAt', 'ipAddress']) &&
+        request.resource.data.name is string && 
+        request.resource.data.name.size() >= 2 && 
+        request.resource.data.name.size() <= 50 &&
+        request.resource.data.email is string && 
+        request.resource.data.email.matches('^[^@]+@[^@]+\\.[^@]+$') &&
+        request.resource.data.message is string && 
+        request.resource.data.message.size() >= 10 && 
+        request.resource.data.message.size() <= 1000 &&
+        request.resource.data.subject is string && 
+        request.resource.data.subject.size() >= 3 && 
+        request.resource.data.subject.size() <= 100 &&
         request.resource.data.status == 'new' &&
-        request.resource.data.createdAt is timestamp;
+        request.resource.data.createdAt is timestamp &&
+        request.resource.data.ipAddress is string;
       
       // Only admins can read, update, or delete
       allow read, update, delete: if isAdmin();
@@ -126,17 +134,22 @@ service cloud.firestore {
 
     // Join Requests Collection
     match /joinRequests/{requestId} {
-      // Only allow creation with strict validation and rate limiting
-      allow create: if isAuthenticated() && 
+      // Allow public creation with validation and rate limiting
+      allow create: if 
         !isRateLimited(collection('joinRequests'), 2) &&
-        request.resource.data.keys().hasAll(['name', 'email', 'phone', 'specialization', 'message', 'createdAt', 'status']) &&
+        request.resource.data.keys().hasAll(['name', 'email', 'phone', 'specialization', 'message', 'status', 'createdAt', 'ipAddress', 'agreedToTerms', 'updatedAt']) &&
         isValidName(request.resource.data.name) &&
         isValidEmail(request.resource.data.email) &&
         isValidPhone(request.resource.data.phone) &&
-        request.resource.data.specialization is string && request.resource.data.specialization.size() >= 2 && request.resource.data.specialization.size() <= 100 &&
+        request.resource.data.specialization is string && 
+        request.resource.data.specialization.size() >= 2 && 
+        request.resource.data.specialization.size() <= 100 &&
         isValidMessage(request.resource.data.message) &&
         request.resource.data.status == 'pending' &&
-        request.resource.data.createdAt is timestamp;
+        request.resource.data.createdAt is timestamp &&
+        request.resource.data.updatedAt is timestamp &&
+        request.resource.data.ipAddress is string &&
+        request.resource.data.agreedToTerms == true;
       
       // Only admins can read, update, or delete
       allow read, update, delete: if isAdmin();
@@ -188,25 +201,8 @@ service cloud.firestore {
     match /videos/{videoId} {
       // Allow public reads
       allow read: if true;
-      // Only admins can write videos with strict validation
-      allow create: if isAdmin() && 
-        request.resource.data.keys().hasAll(['title', 'description', 'category', 'duration', 'videoUrl', 'thumbnailUrl', 'uploadDate', 'createdBy', 'updatedAt']) &&
-        request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 200 &&
-        request.resource.data.description is string && request.resource.data.description.size() > 0 && request.resource.data.description.size() <= 1000 &&
-        request.resource.data.category is string && request.resource.data.category.size() > 0 &&
-        request.resource.data.duration is string && request.resource.data.duration.size() > 0 &&
-        request.resource.data.videoUrl is string && request.resource.data.videoUrl.matches('^https://www\\.youtube\\.com/watch\\?v=[\\w-]+$') &&
-        request.resource.data.thumbnailUrl is string && request.resource.data.thumbnailUrl.matches('^https://img\\.youtube\\.com/vi/[\\w-]+/[\\w-]+\\.jpg$') &&
-        request.resource.data.uploadDate is timestamp &&
-        request.resource.data.createdBy == request.auth.uid &&
-        request.resource.data.updatedAt is timestamp;
-      // Allow any user to increment the views count (simplified rule)
-      allow update: if request.resource.data.keys().hasOnly(['views']);
-      // Allow admins to perform other updates (like editing video details)
-      allow update: if isAdmin() && 
-        request.resource.data.updatedAt is timestamp &&
-        request.resource.data.updatedAt > resource.data.updatedAt;
-      allow delete: if isAdmin();
+      // Only admins can write videos
+      allow write: if isAdmin();
     }
 
     // Podcasts Collection

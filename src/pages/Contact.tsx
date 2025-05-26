@@ -11,31 +11,19 @@ const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    subject: '',
     message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRateLimited, setIsRateLimited] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(0);
 
   // Check rate limit on component mount
   useEffect(() => {
     checkRateLimit();
   }, []);
 
-  // Update countdown timer
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (timeRemaining > 0) {
-      timer = setInterval(() => {
-        setTimeRemaining(prev => prev - 1);
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [timeRemaining]);
-
   const checkRateLimit = async () => {
     try {
-      console.log('Checking rate limit...');
       const contactFormsRef = collection(db, 'contactForms');
       const oneHourAgo = Timestamp.fromMillis(Date.now() - 3600000);
       
@@ -45,25 +33,10 @@ const Contact: React.FC = () => {
       );
       
       const querySnapshot = await getDocs(q);
-      console.log('Recent submissions:', querySnapshot.size);
-      
-      if (querySnapshot.size >= 3) {
-        const oldestSubmission = querySnapshot.docs
-          .sort((a, b) => a.data().createdAt.seconds - b.data().createdAt.seconds)[0];
-        const timeRemaining = oldestSubmission.data().createdAt.seconds + 3600 - Math.floor(Date.now() / 1000);
-        setIsRateLimited(true);
-        setTimeRemaining(timeRemaining);
-        return true;
-      }
-      
-      setIsRateLimited(false);
-      setTimeRemaining(0);
-      return false;
+      setIsRateLimited(querySnapshot.size >= 3);
     } catch (error) {
       console.error('Error checking rate limit:', error);
-      // If there's an error checking rate limit, allow the submission
-      // but log the error for monitoring
-      return false;
+      setIsRateLimited(false);
     }
   };
 
@@ -73,8 +46,62 @@ const Contact: React.FC = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: value.trim(),
     }));
+  };
+
+  const validateForm = () => {
+    if (!formData.name || !formData.email || !formData.message || !formData.subject) {
+      toast({
+        title: "خطأ في البيانات",
+        description: "يرجى ملء جميع الحقول المطلوبة",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Validate name (2-50 characters, no numbers)
+    if (formData.name.length < 2 || formData.name.length > 50 || /\d/.test(formData.name)) {
+      toast({
+        title: "خطأ في الاسم",
+        description: "يجب أن يكون الاسم بين 2 و 50 حرفاً ولا يحتوي على أرقام",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast({
+        title: "خطأ في البريد الإلكتروني",
+        description: "يرجى إدخال بريد إلكتروني صحيح",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Validate subject (3-100 characters)
+    if (formData.subject.length < 3 || formData.subject.length > 100) {
+      toast({
+        title: "خطأ في الموضوع",
+        description: "يجب أن يكون الموضوع بين 3 و 100 حرف",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Validate message (10-1000 characters)
+    if (formData.message.length < 10 || formData.message.length > 1000) {
+      toast({
+        title: "خطأ في الرسالة",
+        description: "يجب أن تكون الرسالة بين 10 و 1000 حرف",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,9 +110,13 @@ const Contact: React.FC = () => {
     if (isRateLimited) {
       toast({
         title: "تم تجاوز الحد المسموح",
-        description: `يرجى الانتظار ${Math.ceil(timeRemaining / 60)} دقيقة قبل المحاولة مرة أخرى`,
+        description: "يرجى المحاولة مرة أخرى بعد ساعة",
         variant: "destructive",
       });
+      return;
+    }
+
+    if (!validateForm()) {
       return;
     }
 
@@ -93,61 +124,57 @@ const Contact: React.FC = () => {
 
     try {
       // Check rate limit before submitting
-      const isLimited = await checkRateLimit();
+      await checkRateLimit();
       
-      if (isLimited) {
+      if (isRateLimited) {
         toast({
           title: "تم تجاوز الحد المسموح",
-          description: `يرجى الانتظار ${Math.ceil(timeRemaining / 60)} دقيقة قبل المحاولة مرة أخرى`,
+          description: "يرجى المحاولة مرة أخرى بعد ساعة",
           variant: "destructive",
         });
         return;
       }
 
-      // Validate form data
-      if (!formData.name || !formData.email || !formData.message) {
-        toast({
-          title: "خطأ في البيانات",
-          description: "يرجى ملء جميع الحقول المطلوبة",
-          variant: "destructive",
-        });
-        return;
+      // Get IP address using a public API with fallback
+      let ipAddress = 'unknown';
+      try {
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        ipAddress = ipData.ip;
+      } catch (error) {
+        console.error('Error fetching IP:', error);
       }
 
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email)) {
-        toast({
-          title: "خطأ في البريد الإلكتروني",
-          description: "يرجى إدخال بريد إلكتروني صحيح",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Send data to Firebase
-      const contactFormData = {
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        message: formData.message.trim(),
-        subject: "New Contact Form Submission",
+      // Prepare contact data
+      const contactData = {
+        name: formData.name,
+        email: formData.email,
+        subject: formData.subject,
+        message: formData.message,
         status: 'new',
         createdAt: serverTimestamp(),
+        ipAddress: ipAddress
       };
 
-      console.log('Submitting contact form:', contactFormData);
-      await addDoc(collection(db, "contactForms"), contactFormData);
+      // Send data to Firebase
+      const contactFormsRef = collection(db, 'contactForms');
+      await addDoc(contactFormsRef, contactData);
 
       toast({
-        title: "تم الإرسال بنجاح",
-        description: "سنتواصل معكم قريباً إن شاء الله",
+        title: "تم إرسال الرسالة بنجاح",
+        description: "سنقوم بالرد عليك في أقرب وقت ممكن",
       });
 
+      // Reset form
       setFormData({
         name: '',
         email: '',
+        subject: '',
         message: '',
       });
+
+      // Update rate limit status
+      await checkRateLimit();
     } catch (error) {
       console.error("Error submitting form: ", error);
       let errorMessage = "يرجى المحاولة مرة أخرى";
@@ -161,7 +188,7 @@ const Contact: React.FC = () => {
       }
       
       toast({
-        title: "حدث خطأ",
+        title: "خطأ في إرسال الرسالة",
         description: errorMessage,
         variant: "destructive",
       });
@@ -173,7 +200,7 @@ const Contact: React.FC = () => {
   return (
     <div className="min-h-screen py-12">
       <div className="container mx-auto max-w-3xl">
-        <h1 className="text-3xl font-bold mb-8 text-saudi">تواصل معنا</h1>
+        <h1 className="text-3xl font-bold mb-8 text-saudi">اتصل بنا</h1>
         
         <div className="bg-white rounded-2xl p-8 shadow-md border border-saudi-light">
           <p className="mb-6 text-lg">
@@ -183,7 +210,7 @@ const Contact: React.FC = () => {
           {isRateLimited && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-red-600">
-                تم تجاوز الحد المسموح من الرسائل. يرجى الانتظار {Math.ceil(timeRemaining / 60)} دقيقة قبل المحاولة مرة أخرى.
+                تم تجاوز الحد المسموح من الرسائل. يرجى المحاولة مرة أخرى بعد ساعة.
               </p>
             </div>
           )}
@@ -200,7 +227,8 @@ const Contact: React.FC = () => {
                 onChange={handleChange}
                 required
                 className="border-saudi-light"
-                disabled={isRateLimited}
+                disabled={isSubmitting || isRateLimited}
+                placeholder="أدخل اسمك الكامل"
               />
             </div>
             
@@ -216,7 +244,24 @@ const Contact: React.FC = () => {
                 onChange={handleChange}
                 required
                 className="border-saudi-light"
-                disabled={isRateLimited}
+                disabled={isSubmitting || isRateLimited}
+                placeholder="أدخل بريدك الإلكتروني"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="subject" className="block mb-2 font-medium">
+                الموضوع
+              </label>
+              <Input
+                id="subject"
+                name="subject"
+                value={formData.subject}
+                onChange={handleChange}
+                required
+                className="border-saudi-light"
+                disabled={isSubmitting || isRateLimited}
+                placeholder="أدخل موضوع الرسالة"
               />
             </div>
             
@@ -231,7 +276,8 @@ const Contact: React.FC = () => {
                 onChange={handleChange}
                 required
                 className="min-h-[150px] border-saudi-light"
-                disabled={isRateLimited}
+                disabled={isSubmitting || isRateLimited}
+                placeholder="اكتب رسالتك هنا..."
               />
             </div>
             

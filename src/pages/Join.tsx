@@ -1,228 +1,402 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { Facebook, Instagram, Linkedin, Youtube, ArrowLeft } from 'lucide-react';
-import { collection, addDoc, serverTimestamp, query, where, getDocs, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
-
+import { db } from '@/lib/firebase';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@/components/ui/accordion';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+} from "@/components/ui/accordion";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: 'الاسم يجب أن يكون أكثر من حرفين',
-  }),
-  email: z.string().email({
-    message: 'البريد الإلكتروني غير صحيح',
-  }),
-  phone: z.string().min(10, {
-    message: 'رقم الهاتف يجب أن يكون 10 أرقام على الأقل',
-  }),
-  specialization: z.string().min(2, {
-    message: 'التخصص مطلوب',
-  }),
-  message: z.string().min(10, {
-    message: 'الرسالة يجب أن تكون أكثر من 10 أحرف',
-  }),
-  acceptRules: z.boolean().refine(val => val === true, {
-    message: 'يجب الموافقة على الشروط قبل إرسال الطلب',
-  }),
-});
+interface JoinFormData {
+  name: string;
+  email: string;
+  phone: string;
+  specialization: string;
+  message: string;
+  agreedToTerms: boolean;
+}
 
 const Join: React.FC = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
+  const [formData, setFormData] = useState<JoinFormData>({
+    name: '',
+    email: '',
+    phone: '',
+    specialization: '',
+    message: '',
+    agreedToTerms: false,
+  });
+  const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRateLimited, setIsRateLimited] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(0);
-  
+
   // Check rate limit on component mount
   useEffect(() => {
     checkRateLimit();
   }, []);
 
-  // Update countdown timer
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (timeRemaining > 0) {
-      timer = setInterval(() => {
-        setTimeRemaining(prev => prev - 1);
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [timeRemaining]);
-
   const checkRateLimit = async () => {
     try {
-      console.log('Checking rate limit...');
-      const joinRequestsRef = collection(db, 'joinRequests');
+      const joinApplicationsRef = collection(db, 'joinRequests');
       const oneHourAgo = Timestamp.fromMillis(Date.now() - 3600000);
       
-      // Get all requests from the last hour
+      // Get IP address first
+      let ipAddress = 'unknown';
+      try {
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        ipAddress = ipData.ip;
+      } catch (error) {
+        console.error('Error fetching IP:', error);
+      }
+      
+      // Check both IP and email based submissions
       const q = query(
-        joinRequestsRef,
-        where('createdAt', '>', oneHourAgo)
+        joinApplicationsRef,
+        where('createdAt', '>', oneHourAgo),
+        where('ipAddress', '==', ipAddress)
       );
       
       const querySnapshot = await getDocs(q);
-      console.log('Recent submissions:', querySnapshot.size);
-      
-      if (querySnapshot.size >= 2) {
-        const oldestSubmission = querySnapshot.docs
-          .sort((a, b) => a.data().createdAt.seconds - b.data().createdAt.seconds)[0];
-        const timeRemaining = oldestSubmission.data().createdAt.seconds + 3600 - Math.floor(Date.now() / 1000);
-        setIsRateLimited(true);
-        setTimeRemaining(timeRemaining);
-        return true;
-      }
-      
-      setIsRateLimited(false);
-      setTimeRemaining(0);
-      return false;
+      setIsRateLimited(querySnapshot.size >= 1); // Reduced to 1 submission per hour
     } catch (error) {
       console.error('Error checking rate limit:', error);
-      // If there's an error checking rate limit, allow the submission
-      // but log the error for monitoring
-      return false;
+      setIsRateLimited(false);
     }
   };
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      specialization: '',
-      message: '',
-      acceptRules: false,
-    },
-  });
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    // Don't trim while typing to allow spaces
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const handleCheckboxChange = (checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      agreedToTerms: checked
+    }));
+  };
+
+  const validateForm = () => {
+    if (!formData.name || !formData.email || !formData.phone || !formData.specialization || !formData.message) {
+      toast({
+        title: "خطأ في البيانات",
+        description: "يرجى ملء جميع الحقول المطلوبة",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Validate name (2-50 characters, no numbers)
+    if (formData.name.length < 2 || formData.name.length > 50 || /\d/.test(formData.name)) {
+      toast({
+        title: "خطأ في الاسم",
+        description: "يجب أن يكون الاسم بين 2 و 50 حرفاً ولا يحتوي على أرقام",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast({
+        title: "خطأ في البريد الإلكتروني",
+        description: "يرجى إدخال بريد إلكتروني صحيح",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Validate phone (International format)
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    if (!phoneRegex.test(formData.phone.replace(/\s+/g, ''))) {
+      toast({
+        title: "خطأ في رقم الهاتف",
+        description: "يرجى إدخال رقم هاتف صحيح (مثال: +1234567890)",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Validate specialization (3-100 characters)
+    if (formData.specialization.length < 3 || formData.specialization.length > 100) {
+      toast({
+        title: "خطأ في التخصص",
+        description: "يجب أن يكون التخصص بين 3 و 100 حرف",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Validate message (10-1000 characters)
+    if (formData.message.length < 10 || formData.message.length > 1000) {
+      toast({
+        title: "خطأ في الرسالة",
+        description: "يجب أن تكون الرسالة بين 10 و 1000 حرف",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!formData.agreedToTerms) {
+      toast({
+        title: "خطأ في الموافقة",
+        description: "يجب الموافقة على الشروط والأحكام",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Additional spam prevention checks
+    const spamKeywords = ['viagra', 'casino', 'lottery', 'winner', 'prize', 'free', 'click here'];
+    const messageLower = formData.message.toLowerCase();
+    const nameLower = formData.name.toLowerCase();
+    const emailLower = formData.email.toLowerCase();
+
+    // Check for spam keywords in message
+    if (spamKeywords.some(keyword => messageLower.includes(keyword))) {
+      toast({
+        title: "خطأ في المحتوى",
+        description: "يحتوي المحتوى على كلمات غير مسموح بها",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Check for suspicious patterns in name
+    if (nameLower.includes('http') || nameLower.includes('www') || nameLower.includes('.com')) {
+      toast({
+        title: "خطأ في الاسم",
+        description: "الاسم يحتوي على روابط غير مسموح بها",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Check for disposable email domains
+    const disposableDomains = ['tempmail.com', 'throwawaymail.com', 'mailinator.com'];
+    const emailDomain = emailLower.split('@')[1];
+    if (disposableDomains.includes(emailDomain)) {
+      toast({
+        title: "خطأ في البريد الإلكتروني",
+        description: "لا يمكن استخدام بريد إلكتروني مؤقت",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Check for repeated characters (common in spam)
+    const repeatedChars = /(.)\1{4,}/;
+    if (repeatedChars.test(nameLower) || repeatedChars.test(messageLower)) {
+      toast({
+        title: "خطأ في المحتوى",
+        description: "يحتوي المحتوى على تكرار غير طبيعي",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (isRateLimited) {
       toast({
         title: "تم تجاوز الحد المسموح",
-        description: `يرجى الانتظار ${Math.ceil(timeRemaining / 3600)} ساعة قبل المحاولة مرة أخرى`,
+        description: "يمكنك تقديم طلب واحد فقط كل ساعة",
         variant: "destructive",
       });
       return;
     }
 
+    if (!validateForm()) {
+      return;
+    }
+
     setIsSubmitting(true);
+
     try {
-      // Check rate limit before submitting
-      const isLimited = await checkRateLimit();
+      console.log('Starting form submission...');
       
-      if (isLimited) {
+      // Check rate limit before submitting
+      await checkRateLimit();
+      console.log('Rate limit check completed');
+      
+      if (isRateLimited) {
         toast({
           title: "تم تجاوز الحد المسموح",
-          description: `يرجى الانتظار ${Math.ceil(timeRemaining / 3600)} ساعة قبل المحاولة مرة أخرى`,
+          description: "يمكنك تقديم طلب واحد فقط كل ساعة",
           variant: "destructive",
         });
         return;
       }
 
-      // Sanitize and validate data
-      const sanitizedData = {
-        name: values.name.trim().replace(/[<>]/g, ''), // Remove potential HTML tags
-        email: values.email.trim().toLowerCase(),
-        phone: values.phone.trim(),
-        specialization: values.specialization.trim().replace(/[<>]/g, ''),
-        message: values.message.trim().replace(/[<>]/g, ''),
+      // Get IP address using a public API with fallback
+      let ipAddress = 'unknown';
+      try {
+        console.log('Fetching IP address...');
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        ipAddress = ipData.ip;
+        console.log('IP address fetched:', ipAddress);
+      } catch (error) {
+        console.error('Error fetching IP:', error);
+      }
+
+      // Clean and format the data
+      const cleanedData = {
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.trim().replace(/\s+/g, ''),
+        specialization: formData.specialization.trim(),
+        message: formData.message.trim(),
         status: 'pending',
         createdAt: serverTimestamp(),
+        ipAddress: ipAddress,
+        agreedToTerms: true,
         updatedAt: serverTimestamp()
       };
 
-      // Validate data lengths
-      if (sanitizedData.name.length > 50 ||
-          sanitizedData.email.length > 100 ||
-          sanitizedData.phone.length > 15 ||
-          sanitizedData.specialization.length > 100 ||
-          sanitizedData.message.length > 1000) {
-        throw new Error('Data exceeds maximum length limits');
-      }
-
-      // Validate email format
-      const emailRegex = /^[^@]+@[^@]+\.[^@]+$/;
-      if (!emailRegex.test(sanitizedData.email)) {
-        throw new Error('Invalid email format');
-      }
-
-      // Validate phone format
-      const phoneRegex = /^[+]?[0-9]{8,15}$/;
-      if (!phoneRegex.test(sanitizedData.phone)) {
-        throw new Error('Invalid phone format');
-      }
-
-      // Check for spam keywords
-      const spamKeywords = ['casino', 'viagra', 'lottery', 'winner', 'prize', 'free money', 'click here', 'buy now', 'limited time'];
-      const containsSpam = spamKeywords.some(keyword => 
-        sanitizedData.message.toLowerCase().includes(keyword) ||
-        sanitizedData.name.toLowerCase().includes(keyword)
-      );
-      
-      if (containsSpam) {
-        throw new Error('Message contains spam content');
-      }
-
-      // Log submission attempt (without sensitive data)
-      console.log('Submitting join request:', {
-        name: sanitizedData.name,
-        email: sanitizedData.email,
-        phone: sanitizedData.phone,
-        specialization: sanitizedData.specialization,
-        message: '[REDACTED]',
-        status: sanitizedData.status,
-        timestamp: new Date().toISOString()
+      console.log('Prepared data:', {
+        ...cleanedData,
+        createdAt: 'timestamp',
+        updatedAt: 'timestamp'
       });
 
-      await addDoc(collection(db, "joinRequests"), sanitizedData);
+      // Send data to Firebase
+      console.log('Attempting to save to Firestore...');
+      const joinApplicationsRef = collection(db, 'joinRequests');
       
-      toast({
-        title: "تم الإرسال بنجاح",
-        description: "سنتواصل معكم قريباً إن شاء الله",
-      });
-      
-      form.reset();
+      try {
+        // Log each validation step
+        console.log('Validating data...');
+        
+        // Check required fields
+        const requiredFields = ['name', 'email', 'phone', 'specialization', 'message', 'status', 'createdAt', 'ipAddress', 'agreedToTerms', 'updatedAt'];
+        const missingFields = requiredFields.filter(field => !(field in cleanedData));
+        if (missingFields.length > 0) {
+          console.error('Missing required fields:', missingFields);
+          throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+        }
+
+        // Validate name
+        if (cleanedData.name.length < 2 || cleanedData.name.length > 50) {
+          console.error('Invalid name length:', cleanedData.name.length);
+          throw new Error('Invalid name length');
+        }
+
+        // Validate email
+        if (!cleanedData.email.match(/^[^@]+@[^@]+\.[^@]+$/)) {
+          console.error('Invalid email format:', cleanedData.email);
+          throw new Error('Invalid email format');
+        }
+
+        // Validate phone
+        if (!cleanedData.phone.match(/^[+]?[0-9]{8,15}$/)) {
+          console.error('Invalid phone format:', cleanedData.phone);
+          throw new Error('Invalid phone format');
+        }
+
+        // Validate specialization
+        if (cleanedData.specialization.length < 2 || cleanedData.specialization.length > 100) {
+          console.error('Invalid specialization length:', cleanedData.specialization.length);
+          throw new Error('Invalid specialization length');
+        }
+
+        // Validate message
+        if (cleanedData.message.length < 10 || cleanedData.message.length > 1000) {
+          console.error('Invalid message length:', cleanedData.message.length);
+          throw new Error('Invalid message length');
+        }
+
+        // Validate status
+        if (cleanedData.status !== 'pending') {
+          console.error('Invalid status:', cleanedData.status);
+          throw new Error('Invalid status');
+        }
+
+        // Validate agreedToTerms
+        if (cleanedData.agreedToTerms !== true) {
+          console.error('Terms not agreed to');
+          throw new Error('Terms must be agreed to');
+        }
+
+        console.log('All validations passed, attempting to save...');
+        const docRef = await addDoc(joinApplicationsRef, cleanedData);
+        console.log('Document created with ID:', docRef.id);
+
+        if (!docRef.id) {
+          throw new Error('Failed to create document - no ID returned');
+        }
+
+        toast({
+          title: "تم تقديم الطلب بنجاح",
+          description: "سنقوم بمراجعة طلبك والرد عليك في أقرب وقت ممكن",
+        });
+
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          specialization: '',
+          message: '',
+          agreedToTerms: false,
+        });
+
+        // Update rate limit status
+        await checkRateLimit();
+      } catch (firestoreError) {
+        console.error('Firestore error:', firestoreError);
+        throw new Error(`Firestore error: ${firestoreError.message}`);
+      }
     } catch (error) {
-      console.error('Error submitting form:', error);
-      let errorMessage = 'حدث خطأ أثناء إرسال الطلب، يرجى المحاولة مرة أخرى';
+      console.error("Error submitting form: ", error);
+      let errorMessage = "يرجى المحاولة مرة أخرى";
       
       if (error instanceof Error) {
+        console.error('Error details:', {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        });
+
         if (error.message.includes('permission-denied')) {
-          errorMessage = 'حدث خطأ في الصلاحيات. يرجى المحاولة مرة أخرى';
+          errorMessage = "حدث خطأ في الصلاحيات. يرجى المحاولة مرة أخرى";
         } else if (error.message.includes('invalid-argument')) {
-          errorMessage = 'البيانات المدخلة غير صحيحة';
-        } else if (error.message.includes('maximum length')) {
-          errorMessage = 'البيانات المدخلة تتجاوز الحد المسموح به';
-        } else if (error.message.includes('spam content')) {
-          errorMessage = 'يحتوي المحتوى على كلمات غير مسموح بها';
+          errorMessage = "البيانات المدخلة غير صحيحة";
+        } else if (error.message.includes('Failed to create document')) {
+          errorMessage = "حدث خطأ أثناء حفظ البيانات. يرجى المحاولة مرة أخرى";
+        } else if (error.message.includes('Firestore error')) {
+          errorMessage = "حدث خطأ في قاعدة البيانات. يرجى المحاولة مرة أخرى";
         }
       }
       
       toast({
-        title: "حدث خطأ",
+        title: "خطأ في تقديم الطلب",
         description: errorMessage,
         variant: "destructive",
       });
@@ -232,197 +406,212 @@ const Join: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen py-12">
+    <div className="min-h-screen py-12 bg-gradient-to-b from-saudi-light/5 to-white">
       <div className="container mx-auto px-4">
-        {/* Add back button at the top left */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-4xl font-bold text-center text-saudi">انضم إلى مشروع ضمة</h1>
-          <Button 
-            variant="outline" 
-            className="border-saudi text-saudi hover:bg-saudi-light flex items-center gap-2"
-            onClick={() => navigate('/')}
-          >
-            <ArrowLeft size={16} />
-            العودة للصفحة الرئيسية
-          </Button>
-        </div>
-        
-        {/* Social Media Links */}
-        <div className="flex justify-center space-x-6 space-x-reverse mb-10">
-          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover-scale">
-            <Instagram className="w-8 h-8 text-saudi hover:text-saudi-dark transition-colors" />
-          </a>
-          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover-scale">
-            <Facebook className="w-8 h-8 text-saudi hover:text-saudi-dark transition-colors" />
-          </a>
-          <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover-scale">
-            <Linkedin className="w-8 h-8 text-saudi hover:text-saudi-dark transition-colors" />
-          </a>
-          <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="hover-scale">
-            <Youtube className="w-8 h-8 text-saudi hover:text-saudi-dark transition-colors" />
-          </a>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {/* Rules Section */}
-          <div className="bg-white rounded-2xl p-8 shadow-md border border-saudi-light relative overflow-hidden">
-            <div className="absolute inset-0 arabesque-bg opacity-10"></div>
-            <h2 className="text-2xl font-bold mb-6 text-saudi relative z-10">شروط الانضمام للمشروع</h2>
-            
-            <Accordion type="single" collapsible className="relative z-10">
-              <AccordionItem value="item-1" className="animate-fade-in border-t-0 border-b border-saudi-light">
-                <AccordionTrigger className="hover:text-saudi">الالتزام بالمنهج السلفي</AccordionTrigger>
-                <AccordionContent className="text-gray-700">
-                  يجب أن يكون المتقدم ملتزماً بالمنهج السلفي الصحيح، متبعاً للكتاب والسنة على فهم السلف الصالح، بعيداً عن البدع والمحدثات في الدين.
-                </AccordionContent>
-              </AccordionItem>
-              
-              <AccordionItem value="item-2" className="animate-fade-in border-b border-saudi-light" style={{ animationDelay: '100ms' }}>
-                <AccordionTrigger className="hover:text-saudi">المعرفة العلمية</AccordionTrigger>
-                <AccordionContent className="text-gray-700">
-                  يُفضل أن يكون المتقدم لديه خلفية علمية شرعية أو في مجال تخصصه، وأن يكون قادراً على البحث والتوثيق العلمي الدقيق.
-                </AccordionContent>
-              </AccordionItem>
-              
-              <AccordionItem value="item-3" className="animate-fade-in border-b border-saudi-light" style={{ animationDelay: '200ms' }}>
-                <AccordionTrigger className="hover:text-saudi">الالتزام بالمواعيد</AccordionTrigger>
-                <AccordionContent className="text-gray-700">
-                  المتقدم يلتزم بإنجاز المهام الموكلة إليه في المواعيد المحددة، ويكون منضبطاً في العمل والتواصل مع فريق المشروع.
-                </AccordionContent>
-              </AccordionItem>
-              
-              <AccordionItem value="item-4" className="animate-fade-in border-b border-saudi-light" style={{ animationDelay: '300ms' }}>
-                <AccordionTrigger className="hover:text-saudi">الدقة في النقل والتوثيق</AccordionTrigger>
-                <AccordionContent className="text-gray-700">
-                  الحرص على الدقة في نقل المعلومات وتوثيقها من مصادرها الأصلية، واتباع المنهجية العلمية في البحث والتحقيق.
-                </AccordionContent>
-              </AccordionItem>
-              
-              <AccordionItem value="item-5" className="animate-fade-in border-b-0" style={{ animationDelay: '400ms' }}>
-                <AccordionTrigger className="hover:text-saudi">حقوق الملكية</AccordionTrigger>
-                <AccordionContent className="text-gray-700">
-                  كل ما ينشر ضمن المشروع يكون حقوقه محفوظة للمشروع، مع ذكر اسم المساهم في العمل كمرجع للمشاركة.
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-            
-            <div className="mt-6 p-4 bg-saudi-light/30 rounded-lg relative z-10 animate-fade-in" style={{ animationDelay: '500ms' }}>
-              <h3 className="font-bold text-saudi">ملاحظة هامة:</h3>
-              <p className="text-gray-700">هذه الشروط قابلة للتعديل والتحديث من قبل إدارة المشروع، ويتم إخطار المشاركين بأي تغييرات تطرأ عليها.</p>
-            </div>
-          </div>
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-4xl font-bold mb-8 text-saudi text-center">انضم إلينا</h1>
           
-          {/* Join Form */}
-          <div className="bg-white rounded-2xl p-8 shadow-md border border-saudi-light">
-            <h2 className="text-2xl font-bold mb-6 text-saudi">نموذج طلب الانضمام</h2>
-            
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>الاسم الكامل</FormLabel>
-                      <FormControl>
-                        <Input placeholder="أدخل اسمك الكامل" {...field} disabled={isRateLimited} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Application Form */}
+            <div className="bg-white rounded-2xl p-8 shadow-md border border-saudi-light relative overflow-hidden">
+              <div className="absolute inset-0 arabesque-bg opacity-10"></div>
+              <div className="relative z-10">
+                <h2 className="text-2xl font-bold mb-6 text-saudi">نموذج التقديم</h2>
+                <p className="text-gray-600 mb-6">يرجى ملء النموذج التالي للتقديم على الانضمام للمشروع</p>
                 
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>البريد الإلكتروني</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="example@domain.com" {...field} disabled={isRateLimited} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="mb-6 p-4 bg-saudi-light/10 border border-saudi-light rounded-lg">
+                  <p className="text-saudi-dark">
+                    للتواصل المباشر: <br />
+                    البريد الإلكتروني: <a href="mailto:dhamma.productionss@gmail.com" className="text-saudi hover:underline">dhamma.productionss@gmail.com</a><br />
+                    انستغرام: <a href="https://www.instagram.com/dhamma.productions/" target="_blank" rel="noopener noreferrer" className="text-saudi hover:underline">@dhamma.productions</a>
+                  </p>
+                </div>
                 
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>رقم الهاتف</FormLabel>
-                      <FormControl>
-                        <Input placeholder="+966 5XXXXXXXX" {...field} disabled={isRateLimited} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {isRateLimited && (
+                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-red-600">
+                      تم تجاوز الحد المسموح من الطلبات. يرجى المحاولة مرة أخرى بعد ساعة.
+                    </p>
+                  </div>
+                )}
                 
-                <FormField
-                  control={form.control}
-                  name="specialization"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>التخصص</FormLabel>
-                      <FormControl>
-                        <Input placeholder="مثال: العقيدة، الفقه، التفسير..." {...field} disabled={isRateLimited} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-gray-700">الاسم الكامل</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      placeholder="أدخل اسمك الكامل"
+                      className="border-saudi-light focus:border-saudi"
+                      disabled={isSubmitting || isRateLimited}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-gray-700">البريد الإلكتروني</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      placeholder="أدخل بريدك الإلكتروني"
+                      className="border-saudi-light focus:border-saudi"
+                      disabled={isSubmitting || isRateLimited}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-gray-700">رقم الهاتف</Label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      required
+                      placeholder="+1234567890"
+                      className="border-saudi-light focus:border-saudi"
+                      disabled={isSubmitting || isRateLimited}
+                    />
+                    <p className="text-sm text-gray-500">أدخل رقم هاتفك مع رمز الدولة (مثال: +1234567890)</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="specialization" className="text-gray-700">التخصص أو المهارة</Label>
+                    <Input
+                      id="specialization"
+                      name="specialization"
+                      value={formData.specialization}
+                      onChange={handleChange}
+                      required
+                      placeholder="مثال: مونتاج، تصميم، كتابة..."
+                      className="border-saudi-light focus:border-saudi"
+                      disabled={isSubmitting || isRateLimited}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="message" className="text-gray-700">رسالة التقديم</Label>
+                    <Textarea
+                      id="message"
+                      name="message"
+                      value={formData.message}
+                      onChange={handleChange}
+                      required
+                      placeholder="اكتب رسالة توضح سبب رغبتك في الانضمام للمشروع"
+                      className="min-h-[120px] border-saudi-light focus:border-saudi"
+                      disabled={isSubmitting || isRateLimited}
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2 space-x-reverse p-4 border border-saudi-light/50 rounded-lg">
+                    <Checkbox
+                      id="terms"
+                      checked={formData.agreedToTerms}
+                      onCheckedChange={handleCheckboxChange}
+                      className="border-saudi-light data-[state=checked]:bg-saudi data-[state=checked]:border-saudi"
+                      disabled={isSubmitting || isRateLimited}
+                    />
+                    <Label htmlFor="terms" className="text-sm text-gray-700">
+                      أوافق على جميع الشروط والأحكام المذكورة أعلاه
+                    </Label>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-saudi hover:bg-saudi-dark text-white font-medium py-2.5"
+                    disabled={isSubmitting || isRateLimited}
+                  >
+                    {isSubmitting ? 'جاري التقديم...' : 'تقديم الطلب'}
+                  </Button>
+                </form>
+              </div>
+            </div>
+
+            {/* Rules and Conditions */}
+            <div className="bg-white rounded-2xl p-8 shadow-md border border-saudi-light relative overflow-hidden">
+              <div className="absolute inset-0 arabesque-bg opacity-10"></div>
+              <div className="relative z-10">
+                <h2 className="text-2xl font-bold mb-6 text-saudi">القوانين التنظيمية</h2>
+                <p className="text-gray-600 mb-6">يرجى قراءة الشروط والأحكام بعناية قبل التقديم</p>
                 
-                <FormField
-                  control={form.control}
-                  name="message"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>نبذة عنك ودوافع الانضمام</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="اكتب هنا نبذة مختصرة عن نفسك وخبراتك ودوافعك للانضمام للمشروع..." 
-                          className="min-h-[120px]"
-                          {...field} 
-                          disabled={isRateLimited}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="acceptRules"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-x-reverse space-y-0 p-4 border border-saudi-light/50 rounded-lg">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>
-                          أقر بأنني اطلعت على شروط الانضمام للمشروع وأوافق عليها
-                        </FormLabel>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <Button 
-                  type="submit" 
-                  className="w-full bg-saudi hover:bg-saudi-dark"
-                  disabled={isSubmitting || isRateLimited}
-                >
-                  {isSubmitting ? 'جاري إرسال الطلب...' : 'إرسال طلب الانضمام'}
-                </Button>
-              </form>
-            </Form>
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="basic-principles" className="border-b border-saudi-light">
+                    <AccordionTrigger className="hover:text-saudi">الباب الأول: المبادئ الأساسية للمشروع</AccordionTrigger>
+                    <AccordionContent>
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                        <li>يُشترط الالتزام التام بالمنهج السلفي في جميع ما يُطرح داخل المشروع.</li>
+                        <li>يجب أن يتم العمل بروح الأخوة والنية الصالحة والالتزام الجماعي.</li>
+                        <li>التواصل داخل مجموعات العمل يجب أن يكون بلغة راقية بعيدًا عن المزاح المفرط أو اللهجة العامية السوقية.</li>
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="content-rules" className="border-b border-saudi-light">
+                    <AccordionTrigger className="hover:text-saudi">الباب الثاني: القواعد الخاصة بالمحتوى والنشر</AccordionTrigger>
+                    <AccordionContent>
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                        <li>يُمنع إخراج أي محتوى أو نقاش داخلي من مجموعات المشروع إلى الخارج.</li>
+                        <li>يُمنع نشر أي محتوى دون مراجعته شرعيًا وعلميًا.</li>
+                        <li>يُمنع نشر أي مادة على المنصات الرسمية إلا بإذن مسبق من المشرف العام.</li>
+                        <li>يُمنع نشر الآراء الشخصية داخل محتوى المشروع إلا إذا كانت موثقة وموافَق عليها.</li>
+                        <li>يُقبل حذف أو تعديل المحتوى المنشور بشكل دوري من قبل المشرفين.</li>
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="management" className="border-b border-saudi-light">
+                    <AccordionTrigger className="hover:text-saudi">الباب الثالث: التنظيم الإداري والإشراف</AccordionTrigger>
+                    <AccordionContent>
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                        <li>يُمنع فتح مجموعات أو قنوات جديدة باسم المشروع دون إذن صريح من الإدارة.</li>
+                        <li>يُمنع التحدث باسم المشروع أو تمثيله دون تكليف رسمي من الإدارة.</li>
+                        <li>يتم تقييم الأعضاء دوريًا لضمان جودة الأداء واستمرار الاستحقاق في البقاء ضمن الفريق.</li>
+                        <li>في حال حدوث خلافات أو مشاكل بين الأعضاء، يتم اللجوء إلى رئيس المشروع للفصل فيها، ويكون قراره نهائيًا.</li>
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="confidentiality" className="border-b border-saudi-light">
+                    <AccordionTrigger className="hover:text-saudi">الباب الرابع: السرية والأخلاقيات</AccordionTrigger>
+                    <AccordionContent>
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                        <li>يجب الحفاظ على سرية هوية الأعضاء وعدم ذكر الأسماء خارج نطاق المشروع.</li>
+                        <li>يُمنع استخدام أدوات أو برامج مقرصنة ضمن أنشطة المشروع.</li>
+                        <li>يجب الحفاظ على سرية الملفات والتعامل معها بحذر واحترافية.</li>
+                        <li>يُمنع فرض الآراء أو التعامل بفوقية داخل الفريق، كما يُمنع كل شكل من أشكال التعصب أو التهميش.</li>
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="time-management" className="border-b border-saudi-light">
+                    <AccordionTrigger className="hover:text-saudi">الباب الخامس: التنظيم الزمني والمهام</AccordionTrigger>
+                    <AccordionContent>
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                        <li>الالتزام بالمواعيد المحددة لإنجاز المهام وعدم التأخر دون عذر مقبول.</li>
+                        <li>يُمنع النقاش في المسائل الخلافية أو السياسية داخل مجموعات المشروع.</li>
+                        <li>يُمنع للعضو الانضمام لمشروع مشابه دون إعلام الإدارة وأخذ الإذن.</li>
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="project-name" className="border-b-0">
+                    <AccordionTrigger className="hover:text-saudi">الباب السادس: استخدام اسم المشروع</AccordionTrigger>
+                    <AccordionContent>
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                        <li>يُمنع استخدام اسم المشروع في أي نشاط خارجي دون موافقة مسبقة من الإدارة.</li>
+                        <li>يُمنع استخدام اسم المشروع في أي منصات أو فعاليات دون إذن مسبق.</li>
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+            </div>
           </div>
         </div>
       </div>

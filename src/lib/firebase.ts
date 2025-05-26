@@ -1,26 +1,21 @@
 // Import the functions you need from the SDKs
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
-// Firebase configuration using environment variables
-// Note: These environment variables should be set in your .env file
-// and should never be committed to version control
+// Firebase configuration
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  apiKey: "AIzaSyAW7PNwnd5BXL21R2lF_oL8_-SnzgPgVLs",
+  authDomain: "dammmasssss.firebaseapp.com",
+  projectId: "dammmasssss",
+  storageBucket: "dammmasssss.firebasestorage.app",
+  messagingSenderId: "1070789052123",
+  appId: "1:1070789052123:web:cfe20676cfe07ae797aefe",
+  measurementId: "G-2TJYPTG3X0"
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-
-// Initialize Firebase Authentication and get a reference to the service
-export const auth = getAuth(app);
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
 // Initialize Cloud Firestore and get a reference to the service
 export const db = getFirestore(app);

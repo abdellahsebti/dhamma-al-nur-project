@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
-import { Search, Headphones } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import PodcastCard from '@/components/PodcastCard';
 
 interface Podcast {
@@ -27,6 +34,7 @@ interface Podcast {
 
 const Podcasts: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [podcasts, setPodcasts] = useState<Podcast[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -39,17 +47,12 @@ const Podcasts: React.FC = () => {
     try {
       setLoading(true);
       const podcastsRef = collection(db, 'podcasts');
-      const q = query(podcastsRef, orderBy('title'));
+      const q = query(podcastsRef, orderBy('date', 'desc'));
       const querySnapshot = await getDocs(q);
-      const fetchedPodcasts = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        console.log('Raw podcast data from Firestore:', data);
-        return {
-          id: doc.id,
-          ...data
-        };
-      }) as Podcast[];
-      console.log('Processed podcasts:', fetchedPodcasts);
+      const fetchedPodcasts = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Podcast[];
       setPodcasts(fetchedPodcasts);
     } catch (error) {
       console.error("Error fetching podcasts:", error);
@@ -63,27 +66,57 @@ const Podcasts: React.FC = () => {
     }
   };
   
-  const filteredPodcasts = podcasts.filter((podcast) => 
-    podcast.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    podcast.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    podcast.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Get unique categories
+  const categories = ['all', ...new Set(podcasts.map(podcast => podcast.category))];
+
+  const filteredPodcasts = podcasts.filter((podcast) => {
+    const matchesSearch = 
+      podcast.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      podcast.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      podcast.category.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCategory = selectedCategory === 'all' || podcast.category === selectedCategory;
+    
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className="min-h-screen py-12">
       <div className="container mx-auto">
         <h1 className="text-3xl font-bold mb-8 text-saudi">البودكاست</h1>
         
-        <div className="mb-8 relative">
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-            <Search size={20} />
+        <div className="flex flex-col md:flex-row gap-4 mb-8">
+          {/* Category Filter */}
+          <div className="w-full md:w-64">
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-full">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-saudi" />
+                  <SelectValue placeholder="اختر التصنيف" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category === 'all' ? 'جميع التصنيفات' : category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <Input
-            className="pl-3 pr-10"
-            placeholder="ابحث في البودكاست..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+
+          {/* Search Input */}
+          <div className="flex-1 relative">
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <Search size={20} />
+            </div>
+            <Input
+              className="pl-3 pr-10"
+              placeholder="ابحث في البودكاست..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
         
         {loading ? (
@@ -113,7 +146,6 @@ const Podcasts: React.FC = () => {
             
             {filteredPodcasts.length === 0 && (
               <div className="text-center py-12 col-span-3">
-                <Headphones className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                 <p className="text-gray-500">لا توجد حلقات بودكاست مطابقة للبحث</p>
               </div>
             )}

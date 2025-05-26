@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, query, getDocs, orderBy, limit } from 'firebase/firestore';
@@ -7,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Book, ChevronLeft, Coffee } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import DOMPurify from 'dompurify';
 
 // Type definitions for coffee stories
 interface CoffeeStory {
@@ -133,6 +133,14 @@ const CoffeeEyes: React.FC = () => {
     } else if (selectedStory) {
       setSelectedStory(null);
     }
+  };
+
+  // Sanitize HTML content
+  const sanitizeHTML = (html: string) => {
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+      ALLOWED_ATTR: []
+    });
   };
 
   // Render story list
@@ -297,7 +305,7 @@ const CoffeeEyes: React.FC = () => {
         <Card className="coffee-card p-8">
           <div 
             className="prose prose-lg max-w-none font-tajawal text-coffee-text leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: selectedChapter.content }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHTML(selectedChapter.content) }}
           />
         </Card>
       </div>

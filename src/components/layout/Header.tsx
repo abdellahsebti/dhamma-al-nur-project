@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const NavLink: React.FC<{ to: string; children: React.ReactNode }> = ({ to, children }) => {
@@ -10,7 +10,7 @@ const NavLink: React.FC<{ to: string; children: React.ReactNode }> = ({ to, chil
 
   return (
     <div
-      className="relative cursor-pointer text-muted-foreground hover:text-foreground transition-colors group"
+      className="relative cursor-pointer text-muted-foreground hover:text-foreground transition-all duration-300 group px-3 py-2 rounded-lg hover:bg-saudi/5"
       onClick={() => navigate(to)}
     >
       {children}
@@ -47,55 +47,59 @@ const Header: React.FC = () => {
   }, []);
 
   return (
-    <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-      isScrolled ? 'bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm' : 'bg-background'
-    } border-b border-border`}>
+    <header 
+      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+        isScrolled 
+          ? 'bg-background/70 backdrop-blur-md supports-[backdrop-filter]:bg-background/40 shadow-lg border-b border-border/40' 
+          : 'bg-background/50 backdrop-blur-sm supports-[backdrop-filter]:bg-background/30'
+      }`}
+    >
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="md:hidden hover:bg-saudi/10"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            {isMenuOpen ? <X /> : <Menu />}
+            {isMenuOpen ? <X className="text-saudi" /> : <Menu className="text-saudi" />}
           </Button>
           <div 
-            className="font-bold text-xl cursor-pointer text-saudi" 
+            className="font-bold text-2xl cursor-pointer text-saudi hover:text-saudi/80 transition-colors duration-300" 
             onClick={() => navigate('/')}
           >
             ضمة
           </div>
         </div>
         
-        <nav className="hidden md:flex gap-6">
+        <nav className="hidden md:flex items-center gap-2">
           {navItems.map((item) => (
             <NavLink key={item.path} to={item.path}>
               {item.name}
             </NavLink>
           ))}
+          <Button
+            onClick={() => navigate('/join')}
+            className="bg-saudi hover:bg-saudi-dark text-white px-4 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center gap-2 group"
+          >
+            <UserPlus className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
+            <span>انضم إلينا</span>
+          </Button>
         </nav>
         
         <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="hidden md:flex"
-            onClick={() => navigate('/admin')}
-          >
-            لوحة التحكم
-          </Button>
+          {/* Empty div for layout balance */}
         </div>
       </div>
       
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden absolute top-16 right-0 left-0 p-4 pt-0 bg-background border-b border-border">
+        <div className="md:hidden absolute top-16 right-0 left-0 p-4 pt-0 bg-background/95 backdrop-blur-md border-b border-border/40">
           <nav className="flex flex-col gap-2">
             {navItems.map((item) => (
               <div
                 key={item.path}
-                className="cursor-pointer py-2 text-muted-foreground hover:text-foreground transition-colors"
+                className="cursor-pointer py-3 px-4 text-muted-foreground hover:text-foreground hover:bg-saudi/5 rounded-lg transition-all duration-300"
                 onClick={() => {
                   navigate(item.path);
                   setIsMenuOpen(false);
@@ -104,16 +108,15 @@ const Header: React.FC = () => {
                 {item.name}
               </div>
             ))}
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="mt-2"
+            <Button
               onClick={() => {
-                navigate('/admin');
+                navigate('/join');
                 setIsMenuOpen(false);
               }}
+              className="bg-saudi hover:bg-saudi-dark text-white px-4 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center gap-2 group mt-2"
             >
-              لوحة التحكم
+              <UserPlus className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
+              <span>انضم إلينا</span>
             </Button>
           </nav>
         </div>

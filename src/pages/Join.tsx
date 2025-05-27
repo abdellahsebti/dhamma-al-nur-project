@@ -53,7 +53,7 @@ const Join: React.FC = () => {
     try {
       const joinApplicationsRef = collection(db, 'joinRequests');
       const oneHourAgo = Timestamp.fromMillis(Date.now() - 3600000);
-      
+
       // Get IP address first
       let ipAddress = 'unknown';
       try {
@@ -63,14 +63,14 @@ const Join: React.FC = () => {
       } catch (error) {
         console.error('Error fetching IP:', error);
       }
-      
+
       // Check both IP and email based submissions
       const q = query(
         joinApplicationsRef,
         where('createdAt', '>', oneHourAgo),
         where('ipAddress', '==', ipAddress)
       );
-      
+
       const querySnapshot = await getDocs(q);
       setIsRateLimited(querySnapshot.size >= 1); // Reduced to 1 submission per hour
     } catch (error) {
@@ -222,7 +222,7 @@ const Join: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (isRateLimited) {
       toast({
         title: "تم تجاوز الحد المسموح",
@@ -240,11 +240,11 @@ const Join: React.FC = () => {
 
     try {
       console.log('Starting form submission...');
-      
+
       // Check rate limit before submitting
       await checkRateLimit();
       console.log('Rate limit check completed');
-      
+
       if (isRateLimited) {
         toast({
           title: "تم تجاوز الحد المسموح",
@@ -280,20 +280,16 @@ const Join: React.FC = () => {
         updatedAt: serverTimestamp()
       };
 
-      console.log('Prepared data:', {
-        ...cleanedData,
-        createdAt: 'timestamp',
-        updatedAt: 'timestamp'
-      });
+      console.log('Prepared data:', cleanedData);
 
       // Send data to Firebase
       console.log('Attempting to save to Firestore...');
       const joinApplicationsRef = collection(db, 'joinRequests');
-      
+
       try {
         // Log each validation step
         console.log('Validating data...');
-        
+
         // Check required fields
         const requiredFields = ['name', 'email', 'phone', 'specialization', 'message', 'status', 'createdAt', 'ipAddress', 'agreedToTerms', 'updatedAt'];
         const missingFields = requiredFields.filter(field => !(field in cleanedData));
@@ -376,7 +372,7 @@ const Join: React.FC = () => {
     } catch (error) {
       console.error("Error submitting form: ", error);
       let errorMessage = "يرجى المحاولة مرة أخرى";
-      
+
       if (error instanceof Error) {
         console.error('Error details:', {
           message: error.message,
@@ -394,7 +390,7 @@ const Join: React.FC = () => {
           errorMessage = "حدث خطأ في قاعدة البيانات. يرجى المحاولة مرة أخرى";
         }
       }
-      
+
       toast({
         title: "خطأ في تقديم الطلب",
         description: errorMessage,
@@ -410,7 +406,7 @@ const Join: React.FC = () => {
       <div className="container mx-auto px-4">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-4xl font-bold mb-8 text-saudi text-center">انضم إلينا</h1>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Application Form */}
             <div className="bg-white rounded-2xl p-8 shadow-md border border-saudi-light relative overflow-hidden">
@@ -418,7 +414,7 @@ const Join: React.FC = () => {
               <div className="relative z-10">
                 <h2 className="text-2xl font-bold mb-6 text-saudi">نموذج التقديم</h2>
                 <p className="text-gray-600 mb-6">يرجى ملء النموذج التالي للتقديم على الانضمام للمشروع</p>
-                
+
                 <div className="mb-6 p-4 bg-saudi-light/10 border border-saudi-light rounded-lg">
                   <p className="text-saudi-dark">
                     للتواصل المباشر: <br />
@@ -426,7 +422,7 @@ const Join: React.FC = () => {
                     انستغرام: <a href="https://www.instagram.com/dhamma.productions/" target="_blank" rel="noopener noreferrer" className="text-saudi hover:underline">@dhamma.productions</a>
                   </p>
                 </div>
-                
+
                 {isRateLimited && (
                   <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-red-600">
@@ -434,7 +430,7 @@ const Join: React.FC = () => {
                     </p>
                   </div>
                 )}
-                
+
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-2">
                     <Label htmlFor="name" className="text-gray-700">الاسم الكامل</Label>
@@ -539,7 +535,7 @@ const Join: React.FC = () => {
               <div className="relative z-10">
                 <h2 className="text-2xl font-bold mb-6 text-saudi">القوانين التنظيمية</h2>
                 <p className="text-gray-600 mb-6">يرجى قراءة الشروط والأحكام بعناية قبل التقديم</p>
-                
+
                 <Accordion type="single" collapsible className="w-full">
                   <AccordionItem value="basic-principles" className="border-b border-saudi-light">
                     <AccordionTrigger className="hover:text-saudi">الباب الأول: المبادئ الأساسية للمشروع</AccordionTrigger>

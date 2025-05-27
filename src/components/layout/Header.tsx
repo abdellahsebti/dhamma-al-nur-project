@@ -68,7 +68,7 @@ const Header: React.FC = () => {
             className="font-bold text-2xl cursor-pointer text-saudi hover:text-saudi/80 transition-colors duration-300" 
             onClick={() => navigate('/')}
           >
-            ضمة
+            ضَـمَّـة
           </div>
         </div>
         

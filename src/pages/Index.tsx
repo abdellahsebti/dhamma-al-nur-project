@@ -163,7 +163,7 @@ const Index: React.FC = () => {
           {/* Hero Section */}
           <section className="py-16 arabesque-bg">
             <div className="container mx-auto text-center">
-              <h1 className="text-4xl md:text-5xl font-bold mb-6 text-saudi">ضمة</h1>
+              <h1 className="text-4xl md:text-5xl font-bold mb-6 text-saudi">ضَـمَّـة</h1>
               <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto">
                 منصة إسلامية تهدف إلى نشر الوعي السلفي والبحث العلمي من خلال مقاطع الفيديو والبودكاست والفوائد العلمية
               </p>

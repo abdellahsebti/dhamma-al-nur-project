@@ -23,7 +23,7 @@ const Footer: React.FC = () => {
           <div className="space-y-6">
             <div className="inline-block">
               <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/80 relative">
-                ضمة
+                ضَـمَّـة
                 <span className="absolute -bottom-2 left-0 w-full h-0.5 bg-white/20 rounded-full"></span>
               </h3>
             </div>
@@ -162,7 +162,7 @@ const Footer: React.FC = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-white/70 text-sm">
-              © {new Date().getFullYear()} ضمة - جميع الحقوق محفوظة
+              © {new Date().getFullYear()} ضَـمَّـة - جميع الحقوق محفوظة
             </p>
             <div className="flex space-x-6 space-x-reverse text-sm text-white/70">
               <span 

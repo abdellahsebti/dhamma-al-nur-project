@@ -5,6 +5,7 @@ import { Search, Filter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Select,
   SelectContent,
@@ -21,6 +22,21 @@ interface Benefit {
   scholarComment?: string;
   category: string;
 }
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 },
+  transition: { duration: 0.5 }
+};
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
 
 const AlQawlAlMufid: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,13 +87,34 @@ const AlQawlAlMufid: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen py-12">
+    <motion.div 
+      className="min-h-screen py-12"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <div className="container mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-saudi">القول المفيد</h1>
+        <motion.h1 
+          className="text-3xl font-bold mb-8 text-saudi"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          القول المفيد
+        </motion.h1>
         
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
+        <motion.div 
+          className="flex flex-col md:flex-row gap-4 mb-8"
+          variants={fadeInUp}
+          initial="initial"
+          animate="animate"
+        >
           {/* Category Filter */}
-          <div className="w-full md:w-64">
+          <motion.div 
+            className="w-full md:w-64"
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.2 }}
+          >
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="w-full">
                 <div className="flex items-center gap-2">
@@ -93,10 +130,14 @@ const AlQawlAlMufid: React.FC = () => {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </motion.div>
 
           {/* Search Input */}
-          <div className="flex-1 relative">
+          <motion.div 
+            className="flex-1 relative"
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.2 }}
+          >
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
               <Search size={20} />
             </div>
@@ -106,36 +147,63 @@ const AlQawlAlMufid: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
         
         {loading ? (
-          <div className="text-center py-12">
+          <motion.div 
+            className="text-center py-12"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
             <p className="text-gray-500">جاري تحميل الفوائد...</p>
-          </div>
+          </motion.div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredBenefits.map((benefit) => (
-              <BenefitCard
-                key={benefit.id}
-                id={benefit.id}
-                bookName={benefit.bookName}
-                volumeAndPage={benefit.volumeAndPage}
-                benefitText={benefit.benefitText}
-                scholarComment={benefit.scholarComment}
-                category={benefit.category}
-              />
-            ))}
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+          >
+            <AnimatePresence mode="wait">
+              {filteredBenefits.map((benefit) => (
+                <motion.div
+                  key={benefit.id}
+                  variants={fadeInUp}
+                  layout
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <BenefitCard
+                    id={benefit.id}
+                    bookName={benefit.bookName}
+                    volumeAndPage={benefit.volumeAndPage}
+                    benefitText={benefit.benefitText}
+                    scholarComment={benefit.scholarComment}
+                    category={benefit.category}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
             
             {filteredBenefits.length === 0 && (
-              <div className="text-center py-12 col-span-full">
+              <motion.div 
+                className="text-center py-12 col-span-full"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
                 <p className="text-gray-500">لا توجد فوائد مطابقة للبحث</p>
-              </div>
+              </motion.div>
             )}
-          </div>
+          </motion.div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };
 

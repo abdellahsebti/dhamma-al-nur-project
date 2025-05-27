@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Coffee, BookOpen, Play, Headphones, Youtube, Linkedin, Instagram, Facebook } from 'lucide-react';
 import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Define types for our data
 interface Video {
@@ -152,246 +153,423 @@ const Index: React.FC = () => {
     fetchData();
   }, []);
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5
+      }
+    }
+  };
+
+  const heroVariants = {
+    hidden: { opacity: 0, y: -20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.8,
+        ease: "easeOut"
+      }
+    }
+  };
+
+  const buttonVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.5
+      }
+    },
+    hover: {
+      scale: 1.05,
+      transition: {
+        duration: 0.2
+      }
+    }
+  };
+
+  const socialVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.3
+      }
+    },
+    hover: {
+      scale: 1.1,
+      y: -5,
+      transition: {
+        duration: 0.2
+      }
+    }
+  };
+
   return (
-    <div className="min-h-screen">
+    <motion.div 
+      className="min-h-screen"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       {loading ? (
-        <div className="flex items-center justify-center min-h-[50vh]">
+        <motion.div 
+          className="flex items-center justify-center min-h-[50vh]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-saudi"></div>
-        </div>
+        </motion.div>
       ) : (
         <>
           {/* Hero Section */}
-          <section className="py-16 arabesque-bg">
+          <motion.section 
+            className="py-16 arabesque-bg"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
             <div className="container mx-auto text-center">
-              <h1 className="text-4xl md:text-5xl font-bold mb-6 text-saudi">ضَـمَّـة</h1>
-              <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto">
+              <motion.h1 
+                className="text-4xl md:text-5xl font-bold mb-6 text-saudi"
+                variants={heroVariants}
+              >
+                ضَـمَّـة
+              </motion.h1>
+              <motion.p 
+                className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto"
+                variants={heroVariants}
+              >
                 منصة إسلامية تهدف إلى نشر الوعي السلفي والبحث العلمي من خلال مقاطع الفيديو والبودكاست والفوائد العلمية
-              </p>
-              <div className="flex flex-wrap gap-4 justify-center mb-8">
-                <Button 
-                  size="lg" 
-                  className="bg-saudi hover:bg-saudi-dark transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl relative overflow-hidden group"
-                  onClick={() => navigate('/videos')}
-                >
-                  <span className="relative z-10">استعراض الفيديوهات</span>
-                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="border-saudi text-saudi hover:bg-saudi-light transform hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-                  onClick={() => navigate('/al-qawl-al-mufid')}
-                >
-                  <span className="relative z-10">القول المفيد</span>
-                  <div className="absolute inset-0 bg-saudi/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="border-[#6F4E37] text-[#6F4E37] hover:bg-[#6F4E37]/10 transform hover:scale-105 transition-all duration-300 flex items-center gap-2 relative overflow-hidden group"
-                  onClick={() => navigate('/coffee-eyes')}
-                >
-                  <Coffee size={18} className="relative z-10" />
-                  <span className="relative z-10">عيون القهوة</span>
-                  <div className="absolute inset-0 bg-[#6F4E37]/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                </Button>
-              </div>
+              </motion.p>
+              <motion.div 
+                className="flex flex-wrap gap-4 justify-center mb-8"
+                variants={containerVariants}
+              >
+                <motion.div variants={buttonVariants} whileHover="hover">
+                  <Button 
+                    size="lg" 
+                    className="bg-saudi hover:bg-saudi-dark transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl relative overflow-hidden group"
+                    onClick={() => navigate('/videos')}
+                  >
+                    <span className="relative z-10">استعراض الفيديوهات</span>
+                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  </Button>
+                </motion.div>
+                <motion.div variants={buttonVariants} whileHover="hover">
+                  <Button 
+                    size="lg" 
+                    variant="outline" 
+                    className="border-saudi text-saudi hover:bg-saudi-light transform hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+                    onClick={() => navigate('/al-qawl-al-mufid')}
+                  >
+                    <span className="relative z-10">القول المفيد</span>
+                    <div className="absolute inset-0 bg-saudi/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  </Button>
+                </motion.div>
+                <motion.div variants={buttonVariants} whileHover="hover">
+                  <Button 
+                    size="lg" 
+                    variant="outline" 
+                    className="border-[#6F4E37] text-[#6F4E37] hover:bg-[#6F4E37]/10 transform hover:scale-105 transition-all duration-300 flex items-center gap-2 relative overflow-hidden group"
+                    onClick={() => navigate('/coffee-eyes')}
+                  >
+                    <Coffee size={18} className="relative z-10" />
+                    <span className="relative z-10">عيون القهوة</span>
+                    <div className="absolute inset-0 bg-[#6F4E37]/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  </Button>
+                </motion.div>
+              </motion.div>
 
               {/* Social Media Links */}
-              <div className="flex justify-center items-center gap-4">
-                <a
-                  href="#"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transform hover:scale-110 transition-all duration-300 group relative overflow-hidden"
-                >
-                  <Youtube className="w-6 h-6 text-saudi group-hover:text-saudi-dark transition-colors duration-300 relative z-10" />
-                  <div className="absolute inset-0 bg-saudi/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                  <span className="sr-only">YouTube</span>
-                </a>
-                <a
-                  href="#"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transform hover:scale-110 transition-all duration-300 group relative overflow-hidden"
-                >
-                  <Linkedin className="w-6 h-6 text-saudi group-hover:text-saudi-dark transition-colors duration-300 relative z-10" />
-                  <div className="absolute inset-0 bg-saudi/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                  <span className="sr-only">LinkedIn</span>
-                </a>
-                <a
-                  href="https://www.instagram.com/dhamma.productions/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transform hover:scale-110 transition-all duration-300 group relative overflow-hidden"
-                >
-                  <Instagram className="w-6 h-6 text-saudi group-hover:text-saudi-dark transition-colors duration-300 relative z-10" />
-                  <div className="absolute inset-0 bg-saudi/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                  <span className="sr-only">Instagram</span>
-                </a>
-                <a
-                  href="#"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transform hover:scale-110 transition-all duration-300 group relative overflow-hidden"
-                >
-                  <Facebook className="w-6 h-6 text-saudi group-hover:text-saudi-dark transition-colors duration-300 relative z-10" />
-                  <div className="absolute inset-0 bg-saudi/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                  <span className="sr-only">Facebook</span>
-                </a>
-              </div>
+              <motion.div 
+                className="flex justify-center items-center gap-4"
+                variants={containerVariants}
+              >
+                {[
+                  { icon: Youtube, href: "#", label: "YouTube" },
+                  { icon: Linkedin, href: "#", label: "LinkedIn" },
+                  { icon: Instagram, href: "https://www.instagram.com/dhamma.productions/", label: "Instagram" },
+                  { icon: Facebook, href: "#", label: "Facebook" }
+                ].map((social, index) => (
+                  <motion.a
+                    key={index}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transform hover:scale-110 transition-all duration-300 group relative overflow-hidden"
+                    variants={socialVariants}
+                    whileHover="hover"
+                  >
+                    <social.icon className="w-6 h-6 text-saudi group-hover:text-saudi-dark transition-colors duration-300 relative z-10" />
+                    <div className="absolute inset-0 bg-saudi/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                    <span className="sr-only">{social.label}</span>
+                  </motion.a>
+                ))}
+              </motion.div>
             </div>
-          </section>
+          </motion.section>
 
           {/* Random Videos Section */}
-          <section className="py-16 bg-gray-50">
+          <motion.section 
+            className="py-16 bg-gray-50"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+          >
             <div className="container mx-auto px-4">
-              <div className="flex justify-between items-center mb-8">
+              <motion.div 
+                className="flex justify-between items-center mb-8"
+                variants={itemVariants}
+              >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-saudi/10 rounded-lg relative overflow-hidden group">
+                  <motion.div 
+                    className="p-2 bg-saudi/10 rounded-lg relative overflow-hidden group"
+                    whileHover={{ scale: 1.1 }}
+                    transition={{ duration: 0.2 }}
+                  >
                     <Play className="w-6 h-6 text-saudi relative z-10" />
                     <div className="absolute inset-0 bg-saudi/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                  </div>
+                  </motion.div>
                   <h2 className="text-3xl font-bold text-saudi relative">
                     فيديوهات عشوائية
                     <span className="absolute -bottom-2 left-0 w-12 h-0.5 bg-saudi/30 rounded-full"></span>
                   </h2>
                 </div>
-                <Button
-                  variant="ghost"
-                  className="text-saudi hover:text-saudi-dark hover:bg-saudi/10 flex items-center gap-2 relative overflow-hidden group"
-                  onClick={() => navigate('/videos')}
-                >
-                  <span className="relative z-10">عرض المزيد</span>
-                  <ArrowLeft size={16} className="relative z-10 transform group-hover:-translate-x-1 transition-transform duration-300" />
-                  <div className="absolute inset-0 bg-saudi/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                </Button>
-              </div>
+                <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
+                  <Button
+                    variant="ghost"
+                    className="text-saudi hover:text-saudi-dark hover:bg-saudi/10 flex items-center gap-2 relative overflow-hidden group"
+                    onClick={() => navigate('/videos')}
+                  >
+                    <span className="relative z-10">عرض المزيد</span>
+                    <ArrowLeft size={16} className="relative z-10 transform group-hover:-translate-x-1 transition-transform duration-300" />
+                    <div className="absolute inset-0 bg-saudi/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  </Button>
+                </motion.div>
+              </motion.div>
               {loading ? (
-                <div className="text-center py-12">
+                <motion.div 
+                  className="text-center py-12"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
                   <div className="animate-pulse flex flex-col items-center gap-4">
                     <div className="h-4 w-32 bg-gray-200 rounded"></div>
                     <div className="h-4 w-48 bg-gray-200 rounded"></div>
                   </div>
-                </div>
+                </motion.div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {videos.map((video) => (
-                    <VideoCard
-                      key={video.id}
-                      id={video.id}
-                      title={video.title}
-                      videoUrl={video.videoUrl}
-                      category={video.category}
-                      views={video.views}
-                      thumbnail={video.thumbnailUrl}
-                    />
-                  ))}
-                </div>
+                <motion.div 
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                  variants={containerVariants}
+                >
+                  <AnimatePresence mode="wait">
+                    {videos.map((video, index) => (
+                      <motion.div
+                        key={video.id}
+                        variants={itemVariants}
+                        custom={index}
+                        layout
+                      >
+                        <VideoCard
+                          id={video.id}
+                          title={video.title}
+                          videoUrl={video.videoUrl}
+                          category={video.category}
+                          views={video.views}
+                          thumbnail={video.thumbnailUrl}
+                        />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
               )}
             </div>
-          </section>
+          </motion.section>
 
           {/* Random Podcasts Section */}
-          <section className="py-16">
+          <motion.section 
+            className="py-16"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+          >
             <div className="container mx-auto px-4">
-              <div className="flex justify-between items-center mb-8">
+              <motion.div 
+                className="flex justify-between items-center mb-8"
+                variants={itemVariants}
+              >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-saudi/10 rounded-lg relative overflow-hidden group">
+                  <motion.div 
+                    className="p-2 bg-saudi/10 rounded-lg relative overflow-hidden group"
+                    whileHover={{ scale: 1.1 }}
+                    transition={{ duration: 0.2 }}
+                  >
                     <Headphones className="w-6 h-6 text-saudi relative z-10" />
                     <div className="absolute inset-0 bg-saudi/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                  </div>
+                  </motion.div>
                   <h2 className="text-3xl font-bold text-saudi relative">
                     بودكاست عشوائي
                     <span className="absolute -bottom-2 left-0 w-12 h-0.5 bg-saudi/30 rounded-full"></span>
                   </h2>
                 </div>
-                <Button
-                  variant="ghost"
-                  className="text-saudi hover:text-saudi-dark hover:bg-saudi/10 flex items-center gap-2 relative overflow-hidden group"
-                  onClick={() => navigate('/podcasts')}
-                >
-                  <span className="relative z-10">عرض المزيد</span>
-                  <ArrowLeft size={16} className="relative z-10 transform group-hover:-translate-x-1 transition-transform duration-300" />
-                  <div className="absolute inset-0 bg-saudi/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                </Button>
-              </div>
+                <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
+                  <Button
+                    variant="ghost"
+                    className="text-saudi hover:text-saudi-dark hover:bg-saudi/10 flex items-center gap-2 relative overflow-hidden group"
+                    onClick={() => navigate('/podcasts')}
+                  >
+                    <span className="relative z-10">عرض المزيد</span>
+                    <ArrowLeft size={16} className="relative z-10 transform group-hover:-translate-x-1 transition-transform duration-300" />
+                    <div className="absolute inset-0 bg-saudi/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  </Button>
+                </motion.div>
+              </motion.div>
               {loading ? (
-                <div className="text-center py-12">
+                <motion.div 
+                  className="text-center py-12"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
                   <div className="animate-pulse flex flex-col items-center gap-4">
                     <div className="h-4 w-32 bg-gray-200 rounded"></div>
                     <div className="h-4 w-48 bg-gray-200 rounded"></div>
                   </div>
-                </div>
+                </motion.div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {podcasts.map((podcast) => (
-                    <PodcastCard
-                      key={podcast.id}
-                      id={podcast.id}
-                      title={podcast.title}
-                      thumbnail={podcast.thumbnail}
-                      externalLink={podcast.externalLink}
-                      platform={podcast.platform}
-                      listens={podcast.listens}
-                    />
-                  ))}
-                </div>
+                <motion.div 
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                  variants={containerVariants}
+                >
+                  <AnimatePresence mode="wait">
+                    {podcasts.map((podcast, index) => (
+                      <motion.div
+                        key={podcast.id}
+                        variants={itemVariants}
+                        custom={index}
+                        layout
+                      >
+                        <PodcastCard
+                          id={podcast.id}
+                          title={podcast.title}
+                          thumbnail={podcast.thumbnail}
+                          externalLink={podcast.externalLink}
+                          platform={podcast.platform}
+                          listens={podcast.listens}
+                        />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
               )}
             </div>
-          </section>
+          </motion.section>
 
           {/* Random Benefits Section */}
-          <section className="py-16 bg-gray-50">
+          <motion.section 
+            className="py-16 bg-gray-50"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+          >
             <div className="container mx-auto px-4">
-              <div className="flex justify-between items-center mb-8">
+              <motion.div 
+                className="flex justify-between items-center mb-8"
+                variants={itemVariants}
+              >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-saudi/10 rounded-lg relative overflow-hidden group">
+                  <motion.div 
+                    className="p-2 bg-saudi/10 rounded-lg relative overflow-hidden group"
+                    whileHover={{ scale: 1.1 }}
+                    transition={{ duration: 0.2 }}
+                  >
                     <BookOpen className="w-6 h-6 text-saudi relative z-10" />
                     <div className="absolute inset-0 bg-saudi/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                  </div>
+                  </motion.div>
                   <h2 className="text-3xl font-bold text-saudi relative">
                     القول المفيد
                     <span className="absolute -bottom-2 left-0 w-12 h-0.5 bg-saudi/30 rounded-full"></span>
                   </h2>
                 </div>
-                <Button
-                  variant="ghost"
-                  className="text-saudi hover:text-saudi-dark hover:bg-saudi/10 flex items-center gap-2 relative overflow-hidden group"
-                  onClick={() => navigate('/al-qawl-al-mufid')}
-                >
-                  <span className="relative z-10">عرض المزيد</span>
-                  <ArrowLeft size={16} className="relative z-10 transform group-hover:-translate-x-1 transition-transform duration-300" />
-                  <div className="absolute inset-0 bg-saudi/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                </Button>
-              </div>
+                <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
+                  <Button
+                    variant="ghost"
+                    className="text-saudi hover:text-saudi-dark hover:bg-saudi/10 flex items-center gap-2 relative overflow-hidden group"
+                    onClick={() => navigate('/al-qawl-al-mufid')}
+                  >
+                    <span className="relative z-10">عرض المزيد</span>
+                    <ArrowLeft size={16} className="relative z-10 transform group-hover:-translate-x-1 transition-transform duration-300" />
+                    <div className="absolute inset-0 bg-saudi/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  </Button>
+                </motion.div>
+              </motion.div>
               {loading ? (
-                <div className="text-center py-12">
+                <motion.div 
+                  className="text-center py-12"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
                   <div className="animate-pulse flex flex-col items-center gap-4">
                     <div className="h-4 w-32 bg-gray-200 rounded"></div>
                     <div className="h-4 w-48 bg-gray-200 rounded"></div>
                   </div>
-                </div>
+                </motion.div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {benefits.map((benefit) => (
-                    <BenefitCard
-                      key={benefit.id}
-                      id={benefit.id}
-                      bookName={benefit.bookName}
-                      volumeAndPage={benefit.volumeAndPage}
-                      benefitText={benefit.benefitText}
-                      scholarComment={benefit.scholarComment}
-                      category={benefit.category}
-                    />
-                  ))}
-                </div>
+                <motion.div 
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                  variants={containerVariants}
+                >
+                  <AnimatePresence mode="wait">
+                    {benefits.map((benefit, index) => (
+                      <motion.div
+                        key={benefit.id}
+                        variants={itemVariants}
+                        custom={index}
+                        layout
+                      >
+                        <BenefitCard
+                          id={benefit.id}
+                          bookName={benefit.bookName}
+                          volumeAndPage={benefit.volumeAndPage}
+                          benefitText={benefit.benefitText}
+                          scholarComment={benefit.scholarComment}
+                          category={benefit.category}
+                        />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
               )}
             </div>
-          </section>
+          </motion.section>
         </>
       )}
-    </div>
+    </motion.div>
   );
 };
 

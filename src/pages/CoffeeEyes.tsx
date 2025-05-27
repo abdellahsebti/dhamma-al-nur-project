@@ -55,8 +55,6 @@ const CoffeeEyes: React.FC = () => {
     // Calculate immediately
     calculateTimeLeft();
 
-    // Update every second
-    const timer = setInterval(calculateTimeLeft, 1000);
 
     // Cleanup
     return () => clearInterval(timer);

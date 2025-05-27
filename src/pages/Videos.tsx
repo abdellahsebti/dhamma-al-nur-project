@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Search, Filter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import {
   Select,
   SelectContent,
@@ -24,7 +24,6 @@ interface Video {
   featured: boolean;
   views: number;
   youtubeId: string;
-  date?: any; // Add date field
 }
 
 const Videos: React.FC = () => {
@@ -41,34 +40,30 @@ const Videos: React.FC = () => {
   const fetchVideos = async () => {
     try {
       setLoading(true);
-      console.log('Starting to fetch videos...');
-      
       const videosRef = collection(db, 'videos');
-      console.log('Created videos reference');
-      
-      // Try to get videos without ordering first
       const querySnapshot = await getDocs(videosRef);
-      console.log('Got query snapshot, size:', querySnapshot.size);
+      
+      if (querySnapshot.empty) {
+        setVideos([]);
+        return;
+      }
       
       const fetchedVideos = querySnapshot.docs.map(doc => {
         const data = doc.data();
-        console.log('Processing video document:', doc.id, data);
         return {
           id: doc.id,
-          title: data.title || '',
+          title: data.title || 'Untitled Video',
           description: data.description || '',
-          category: data.category || '',
+          category: data.category || 'Uncategorized',
           duration: data.duration || '',
           videoUrl: data.videoUrl || '',
           thumbnailUrl: data.thumbnailUrl || '',
           featured: data.featured || false,
           views: data.views || 0,
-          youtubeId: data.youtubeId || '',
-          date: data.date || data.createdAt || data.uploadDate || new Date()
+          youtubeId: data.youtubeId || ''
         };
       });
       
-      console.log('Fetched videos:', fetchedVideos);
       setVideos(fetchedVideos);
     } catch (error) {
       console.error("Error fetching videos:", error);
@@ -99,7 +94,9 @@ const Videos: React.FC = () => {
   return (
     <div className="min-h-screen py-12">
       <div className="container mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-saudi">الفيديوهات</h1>
+        <h1 className="text-3xl font-bold mb-8 text-saudi">
+          الفيديوهات
+        </h1>
         
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           {/* Category Filter */}
@@ -147,15 +144,16 @@ const Videos: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredVideos.map((video) => (
-              <VideoCard
-                key={video.id}
-                id={video.id}
-                title={video.title}
-                videoUrl={video.videoUrl}
-                category={video.category}
-                views={video.views}
-                thumbnail={video.thumbnailUrl}
-              />
+              <div key={video.id}>
+                <VideoCard
+                  id={video.id}
+                  title={video.title}
+                  videoUrl={video.videoUrl}
+                  category={video.category}
+                  views={video.views}
+                  thumbnail={video.thumbnailUrl}
+                />
+              </div>
             ))}
             
             {filteredVideos.length === 0 && (

@@ -408,6 +408,112 @@ const Join: React.FC = () => {
           <h1 className="text-4xl font-bold mb-8 text-saudi text-center">انضم إلينا</h1>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Rules and Conditions */}
+            <div className="bg-white rounded-2xl p-8 shadow-md border border-saudi-light relative overflow-hidden">
+              <div className="absolute inset-0 arabesque-bg opacity-10"></div>
+              <div className="relative z-10">
+                <h2 className="text-2xl font-bold mb-6 text-saudi">القوانين التنظيمية</h2>
+                <p className="text-gray-600 mb-6">يرجى قراءة الشروط والأحكام بعناية قبل التقديم</p>
+
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="basic-principles" className="border-b border-saudi-light">
+                    <AccordionTrigger className="hover:text-saudi">الباب الأول: المبادئ الأساسية للمشروع</AccordionTrigger>
+                    <AccordionContent>
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                        <li>يُشترط الالتزام التام بالمنهج السلفي في جميع ما يُطرح داخل المشروع.</li>
+                        <li>يجب أن يتم العمل بروح الأخوة والنية الصالحة والالتزام الجماعي.</li>
+                        <li>التواصل داخل مجموعات العمل يجب أن يكون بلغة راقية بعيدًا عن المزاح المفرط أو اللهجة العامية السوقية.</li>
+                        <li>الالتزام بآداب الإسلام في التعامل والحديث والسلوك.</li>
+                        <li>احترام آراء الآخرين وعدم التعصب للرأي.</li>
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="content-rules" className="border-b border-saudi-light">
+                    <AccordionTrigger className="hover:text-saudi">الباب الثاني: القواعد الخاصة بالمحتوى والنشر</AccordionTrigger>
+                    <AccordionContent>
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                        <li>يُمنع إخراج أي محتوى أو نقاش داخلي من مجموعات المشروع إلى الخارج.</li>
+                        <li>يُمنع نشر أي محتوى دون مراجعته شرعيًا وعلميًا.</li>
+                        <li>يُمنع نشر أي مادة على المنصات الرسمية إلا بإذن مسبق من المشرف العام.</li>
+                        <li>يُمنع نشر الآراء الشخصية داخل محتوى المشروع إلا إذا كانت موثقة وموافَق عليها.</li>
+                        <li>يُقبل حذف أو تعديل المحتوى المنشور بشكل دوري من قبل المشرفين.</li>
+                        <li>الالتزام بمعايير الجودة في إنتاج المحتوى.</li>
+                        <li>احترام حقوق الملكية الفكرية في جميع المواد المنشورة.</li>
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="management" className="border-b border-saudi-light">
+                    <AccordionTrigger className="hover:text-saudi">الباب الثالث: التنظيم الإداري والإشراف</AccordionTrigger>
+                    <AccordionContent>
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                        <li>يُمنع فتح مجموعات أو قنوات جديدة باسم المشروع دون إذن صريح من الإدارة.</li>
+                        <li>يُمنع التحدث باسم المشروع أو تمثيله دون تكليف رسمي من الإدارة.</li>
+                        <li>يتم تقييم الأعضاء دوريًا لضمان جودة الأداء واستمرار الاستحقاق في البقاء ضمن الفريق.</li>
+                        <li>في حال حدوث خلافات أو مشاكل بين الأعضاء، يتم اللجوء إلى رئيس المشروع للفصل فيها، ويكون قراره نهائيًا.</li>
+                        <li>الالتزام بالهيكل التنظيمي للمشروع واحترام التسلسل الإداري.</li>
+                        <li>ضرورة إبلاغ الإدارة عن أي تغييرات في البيانات الشخصية أو ظروف العمل.</li>
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="confidentiality" className="border-b border-saudi-light">
+                    <AccordionTrigger className="hover:text-saudi">الباب الرابع: السرية والأخلاقيات</AccordionTrigger>
+                    <AccordionContent>
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                        <li>يجب الحفاظ على سرية هوية الأعضاء وعدم ذكر الأسماء خارج نطاق المشروع.</li>
+                        <li>يُمنع استخدام أدوات أو برامج مقرصنة ضمن أنشطة المشروع.</li>
+                        <li>يجب الحفاظ على سرية الملفات والتعامل معها بحذر واحترافية.</li>
+                        <li>يُمنع فرض الآراء أو التعامل بفوقية داخل الفريق، كما يُمنع كل شكل من أشكال التعصب أو التهميش.</li>
+                        <li>الالتزام بسرية المعلومات والبيانات المتعلقة بالمشروع.</li>
+                        <li>حماية خصوصية المستخدمين والمتابعين.</li>
+                        <li>الامتناع عن نشر أي معلومات شخصية لأي عضو في المشروع.</li>
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="time-management" className="border-b border-saudi-light">
+                    <AccordionTrigger className="hover:text-saudi">الباب الخامس: التنظيم الزمني والمهام</AccordionTrigger>
+                    <AccordionContent>
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                        <li>الالتزام بالمواعيد المحددة لإنجاز المهام وعدم التأخر دون عذر مقبول.</li>
+                        <li>يُمنع النقاش في المسائل الخلافية أو السياسية داخل مجموعات المشروع.</li>
+                        <li>يُمنع للعضو الانضمام لمشروع مشابه دون إعلام الإدارة وأخذ الإذن.</li>
+                        <li>ضرورة إبلاغ الإدارة عن أي تأخير في إنجاز المهام الموكلة.</li>
+                        <li>الالتزام بجدول العمل المحدد لكل عضو.</li>
+                        <li>احترام مواعيد الاجتماعات واللقاءات.</li>
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="project-name" className="border-b border-saudi-light">
+                    <AccordionTrigger className="hover:text-saudi">الباب السادس: استخدام اسم المشروع</AccordionTrigger>
+                    <AccordionContent>
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                        <li>يُمنع استخدام اسم المشروع في أي نشاط خارجي دون موافقة مسبقة من الإدارة.</li>
+                        <li>يُمنع استخدام اسم المشروع في أي منصات أو فعاليات دون إذن مسبق.</li>
+                        <li>حماية العلامة التجارية للمشروع وشعاره.</li>
+                        <li>الالتزام بالهوية البصرية للمشروع في جميع المواد المنشورة.</li>
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="discipline" className="border-b-0">
+                    <AccordionTrigger className="hover:text-saudi">الباب السابع: العقوبات والجزاءات</AccordionTrigger>
+                    <AccordionContent>
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                        <li>تطبيق نظام تحذيري متدرج للمخالفات.</li>
+                        <li>حق الإدارة في فصل أي عضو يخالف القوانين التنظيمية.</li>
+                        <li>إمكانية إيقاف العضو مؤقتاً عن العمل في حال المخالفات المتكررة.</li>
+                        <li>حق الإدارة في اتخاذ الإجراءات القانونية في حالات المخالفات الجسيمة.</li>
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+            </div>
+
             {/* Application Form */}
             <div className="bg-white rounded-2xl p-8 shadow-md border border-saudi-light relative overflow-hidden">
               <div className="absolute inset-0 arabesque-bg opacity-10"></div>
@@ -466,26 +572,24 @@ const Join: React.FC = () => {
                     <Input
                       id="phone"
                       name="phone"
-                      type="tel"
                       value={formData.phone}
                       onChange={handleChange}
                       required
-                      placeholder="+1234567890"
+                      placeholder="أدخل رقم هاتفك"
                       className="border-saudi-light focus:border-saudi"
                       disabled={isSubmitting || isRateLimited}
                     />
-                    <p className="text-sm text-gray-500">أدخل رقم هاتفك مع رمز الدولة (مثال: +1234567890)</p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="specialization" className="text-gray-700">التخصص أو المهارة</Label>
+                    <Label htmlFor="specialization" className="text-gray-700">التخصص</Label>
                     <Input
                       id="specialization"
                       name="specialization"
                       value={formData.specialization}
                       onChange={handleChange}
                       required
-                      placeholder="مثال: مونتاج، تصميم، كتابة..."
+                      placeholder="أدخل تخصصك"
                       className="border-saudi-light focus:border-saudi"
                       disabled={isSubmitting || isRateLimited}
                     />
@@ -526,86 +630,6 @@ const Join: React.FC = () => {
                     {isSubmitting ? 'جاري التقديم...' : 'تقديم الطلب'}
                   </Button>
                 </form>
-              </div>
-            </div>
-
-            {/* Rules and Conditions */}
-            <div className="bg-white rounded-2xl p-8 shadow-md border border-saudi-light relative overflow-hidden">
-              <div className="absolute inset-0 arabesque-bg opacity-10"></div>
-              <div className="relative z-10">
-                <h2 className="text-2xl font-bold mb-6 text-saudi">القوانين التنظيمية</h2>
-                <p className="text-gray-600 mb-6">يرجى قراءة الشروط والأحكام بعناية قبل التقديم</p>
-
-                <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="basic-principles" className="border-b border-saudi-light">
-                    <AccordionTrigger className="hover:text-saudi">الباب الأول: المبادئ الأساسية للمشروع</AccordionTrigger>
-                    <AccordionContent>
-                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
-                        <li>يُشترط الالتزام التام بالمنهج السلفي في جميع ما يُطرح داخل المشروع.</li>
-                        <li>يجب أن يتم العمل بروح الأخوة والنية الصالحة والالتزام الجماعي.</li>
-                        <li>التواصل داخل مجموعات العمل يجب أن يكون بلغة راقية بعيدًا عن المزاح المفرط أو اللهجة العامية السوقية.</li>
-                      </ul>
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="content-rules" className="border-b border-saudi-light">
-                    <AccordionTrigger className="hover:text-saudi">الباب الثاني: القواعد الخاصة بالمحتوى والنشر</AccordionTrigger>
-                    <AccordionContent>
-                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
-                        <li>يُمنع إخراج أي محتوى أو نقاش داخلي من مجموعات المشروع إلى الخارج.</li>
-                        <li>يُمنع نشر أي محتوى دون مراجعته شرعيًا وعلميًا.</li>
-                        <li>يُمنع نشر أي مادة على المنصات الرسمية إلا بإذن مسبق من المشرف العام.</li>
-                        <li>يُمنع نشر الآراء الشخصية داخل محتوى المشروع إلا إذا كانت موثقة وموافَق عليها.</li>
-                        <li>يُقبل حذف أو تعديل المحتوى المنشور بشكل دوري من قبل المشرفين.</li>
-                      </ul>
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="management" className="border-b border-saudi-light">
-                    <AccordionTrigger className="hover:text-saudi">الباب الثالث: التنظيم الإداري والإشراف</AccordionTrigger>
-                    <AccordionContent>
-                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
-                        <li>يُمنع فتح مجموعات أو قنوات جديدة باسم المشروع دون إذن صريح من الإدارة.</li>
-                        <li>يُمنع التحدث باسم المشروع أو تمثيله دون تكليف رسمي من الإدارة.</li>
-                        <li>يتم تقييم الأعضاء دوريًا لضمان جودة الأداء واستمرار الاستحقاق في البقاء ضمن الفريق.</li>
-                        <li>في حال حدوث خلافات أو مشاكل بين الأعضاء، يتم اللجوء إلى رئيس المشروع للفصل فيها، ويكون قراره نهائيًا.</li>
-                      </ul>
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="confidentiality" className="border-b border-saudi-light">
-                    <AccordionTrigger className="hover:text-saudi">الباب الرابع: السرية والأخلاقيات</AccordionTrigger>
-                    <AccordionContent>
-                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
-                        <li>يجب الحفاظ على سرية هوية الأعضاء وعدم ذكر الأسماء خارج نطاق المشروع.</li>
-                        <li>يُمنع استخدام أدوات أو برامج مقرصنة ضمن أنشطة المشروع.</li>
-                        <li>يجب الحفاظ على سرية الملفات والتعامل معها بحذر واحترافية.</li>
-                        <li>يُمنع فرض الآراء أو التعامل بفوقية داخل الفريق، كما يُمنع كل شكل من أشكال التعصب أو التهميش.</li>
-                      </ul>
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="time-management" className="border-b border-saudi-light">
-                    <AccordionTrigger className="hover:text-saudi">الباب الخامس: التنظيم الزمني والمهام</AccordionTrigger>
-                    <AccordionContent>
-                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
-                        <li>الالتزام بالمواعيد المحددة لإنجاز المهام وعدم التأخر دون عذر مقبول.</li>
-                        <li>يُمنع النقاش في المسائل الخلافية أو السياسية داخل مجموعات المشروع.</li>
-                        <li>يُمنع للعضو الانضمام لمشروع مشابه دون إعلام الإدارة وأخذ الإذن.</li>
-                      </ul>
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="project-name" className="border-b-0">
-                    <AccordionTrigger className="hover:text-saudi">الباب السادس: استخدام اسم المشروع</AccordionTrigger>
-                    <AccordionContent>
-                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
-                        <li>يُمنع استخدام اسم المشروع في أي نشاط خارجي دون موافقة مسبقة من الإدارة.</li>
-                        <li>يُمنع استخدام اسم المشروع في أي منصات أو فعاليات دون إذن مسبق.</li>
-                      </ul>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
               </div>
             </div>
           </div>

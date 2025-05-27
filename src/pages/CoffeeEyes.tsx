@@ -1,337 +1,407 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { collection, query, getDocs, orderBy, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Book, ChevronLeft, Coffee } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import DOMPurify from 'dompurify';
+import { Instagram, Mail, Twitter, Youtube, Book, PenTool, Users, MessageSquare, Coffee, Facebook, Linkedin } from 'lucide-react';
+import { motion, Variants } from 'framer-motion';
 
-// Type definitions for coffee stories
-interface CoffeeStory {
-  id: string;
-  title: string;
-  author: string;
-  cover: string;
-  summary: string;
-  chaptersCount: number;
-  createdAt: Date;
-}
+// Coffee bean SVG component
+const CoffeeBean: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    viewBox="0 0 24 24"
+    className={className}
+    fill="currentColor"
+  >
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+  </svg>
+);
 
-interface Chapter {
-  id: string;
-  storyId: string;
-  title: string;
-  content: string;
-  orderNumber: number;
-}
+// Steam SVG component
+const Steam: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    viewBox="0 0 24 24"
+    className={className}
+    fill="currentColor"
+  >
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+  </svg>
+);
 
 const CoffeeEyes: React.FC = () => {
-  const [stories, setStories] = useState<CoffeeStory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedStory, setSelectedStory] = useState<CoffeeStory | null>(null);
-  const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
-  const navigate = useNavigate();
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  });
 
-  // Add CSS class to change theme when component mounts
+  // Set launch date to August 31st, 2025 at 12:00 PM
+  const launchDate = new Date('2025-08-31T12:00:00+03:00'); // Adding timezone offset for Algeria
+
   useEffect(() => {
-    document.body.classList.add('coffee-theme');
-    
-    // Fetch stories from Firebase
-    fetchStories();
-    
-    // Clean up when component unmounts
-    return () => {
-      document.body.classList.remove('coffee-theme');
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const difference = launchDate.getTime() - now.getTime();
+
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        setTimeLeft({ days, hours, minutes, seconds });
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      }
     };
+
+    // Calculate immediately
+    calculateTimeLeft();
+
+    // Update every second
+    const timer = setInterval(calculateTimeLeft, 1000);
+
+    // Cleanup
+    return () => clearInterval(timer);
   }, []);
 
-  // Fetch stories from Firebase
-  const fetchStories = async () => {
-    try {
-      setLoading(true);
-      const q = query(
-        collection(db, 'coffeeStories'),
-        orderBy('createdAt', 'desc')
-      );
-      
-      const querySnapshot = await getDocs(q);
-      const storiesData: CoffeeStory[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        storiesData.push({
-          id: doc.id,
-          title: data.title,
-          author: data.author,
-          cover: data.cover,
-          summary: data.summary,
-          chaptersCount: data.chaptersCount,
-          createdAt: data.createdAt?.toDate() || new Date(),
-        });
-      });
-      
-      setStories(storiesData);
-    } catch (error) {
-      console.error('Error fetching coffee stories:', error);
-    } finally {
-      setLoading(false);
+  // Format number to always show two digits
+  const formatNumber = (num: number) => {
+    return num.toString().padStart(2, '0');
+  };
+
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+        delayChildren: 0.3
+      }
     }
   };
 
-  // Fetch chapters for a story
-  const fetchChapters = async (storyId: string) => {
-    try {
-      setLoading(true);
-      const q = query(
-        collection(db, 'coffeeChapters'),
-        orderBy('orderNumber', 'asc')
-      );
-      
-      const querySnapshot = await getDocs(q);
-      const chaptersData: Chapter[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        if (data.storyId === storyId) {
-          chaptersData.push({
-            id: doc.id,
-            storyId: data.storyId,
-            title: data.title,
-            content: data.content,
-            orderNumber: data.orderNumber,
-          });
-        }
-      });
-      
-      setChapters(chaptersData);
-    } catch (error) {
-      console.error('Error fetching chapters:', error);
-    } finally {
-      setLoading(false);
+  const itemVariants: Variants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        duration: 0.5,
+        ease: "easeOut"
+      }
     }
   };
 
-  // Handle story selection
-  const handleStoryClick = (story: CoffeeStory) => {
-    setSelectedStory(story);
-    setSelectedChapter(null);
-    fetchChapters(story.id);
-  };
-
-  // Handle chapter selection
-  const handleChapterClick = (chapter: Chapter) => {
-    setSelectedChapter(chapter);
-  };
-
-  // Handle back navigation
-  const handleBack = () => {
-    if (selectedChapter) {
-      setSelectedChapter(null);
-    } else if (selectedStory) {
-      setSelectedStory(null);
+  const coffeeSteamVariants: Variants = {
+    initial: { opacity: 0, y: 0 },
+    animate: {
+      opacity: [0, 1, 0],
+      y: [-10, -30, -50],
+      transition: {
+        duration: 2,
+        repeat: Infinity,
+        repeatType: "loop" as const
+      }
     }
   };
 
-  // Sanitize HTML content
-  const sanitizeHTML = (html: string) => {
-    return DOMPurify.sanitize(html, {
-      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
-      ALLOWED_ATTR: []
-    });
+  // Background animation variants
+  const backgroundVariants: Variants = {
+    animate: {
+      backgroundPosition: ['0% 0%', '100% 100%'],
+      transition: {
+        duration: 30,
+        repeat: Infinity,
+        repeatType: "reverse" as const,
+        ease: "easeInOut"
+      }
+    }
   };
 
-  // Render story list
-  const renderStoryList = () => {
-    if (loading) {
-      return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i} className="coffee-card">
-              <CardHeader>
-                <Skeleton className="h-4 w-2/3" />
-                <Skeleton className="h-4 w-1/3" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-[180px] w-full rounded-md" />
-                <div className="mt-4">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-4/5 mt-2" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      );
+  const floatingCoffeeVariants: Variants = {
+    initial: { 
+      y: -100, 
+      opacity: 0, 
+      rotate: 0,
+      scale: 0.8
+    },
+    animate: {
+      y: ['0%', '100%'],
+      opacity: [0, 0.15, 0],
+      rotate: [0, 360],
+      scale: [0.8, 1.2, 0.8],
+      transition: {
+        duration: 12,
+        repeat: Infinity,
+        repeatType: "loop" as const,
+        ease: "easeInOut"
+      }
     }
-
-    if (stories.length === 0) {
-      return (
-        <div className="text-center py-12">
-          <Coffee className="mx-auto w-12 h-12 text-coffee mb-4" />
-          <h3 className="text-2xl font-bold text-coffee-dark">لا توجد روايات حالياً</h3>
-          <p className="text-coffee-muted mt-2">
-            سيتم إضافة روايات وقصص قريباً
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {stories.map((story) => (
-          <Card 
-            key={story.id} 
-            className="coffee-card hover:shadow-lg transition-all cursor-pointer"
-            onClick={() => handleStoryClick(story)}
-          >
-            <CardHeader>
-              <CardTitle>{story.title}</CardTitle>
-              <CardDescription>بقلم: {story.author}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="aspect-[2/3] relative overflow-hidden rounded-md mb-4">
-                <img 
-                  src={story.cover || 'https://via.placeholder.com/300x450?text=غلاف+الكتاب'} 
-                  alt={story.title}
-                  className="object-cover w-full h-full"
-                />
-              </div>
-              <p className="line-clamp-3 text-coffee-muted">{story.summary}</p>
-            </CardContent>
-            <CardFooter>
-              <div className="w-full flex justify-between items-center">
-                <span className="text-sm text-coffee-muted">
-                  {story.chaptersCount} فصول
-                </span>
-                <Button variant="ghost" className="text-coffee">
-                  قراءة المزيد
-                </Button>
-              </div>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-    );
   };
 
-  // Render chapters list
-  const renderChaptersList = () => {
-    if (!selectedStory) return null;
-
-    if (loading) {
-      return (
-        <div className="space-y-4">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Card key={i} className="coffee-card">
-              <CardHeader>
-                <Skeleton className="h-4 w-1/2" />
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
-      );
+  const steamVariants: Variants = {
+    initial: { 
+      opacity: 0, 
+      y: 0, 
+      scale: 0.8,
+      x: 0
+    },
+    animate: {
+      opacity: [0, 0.1, 0],
+      y: [-20, -80],
+      scale: [0.8, 1.5, 0.8],
+      x: [-10, 10, -10],
+      transition: {
+        duration: 6,
+        repeat: Infinity,
+        repeatType: "loop" as const,
+        ease: "easeInOut"
+      }
     }
-
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            onClick={handleBack}
-            className="text-coffee mr-2"
-          >
-            <ChevronLeft className="h-4 w-4 ml-2" />
-            عودة
-          </Button>
-          <h2 className="text-2xl font-bold text-coffee-dark">
-            {selectedStory.title} - الفصول
-          </h2>
-        </div>
-
-        {chapters.length === 0 ? (
-          <div className="text-center py-12">
-            <Book className="mx-auto w-12 h-12 text-coffee mb-4" />
-            <h3 className="text-xl font-bold text-coffee-dark">
-              لا توجد فصول متاحة حالياً
-            </h3>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {chapters.map((chapter) => (
-              <Card 
-                key={chapter.id} 
-                className="coffee-card hover:shadow-md transition-all cursor-pointer"
-                onClick={() => handleChapterClick(chapter)}
-              >
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    {chapter.title}
-                  </CardTitle>
-                  <CardDescription>
-                    الفصل {chapter.orderNumber}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Render chapter content
-  const renderChapterContent = () => {
-    if (!selectedChapter) return null;
-
-    return (
-      <div className="coffee-chapter-container">
-        <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            onClick={handleBack}
-            className="text-coffee mr-2"
-          >
-            <ChevronLeft className="h-4 w-4 ml-2" />
-            عودة للفصول
-          </Button>
-          <h2 className="text-2xl font-bold text-coffee-dark">
-            {selectedChapter.title}
-          </h2>
-        </div>
-
-        <Card className="coffee-card p-8">
-          <div 
-            className="prose prose-lg max-w-none font-tajawal text-coffee-text leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: sanitizeHTML(selectedChapter.content) }}
-          />
-        </Card>
-      </div>
-    );
   };
 
   return (
-    <div className="min-h-screen py-12 bg-coffee-bg">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-12">
-          <h1 className="text-4xl font-bold text-coffee-dark">عيون القهوة</h1>
-          <Button 
-            variant="outline" 
-            className="border-coffee text-coffee hover:bg-coffee/10"
-            onClick={() => navigate('/')}
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Animated Background */}
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-b from-[#4A2C2A]/5 via-[#8B4513]/10 to-[#4A2C2A]/5"
+        animate="animate"
+        variants={backgroundVariants}
+      >
+        {/* Floating Coffee Icons */}
+        {[...Array(15)].map((_, i) => (
+          <motion.div
+            key={`coffee-${i}`}
+            className="absolute"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            variants={floatingCoffeeVariants}
+            initial="initial"
+            animate="animate"
+            transition={{ 
+              delay: i * 0.3,
+              duration: 12 + Math.random() * 6
+            }}
           >
-            العودة للصفحة الرئيسية
-          </Button>
-        </div>
+            <Coffee className="w-10 h-10 text-[#4A2C2A]/15 drop-shadow-lg" />
+          </motion.div>
+        ))}
 
-        {selectedChapter 
-          ? renderChapterContent() 
-          : selectedStory 
-            ? renderChaptersList() 
-            : renderStoryList()
-        }
+        {/* Floating Steam Effects */}
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={`steam-${i}`}
+            className="absolute"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            variants={steamVariants}
+            initial="initial"
+            animate="animate"
+            transition={{ 
+              delay: i * 0.2,
+              duration: 6 + Math.random() * 3
+            }}
+          >
+            <div className="w-6 h-16 bg-gradient-to-t from-[#4A2C2A]/10 to-transparent rounded-full blur-md" />
+          </motion.div>
+        ))}
+      </motion.div>
+
+      {/* Main Content */}
+      <div className="relative z-10 min-h-screen py-12">
+        <div className="container mx-auto px-4">
+          <motion.div 
+            className="max-w-4xl mx-auto text-center"
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+          >
+            {/* Coffee Cup Animation and Header */}
+            <motion.div 
+              className="flex items-center justify-center gap-6 mb-12"
+              variants={itemVariants}
+            >
+              <motion.div 
+                className="relative w-24 h-24"
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ duration: 0.8, type: "spring", bounce: 0.5 }}
+              >
+                <Coffee className="w-24 h-24 text-[#4A2C2A] drop-shadow-lg" />
+                {/* Steam Animation */}
+                <motion.div
+                  className="absolute top-0 left-1/2 transform -translate-x-1/2"
+                  variants={coffeeSteamVariants}
+                  initial="initial"
+                  animate="animate"
+                >
+                  <div className="w-3 h-12 bg-[#4A2C2A]/30 rounded-full blur-sm" />
+                </motion.div>
+                <motion.div
+                  className="absolute top-0 left-1/2 transform -translate-x-1/2 -ml-4"
+                  variants={coffeeSteamVariants}
+                  initial="initial"
+                  animate="animate"
+                  transition={{ delay: 0.3 }}
+                >
+                  <div className="w-3 h-12 bg-[#4A2C2A]/30 rounded-full blur-sm" />
+                </motion.div>
+                <motion.div
+                  className="absolute top-0 left-1/2 transform -translate-x-1/2 ml-4"
+                  variants={coffeeSteamVariants}
+                  initial="initial"
+                  animate="animate"
+                  transition={{ delay: 0.6 }}
+                >
+                  <div className="w-3 h-12 bg-[#4A2C2A]/30 rounded-full blur-sm" />
+                </motion.div>
+              </motion.div>
+
+              <motion.h1 
+                className="text-6xl font-bold text-[#4A2C2A] drop-shadow-sm"
+                variants={itemVariants}
+              >
+                عيون القهوة
+              </motion.h1>
+            </motion.div>
+
+            <motion.div 
+              className="bg-white/95 rounded-3xl p-10 shadow-2xl border border-[#8B4513]/20 relative overflow-hidden backdrop-blur-sm"
+              variants={itemVariants}
+            >
+              <div className="absolute inset-0 bg-[url('/coffee-pattern.png')] opacity-5"></div>
+              <div className="relative z-10">
+                <motion.h2 
+                  className="text-4xl font-bold mb-6 text-[#4A2C2A]"
+                  variants={itemVariants}
+                >
+                  قريباً
+                </motion.h2>
+                <motion.p 
+                  className="text-[#8B4513] text-xl mb-12 leading-relaxed"
+                  variants={itemVariants}
+                >
+                  نحن نعمل حالياً على تطوير هذه الصفحة. سنعود قريباً بمحتوى جديد ومميز.
+                </motion.p>
+
+                {/* Countdown Timer */}
+                <motion.div 
+                  className="mb-16"
+                  variants={itemVariants}
+                >
+                  <h3 className="text-2xl font-semibold mb-8 text-[#4A2C2A]">موعد الإطلاق</h3>
+                  <div className="grid grid-cols-4 gap-6 max-w-2xl mx-auto">
+                    {[
+                      { value: timeLeft.days, label: 'أيام' },
+                      { value: formatNumber(timeLeft.hours), label: 'ساعات' },
+                      { value: formatNumber(timeLeft.minutes), label: 'دقائق' },
+                      { value: formatNumber(timeLeft.seconds), label: 'ثواني' }
+                    ].map((item, index) => (
+                      <motion.div
+                        key={index}
+                        className="bg-gradient-to-b from-[#4A2C2A]/10 to-[#4A2C2A]/5 rounded-2xl p-6 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+                        whileHover={{ scale: 1.05, y: -5 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <div className="text-4xl font-bold text-[#4A2C2A] mb-2">{item.value}</div>
+                        <div className="text-sm font-medium text-[#8B4513]">{item.label}</div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+
+                {/* Progress Indicator */}
+                <motion.div 
+                  className="mb-16"
+                  variants={itemVariants}
+                >
+                  <h3 className="text-2xl font-semibold mb-8 text-[#4A2C2A]">تقدم العمل</h3>
+                  <div className="w-full bg-[#4A2C2A]/20 rounded-full h-4 overflow-hidden">
+                    <motion.div 
+                      className="bg-gradient-to-r from-[#4A2C2A] to-[#8B4513] h-4 rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: '75%' }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                    />
+                  </div>
+                  <p className="text-sm font-medium text-[#8B4513] mt-3">75% مكتمل</p>
+                </motion.div>
+
+                {/* Coming Features Preview */}
+                <motion.div 
+                  className="mb-16"
+                  variants={itemVariants}
+                >
+                  <h3 className="text-2xl font-semibold mb-8 text-[#4A2C2A]">ماذا سيأتي؟</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-right">
+                    {[
+                      { icon: Book, title: 'قصص وروايات', desc: 'مجموعة من القصص والروايات المميزة' },
+                      { icon: PenTool, title: 'مقالات أدبية', desc: 'مقالات في الأدب والثقافة' },
+                      { icon: Users, title: 'حوارات أدبية', desc: 'حوارات مع أدباء ومثقفين' },
+                      { icon: MessageSquare, title: 'شعر ونثر', desc: 'إبداعات شعرية ونثرية' }
+                    ].map((feature, index) => (
+                      <motion.div
+                        key={index}
+                        className="p-8 bg-gradient-to-br from-[#4A2C2A]/5 to-[#4A2C2A]/10 rounded-2xl flex items-start gap-6 hover:from-[#4A2C2A]/10 hover:to-[#4A2C2A]/20 transition-all duration-300 shadow-lg hover:shadow-xl"
+                        whileHover={{ scale: 1.02, y: -5 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <feature.icon className="w-10 h-10 text-[#4A2C2A] flex-shrink-0" />
+                        <div>
+                          <h4 className="font-medium text-[#4A2C2A] mb-3 text-xl">{feature.title}</h4>
+                          <p className="text-[#8B4513] leading-relaxed">{feature.desc}</p>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+
+                {/* Contact Information */}
+                <motion.div 
+                  className="mt-16 p-8 bg-gradient-to-br from-[#4A2C2A]/10 to-[#4A2C2A]/5 border border-[#8B4513]/20 rounded-2xl shadow-lg"
+                  variants={itemVariants}
+                >
+                  <h3 className="text-2xl font-semibold mb-8 text-[#4A2C2A]">للتواصل</h3>
+                  <div className="space-y-4">
+                    <p className="text-[#8B4513] text-lg">
+                      البريد الإلكتروني: <a href="mailto:dhamma.productionss@gmail.com" className="text-[#4A2C2A] hover:underline font-medium">dhamma.productionss@gmail.com</a>
+                    </p>
+                    <p className="text-[#8B4513] text-lg">
+                      انستغرام: <a href="https://www.instagram.com/dhamma.productions/" target="_blank" rel="noopener noreferrer" className="text-[#4A2C2A] hover:underline font-medium">@dhamma.productions</a>
+                    </p>
+                  </div>
+
+                  {/* Social Media Links */}
+                  <div className="mt-10 flex justify-center gap-8">
+                    {[
+                      { icon: Instagram, href: 'https://www.instagram.com/dhamma.productions/', label: 'Instagram' },
+                      { icon: Facebook, href: 'https://www.facebook.com/dhamma.productions', label: 'Facebook' },
+                      { icon: Twitter, href: 'https://twitter.com/dhamma_prod', label: 'Twitter' },
+                      { icon: Youtube, href: 'https://www.youtube.com/@dhamma.productions', label: 'YouTube' },
+                      { icon: Linkedin, href: 'https://www.linkedin.com/company/dhamma-productions', label: 'LinkedIn' }
+                    ].map((social, index) => (
+                      <motion.a
+                        key={index}
+                        href={social.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#4A2C2A] hover:text-[#8B4513] transition-all duration-300 group"
+                        whileHover={{ scale: 1.2, y: -5 }}
+                        whileTap={{ scale: 0.9 }}
+                        aria-label={social.label}
+                      >
+                        <social.icon className="w-8 h-8" />
+                        <span className="sr-only">{social.label}</span>
+                      </motion.a>
+                    ))}
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
       </div>
     </div>
   );

@@ -164,6 +164,19 @@ const Videos: React.FC = () => {
           </div>
         )}
       </div>
+      
+      {/* Copyright Notice */}
+      <div className="container mx-auto mt-12 pb-8">
+        <div className="bg-saudi/5 rounded-lg p-6 text-center">
+          <h3 className="text-lg font-bold text-saudi mb-2">تنويه حقوق النشر</h3>
+          <p className="text-gray-700 mb-4">
+            جميع المحتويات المعروضة في هذه الصفحة متاحة للتحميل والمشاركة بحرية. نحن لا نحتفظ بحقوق الملكية الفكرية لهذه المحتويات.
+          </p>
+          <p className="text-gray-700">
+            نرجو فقط ذكر مصدر المحتوى عند المشاركة: <span className="font-bold text-saudi">ضمة</span>
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

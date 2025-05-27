@@ -1,99 +1,250 @@
 import React from 'react';
+import { motion } from 'framer-motion';
+import { Shield, Lock, Eye, FileText, AlertCircle, Mail, Users, Database } from 'lucide-react';
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5 }
+};
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
 
 const PrivacyPolicy: React.FC = () => {
   return (
-    <div className="min-h-screen py-12">
-      <div className="container mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-saudi">سياسة الخصوصية</h1>
+    <div className="min-h-screen py-8 sm:py-12">
+      <div className="container mx-auto px-4">
+        <motion.h1 
+          className="text-3xl sm:text-4xl font-bold mb-6 sm:mb-8 text-saudi text-center"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          سياسة الخصوصية
+        </motion.h1>
         
-        <div className="bg-white rounded-2xl p-8 shadow-md border border-saudi-light arabesque-bg">
-          <h2 className="text-2xl font-bold mb-6 text-saudi">حماية خصوصيتكم</h2>
-          
-          <div className="space-y-6 text-lg">
-            <p>
+        <motion.div 
+          className="bg-white rounded-2xl p-4 sm:p-8 shadow-md border border-saudi-light arabesque-bg"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Introduction */}
+          <motion.div 
+            className="space-y-6 text-base sm:text-lg mb-8"
+            variants={fadeInUp}
+            initial="initial"
+            animate="animate"
+          >
+            <p className="leading-relaxed">
               نحن في منصة ضَـمَّـة نلتزم بحماية خصوصية مستخدمينا وفقاً للمنهج السلفي وقوانين حماية البيانات في الجمهورية الجزائرية. توضح سياسة الخصوصية هذه كيفية جمع واستخدام وحماية المعلومات الشخصية التي تقدمها لنا.
             </p>
+          </motion.div>
+
+          {/* Main Sections */}
+          <motion.div 
+            className="space-y-8"
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+          >
+            <motion.h2 
+              className="text-2xl sm:text-3xl font-bold text-saudi mb-6"
+              variants={fadeInUp}
+            >
+              حماية خصوصيتكم
+            </motion.h2>
             
-            <h3 className="text-xl font-bold mt-8 mb-4 text-saudi">المبادئ الأساسية</h3>
-            
-            <ul className="list-disc list-inside space-y-3 mr-6">
-              <li>الالتزام بمبادئ الشريعة الإسلامية في حفظ الأسرار والخصوصية</li>
-              <li>احترام خصوصية المستخدمين وحماية بياناتهم الشخصية</li>
-              <li>الالتزام بقوانين حماية البيانات في الجمهورية الجزائرية</li>
-              <li>عدم استخدام البيانات الشخصية في أي غرض يخالف الشريعة الإسلامية</li>
-            </ul>
-            
-            <h3 className="text-xl font-bold mt-8 mb-4 text-saudi">المعلومات التي نجمعها</h3>
-            
-            <ul className="list-disc list-inside space-y-3 mr-6">
-              <li>المعلومات الشخصية (الاسم، البريد الإلكتروني، رقم الهاتف) وفقاً للقانون الجزائري</li>
-              <li>معلومات الاتصال التي تقدمها من خلال نموذج التواصل</li>
-              <li>بيانات التصفح والتفاعل مع المنصة</li>
-              <li>معلومات الجهاز والمتصفح</li>
-            </ul>
-            
-            <h3 className="text-xl font-bold mt-8 mb-4 text-saudi">كيف نستخدم المعلومات</h3>
-            
-            <ul className="list-disc list-inside space-y-3 mr-6">
-              <li>تحسين خدماتنا وتجربة المستخدم بما يتوافق مع الشريعة الإسلامية</li>
-              <li>الرد على استفساراتكم وطلباتكم</li>
-              <li>إرسال تحديثات وإشعارات مهمة</li>
-              <li>تحليل استخدام المنصة وتطويرها</li>
-              <li>الامتثال للقوانين الجزائرية المتعلقة بحماية البيانات</li>
-            </ul>
-            
-            <h3 className="text-xl font-bold mt-8 mb-4 text-saudi">حماية المعلومات</h3>
-            
-            <p>
-              نتخذ إجراءات أمنية مناسبة لحماية معلوماتكم الشخصية من الوصول غير المصرح به أو التغيير أو الكشف، وفقاً لأعلى معايير الأمان الإسلامية والقانونية. نستخدم تقنيات تشفير متقدمة ونتبع أفضل الممارسات الأمنية.
-            </p>
-            
-            <h3 className="text-xl font-bold mt-8 mb-4 text-saudi">مشاركة المعلومات</h3>
-            
-            <p>
-              لا نقوم ببيع أو تأجير أو مشاركة معلوماتكم الشخصية مع أطراف ثالثة إلا في الحالات التالية:
-            </p>
-            
-            <ul className="list-disc list-inside space-y-3 mr-6 mt-4">
-              <li>عندما يكون ذلك مطلوباً بموجب القانون الجزائري</li>
-              <li>لحماية حقوقنا وممتلكاتنا</li>
-              <li>للمساعدة في منع نشاط غير قانوني</li>
-              <li>عندما يكون ذلك ضرورياً لحماية المصلحة العامة</li>
-            </ul>
-            
-            <h3 className="text-xl font-bold mt-8 mb-4 text-saudi">حقوقكم</h3>
-            
-            <p>
-              لديكم الحق في:
-            </p>
-            
-            <ul className="list-disc list-inside space-y-3 mr-6 mt-4">
-              <li>الوصول إلى معلوماتكم الشخصية</li>
-              <li>تصحيح أي معلومات غير دقيقة</li>
-              <li>طلب حذف معلوماتكم</li>
-              <li>الاعتراض على معالجة معلوماتكم</li>
-              <li>طلب نقل بياناتكم إلى منصة أخرى</li>
-              <li>التراجع عن الموافقة على معالجة بياناتكم</li>
-            </ul>
-            
-            <h3 className="text-xl font-bold mt-8 mb-4 text-saudi">التغييرات على سياسة الخصوصية</h3>
-            
-            <p>
-              قد نقوم بتحديث سياسة الخصوصية من وقت لآخر بما يتوافق مع الشريعة الإسلامية والقانون الجزائري. سنقوم بإخطاركم بأي تغييرات جوهرية من خلال المنصة أو عبر البريد الإلكتروني.
-            </p>
-            
-            <h3 className="text-xl font-bold mt-8 mb-4 text-saudi">اتصل بنا</h3>
-            
-            <p>
-              إذا كان لديكم أي أسئلة أو استفسارات حول سياسة الخصوصية، يرجى التواصل معنا من خلال:
-            </p>
-            
-            <ul className="list-disc list-inside space-y-3 mr-6 mt-4">
-              <li>البريد الإلكتروني: dhamma.productionss@gmail.com</li>
-              <li>صفحة التواصل على المنصة</li>
-            </ul>
-          </div>
-        </div>
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
+              variants={staggerContainer}
+            >
+              {/* Basic Principles */}
+              <motion.div 
+                className="bg-gradient-to-br from-saudi/5 to-saudi/10 p-4 sm:p-6 rounded-xl"
+                variants={fadeInUp}
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <Shield className="w-6 h-6 text-saudi" />
+                  <h3 className="text-lg sm:text-xl font-bold text-saudi">المبادئ الأساسية</h3>
+                </div>
+                <ul className="list-none space-y-3">
+                  {[
+                    'الالتزام بمبادئ الشريعة الإسلامية في حفظ الأسرار والخصوصية',
+                    'احترام خصوصية المستخدمين وحماية بياناتهم الشخصية',
+                    'الالتزام بقوانين حماية البيانات في الجمهورية الجزائرية',
+                    'عدم استخدام البيانات الشخصية في أي غرض يخالف الشريعة الإسلامية'
+                  ].map((item, index) => (
+                    <li key={index} className="flex items-start gap-3 text-gray-700">
+                      <span className="text-saudi mt-2">•</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+
+              {/* Information Collection */}
+              <motion.div 
+                className="bg-gradient-to-br from-saudi/5 to-saudi/10 p-4 sm:p-6 rounded-xl"
+                variants={fadeInUp}
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <Database className="w-6 h-6 text-saudi" />
+                  <h3 className="text-lg sm:text-xl font-bold text-saudi">المعلومات التي نجمعها</h3>
+                </div>
+                <ul className="list-none space-y-3">
+                  {[
+                    'الاسم والبريد الإلكتروني',
+                    'معلومات الحساب الأساسية',
+                    'سجل النشاط على المنصة',
+                    'تفضيلات المحتوى والاهتمامات'
+                  ].map((item, index) => (
+                    <li key={index} className="flex items-start gap-3 text-gray-700">
+                      <span className="text-saudi mt-2">•</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+
+              {/* Data Protection */}
+              <motion.div 
+                className="bg-gradient-to-br from-saudi/5 to-saudi/10 p-4 sm:p-6 rounded-xl"
+                variants={fadeInUp}
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <Lock className="w-6 h-6 text-saudi" />
+                  <h3 className="text-lg sm:text-xl font-bold text-saudi">حماية البيانات</h3>
+                </div>
+                <p className="text-gray-700 mb-4">
+                  نحن نستخدم تقنيات تشفير متقدمة لحماية بياناتكم الشخصية، ونتخذ إجراءات أمنية صارمة لمنع الوصول غير المصرح به.
+                </p>
+                <ul className="list-none space-y-3">
+                  {[
+                    'تشفير البيانات الحساسة',
+                    'حماية كلمات المرور',
+                    'مراقبة مستمرة للأنشطة المشبوهة',
+                    'تحديثات دورية لأنظمة الحماية'
+                  ].map((item, index) => (
+                    <li key={index} className="flex items-start gap-3 text-gray-700">
+                      <span className="text-saudi mt-2">•</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+
+              {/* Data Usage */}
+              <motion.div 
+                className="bg-gradient-to-br from-saudi/5 to-saudi/10 p-4 sm:p-6 rounded-xl"
+                variants={fadeInUp}
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <Eye className="w-6 h-6 text-saudi" />
+                  <h3 className="text-lg sm:text-xl font-bold text-saudi">استخدام البيانات</h3>
+                </div>
+                <p className="text-gray-700 mb-4">
+                  نستخدم بياناتكم فقط للأغراض المصرح بها، مثل:
+                </p>
+                <ul className="list-none space-y-3">
+                  {[
+                    'تحسين تجربة المستخدم',
+                    'تخصيص المحتوى حسب اهتماماتكم',
+                    'تحليل استخدام المنصة',
+                    'التواصل معكم حول التحديثات المهمة'
+                  ].map((item, index) => (
+                    <li key={index} className="flex items-start gap-3 text-gray-700">
+                      <span className="text-saudi mt-2">•</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+
+              {/* User Rights */}
+              <motion.div 
+                className="bg-gradient-to-br from-saudi/5 to-saudi/10 p-4 sm:p-6 rounded-xl"
+                variants={fadeInUp}
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <Users className="w-6 h-6 text-saudi" />
+                  <h3 className="text-lg sm:text-xl font-bold text-saudi">حقوق المستخدمين</h3>
+                </div>
+                <ul className="list-none space-y-3">
+                  {[
+                    'الحق في الوصول إلى بياناتكم الشخصية',
+                    'الحق في تصحيح البيانات غير الدقيقة',
+                    'الحق في طلب حذف بياناتكم',
+                    'الحق في الاعتراض على معالجة بياناتكم'
+                  ].map((item, index) => (
+                    <li key={index} className="flex items-start gap-3 text-gray-700">
+                      <span className="text-saudi mt-2">•</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+
+              {/* Policy Updates */}
+              <motion.div 
+                className="bg-gradient-to-br from-saudi/5 to-saudi/10 p-4 sm:p-6 rounded-xl"
+                variants={fadeInUp}
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <FileText className="w-6 h-6 text-saudi" />
+                  <h3 className="text-lg sm:text-xl font-bold text-saudi">تحديثات السياسة</h3>
+                </div>
+                <p className="text-gray-700">
+                  نحتفظ بالحق في تحديث سياسة الخصوصية في أي وقت. سيتم إخطاركم بأي تغييرات جوهرية من خلال المنصة أو عبر البريد الإلكتروني.
+                </p>
+              </motion.div>
+
+              {/* Contact Information */}
+              <motion.div 
+                className="bg-gradient-to-br from-saudi/5 to-saudi/10 p-4 sm:p-6 rounded-xl"
+                variants={fadeInUp}
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <Mail className="w-6 h-6 text-saudi" />
+                  <h3 className="text-lg sm:text-xl font-bold text-saudi">اتصل بنا</h3>
+                </div>
+                <p className="text-gray-700 mb-4">
+                  إذا كان لديكم أي أسئلة حول سياسة الخصوصية، يمكنكم التواصل معنا من خلال:
+                </p>
+                <ul className="list-none space-y-3">
+                  <li className="flex items-start gap-3 text-gray-700">
+                    <span className="text-saudi mt-2">•</span>
+                    <span>البريد الإلكتروني: <a href="mailto:dhamma.productionss@gmail.com" className="text-saudi hover:underline">dhamma.productionss@gmail.com</a></span>
+                  </li>
+                  <li className="flex items-start gap-3 text-gray-700">
+                    <span className="text-saudi mt-2">•</span>
+                    <span>صفحة التواصل على المنصة</span>
+                  </li>
+                </ul>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       </div>
     </div>
   );

@@ -55,6 +55,8 @@ const CoffeeEyes: React.FC = () => {
     // Calculate immediately
     calculateTimeLeft();
 
+    // Update countdown every second
+    const timer = setInterval(calculateTimeLeft, 1000);
 
     // Cleanup
     return () => clearInterval(timer);
@@ -157,10 +159,10 @@ const CoffeeEyes: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden bg-background dark:bg-gray-900">
       {/* Animated Background */}
       <motion.div
-        className="absolute inset-0 bg-gradient-to-b from-[#4A2C2A]/5 via-[#8B4513]/10 to-[#4A2C2A]/5"
+        className="absolute inset-0 bg-gradient-to-b from-[#4A2C2A]/5 via-[#8B4513]/10 to-[#4A2C2A]/5 dark:from-[#E0C9A6]/5 dark:via-[#C19A6B]/10 dark:to-[#E0C9A6]/5"
         animate="animate"
         variants={backgroundVariants}
       >
@@ -181,7 +183,7 @@ const CoffeeEyes: React.FC = () => {
               duration: 12 + Math.random() * 6
             }}
           >
-            <Coffee className="w-10 h-10 text-[#4A2C2A]/15 drop-shadow-lg" />
+            <Coffee className="w-10 h-10 text-[#4A2C2A]/15 dark:text-[#E0C9A6]/15 drop-shadow-lg" />
           </motion.div>
         ))}
 
@@ -202,7 +204,7 @@ const CoffeeEyes: React.FC = () => {
               duration: 6 + Math.random() * 3
             }}
           >
-            <div className="w-6 h-16 bg-gradient-to-t from-[#4A2C2A]/10 to-transparent rounded-full blur-md" />
+            <div className="w-6 h-16 bg-gradient-to-t from-[#4A2C2A]/10 to-transparent rounded-full blur-md dark:from-[#E0C9A6]/10" />
           </motion.div>
         ))}
       </motion.div>
@@ -227,7 +229,7 @@ const CoffeeEyes: React.FC = () => {
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ duration: 0.8, type: "spring", bounce: 0.5 }}
               >
-                <Coffee className="w-16 h-16 sm:w-24 sm:h-24 text-[#4A2C2A] drop-shadow-lg" />
+                <Coffee className="w-16 h-16 sm:w-24 sm:h-24 text-[#4A2C2A] dark:text-[#E0C9A6] drop-shadow-lg" />
                 {/* Steam Animation */}
                 <motion.div
                   className="absolute top-0 left-1/2 transform -translate-x-1/2"
@@ -235,7 +237,7 @@ const CoffeeEyes: React.FC = () => {
                   initial="initial"
                   animate="animate"
                 >
-                  <div className="w-2 h-8 sm:w-3 sm:h-12 bg-[#4A2C2A]/30 rounded-full blur-sm" />
+                  <div className="w-2 h-8 sm:w-3 sm:h-12 bg-[#4A2C2A]/30 dark:bg-[#E0C9A6]/30 rounded-full blur-sm" />
                 </motion.div>
                 <motion.div
                   className="absolute top-0 left-1/2 transform -translate-x-1/2 -ml-3 sm:-ml-4"
@@ -244,7 +246,7 @@ const CoffeeEyes: React.FC = () => {
                   animate="animate"
                   transition={{ delay: 0.3 }}
                 >
-                  <div className="w-2 h-8 sm:w-3 sm:h-12 bg-[#4A2C2A]/30 rounded-full blur-sm" />
+                  <div className="w-2 h-8 sm:w-3 sm:h-12 bg-[#4A2C2A]/30 dark:bg-[#E0C9A6]/30 rounded-full blur-sm" />
                 </motion.div>
                 <motion.div
                   className="absolute top-0 left-1/2 transform -translate-x-1/2 ml-3 sm:ml-4"
@@ -253,12 +255,12 @@ const CoffeeEyes: React.FC = () => {
                   animate="animate"
                   transition={{ delay: 0.6 }}
                 >
-                  <div className="w-2 h-8 sm:w-3 sm:h-12 bg-[#4A2C2A]/30 rounded-full blur-sm" />
+                  <div className="w-2 h-8 sm:w-3 sm:h-12 bg-[#4A2C2A]/30 dark:bg-[#E0C9A6]/30 rounded-full blur-sm" />
                 </motion.div>
               </motion.div>
 
               <motion.h1 
-                className="text-4xl sm:text-6xl font-bold text-[#4A2C2A] drop-shadow-sm"
+                className="text-4xl sm:text-6xl font-bold text-[#4A2C2A] dark:text-[#E0C9A6] drop-shadow-sm"
                 variants={itemVariants}
               >
                 عيون القهوة
@@ -266,19 +268,19 @@ const CoffeeEyes: React.FC = () => {
             </motion.div>
 
             <motion.div 
-              className="bg-white/95 rounded-2xl sm:rounded-3xl p-4 sm:p-10 shadow-2xl border border-[#8B4513]/20 relative overflow-hidden backdrop-blur-sm"
+              className="bg-white/95 dark:bg-gray-800/95 rounded-2xl sm:rounded-3xl p-4 sm:p-10 shadow-2xl border border-[#8B4513]/20 dark:border-border relative overflow-hidden backdrop-blur-sm"
               variants={itemVariants}
             >
-              <div className="absolute inset-0 bg-[url('/coffee-pattern.png')] opacity-5"></div>
+              <div className="absolute inset-0 bg-[url('/coffee-pattern.png')] opacity-5 dark:opacity-2"></div>
               <div className="relative z-10">
                 <motion.h2 
-                  className="text-3xl sm:text-4xl font-bold mb-4 sm:mb-6 text-[#4A2C2A]"
+                  className="text-3xl sm:text-4xl font-bold mb-4 sm:mb-6 text-[#4A2C2A] dark:text-[#E0C9A6]"
                   variants={itemVariants}
                 >
                   قريباً
                 </motion.h2>
                 <motion.p 
-                  className="text-[#8B4513] text-lg sm:text-xl mb-8 sm:mb-12 leading-relaxed"
+                  className="text-[#8B4513] dark:text-[#C19A6B] text-lg sm:text-xl mb-8 sm:mb-12 leading-relaxed"
                   variants={itemVariants}
                 >
                   نحن نعمل حالياً على تطوير هذه الصفحة. سنعود قريباً بمحتوى جديد ومميز.
@@ -289,7 +291,7 @@ const CoffeeEyes: React.FC = () => {
                   className="mb-12 sm:mb-16"
                   variants={itemVariants}
                 >
-                  <h3 className="text-xl sm:text-2xl font-semibold mb-6 sm:mb-8 text-[#4A2C2A]">موعد الإطلاق</h3>
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-6 sm:mb-8 text-[#4A2C2A] dark:text-[#E0C9A6]">موعد الإطلاق</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 max-w-2xl mx-auto">
                     {[
                       { value: timeLeft.days, label: 'أيام' },
@@ -299,12 +301,12 @@ const CoffeeEyes: React.FC = () => {
                     ].map((item, index) => (
                       <motion.div
                         key={index}
-                        className="bg-gradient-to-b from-[#4A2C2A]/10 to-[#4A2C2A]/5 rounded-xl sm:rounded-2xl p-3 sm:p-6 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+                        className="bg-gradient-to-b from-[#4A2C2A]/10 to-[#4A2C2A]/5 rounded-xl sm:rounded-2xl p-3 sm:p-6 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl dark:from-[#E0C9A6]/10 dark:to-[#E0C9A6]/5 dark:bg-gray-700"
                         whileHover={{ scale: 1.05, y: -5 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        <div className="text-2xl sm:text-4xl font-bold text-[#4A2C2A] mb-1 sm:mb-2">{item.value}</div>
-                        <div className="text-xs sm:text-sm font-medium text-[#8B4513]">{item.label}</div>
+                        <div className="text-2xl sm:text-4xl font-bold text-[#4A2C2A] dark:text-[#E0C9A6] mb-1 sm:mb-2">{item.value}</div>
+                        <div className="text-xs sm:text-sm font-medium text-[#8B4513] dark:text-[#C19A6B]">{item.label}</div>
                       </motion.div>
                     ))}
                   </div>
@@ -315,16 +317,16 @@ const CoffeeEyes: React.FC = () => {
                   className="mb-12 sm:mb-16"
                   variants={itemVariants}
                 >
-                  <h3 className="text-xl sm:text-2xl font-semibold mb-6 sm:mb-8 text-[#4A2C2A]">تقدم العمل</h3>
-                  <div className="w-full bg-[#4A2C2A]/20 rounded-full h-3 sm:h-4 overflow-hidden">
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-6 sm:mb-8 text-[#4A2C2A] dark:text-[#E0C9A6]">تقدم العمل</h3>
+                  <div className="w-full bg-[#4A2C2A]/20 dark:bg-[#E0C9A6]/20 rounded-full h-3 sm:h-4 overflow-hidden">
                     <motion.div 
-                      className="bg-gradient-to-r from-[#4A2C2A] to-[#8B4513] h-3 sm:h-4 rounded-full"
+                      className="bg-gradient-to-r from-[#4A2C2A] to-[#8B4513] dark:from-[#E0C9A6] dark:to-[#C19A6B] h-3 sm:h-4 rounded-full"
                       initial={{ width: 0 }}
                       animate={{ width: '75%' }}
                       transition={{ duration: 1.5, ease: "easeOut" }}
                     />
                   </div>
-                  <p className="text-xs sm:text-sm font-medium text-[#8B4513] mt-2 sm:mt-3">75% مكتمل</p>
+                  <p className="text-xs sm:text-sm font-medium text-[#8B4513] dark:text-[#C19A6B] mt-2 sm:mt-3">75% مكتمل</p>
                 </motion.div>
 
                 {/* Coming Features Preview */}
@@ -332,7 +334,7 @@ const CoffeeEyes: React.FC = () => {
                   className="mb-12 sm:mb-16"
                   variants={itemVariants}
                 >
-                  <h3 className="text-xl sm:text-2xl font-semibold mb-6 sm:mb-8 text-[#4A2C2A]">ماذا سيأتي؟</h3>
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-6 sm:mb-8 text-[#4A2C2A] dark:text-[#E0C9A6]">ماذا سيأتي؟</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 text-right">
                     {[
                       { icon: Book, title: 'قصص وروايات', desc: 'مجموعة من القصص والروايات المميزة' },
@@ -342,14 +344,14 @@ const CoffeeEyes: React.FC = () => {
                     ].map((feature, index) => (
                       <motion.div
                         key={index}
-                        className="p-4 sm:p-8 bg-gradient-to-br from-[#4A2C2A]/5 to-[#4A2C2A]/10 rounded-xl sm:rounded-2xl flex items-start gap-4 sm:gap-6 hover:from-[#4A2C2A]/10 hover:to-[#4A2C2A]/20 transition-all duration-300 shadow-lg hover:shadow-xl"
+                        className="p-4 sm:p-8 bg-gradient-to-br from-[#4A2C2A]/5 to-[#4A2C2A]/10 rounded-xl sm:rounded-2xl flex items-start gap-4 sm:gap-6 hover:from-[#4A2C2A]/10 hover:to-[#4A2C2A]/20 transition-all duration-300 shadow-lg hover:shadow-xl dark:from-[#E0C9A6]/5 dark:to-[#E0C9A6]/10 dark:hover:from-[#E0C9A6]/10 dark:hover:to-[#E0C9A6]/20 dark:bg-gray-700"
                         whileHover={{ scale: 1.02, y: -5 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <feature.icon className="w-8 h-8 sm:w-10 sm:h-10 text-[#4A2C2A] flex-shrink-0" />
+                        <feature.icon className="w-8 h-8 sm:w-10 sm:h-10 text-[#4A2C2A] dark:text-[#E0C9A6] flex-shrink-0" />
                         <div>
-                          <h4 className="font-medium text-[#4A2C2A] mb-2 sm:mb-3 text-lg sm:text-xl">{feature.title}</h4>
-                          <p className="text-sm sm:text-base text-[#8B4513] leading-relaxed">{feature.desc}</p>
+                          <h4 className="font-medium text-[#4A2C2A] dark:text-[#E0C9A6] mb-2 sm:mb-3 text-lg sm:text-xl">{feature.title}</h4>
+                          <p className="text-sm sm:text-base text-[#8B4513] dark:text-[#C19A6B] leading-relaxed">{feature.desc}</p>
                         </div>
                       </motion.div>
                     ))}
@@ -358,16 +360,16 @@ const CoffeeEyes: React.FC = () => {
 
                 {/* Contact Information */}
                 <motion.div 
-                  className="mt-12 sm:mt-16 p-4 sm:p-8 bg-gradient-to-br from-[#4A2C2A]/10 to-[#4A2C2A]/5 border border-[#8B4513]/20 rounded-xl sm:rounded-2xl shadow-lg"
+                  className="mt-12 sm:mt-16 p-4 sm:p-8 bg-gradient-to-br from-[#4A2C2A]/10 to-[#4A2C2A]/5 border border-[#8B4513]/20 rounded-xl sm:rounded-2xl shadow-lg dark:from-[#E0C9A6]/10 dark:to-[#E0C9A6]/5 dark:border-border dark:bg-gray-700"
                   variants={itemVariants}
                 >
-                  <h3 className="text-xl sm:text-2xl font-semibold mb-6 sm:mb-8 text-[#4A2C2A]">للتواصل</h3>
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-6 sm:mb-8 text-[#4A2C2A] dark:text-[#E0C9A6]">للتواصل</h3>
                   <div className="space-y-3 sm:space-y-4">
-                    <p className="text-base sm:text-lg text-[#8B4513]">
-                      البريد الإلكتروني: <a href="mailto:dhamma.productionss@gmail.com" className="text-[#4A2C2A] hover:underline font-medium">dhamma.productionss@gmail.com</a>
+                    <p className="text-base sm:text-lg text-[#8B4513] dark:text-[#C19A6B]">
+                      البريد الإلكتروني: <a href="mailto:dhamma.productionss@gmail.com" className="text-[#4A2C2A] dark:text-[#E0C9A6] hover:underline font-medium">dhamma.productionss@gmail.com</a>
                     </p>
-                    <p className="text-base sm:text-lg text-[#8B4513]">
-                      انستغرام: <a href="https://www.instagram.com/dhamma.productions/" target="_blank" rel="noopener noreferrer" className="text-[#4A2C2A] hover:underline font-medium">@dhamma.productions</a>
+                    <p className="text-base sm:text-lg text-[#8B4513] dark:text-[#C19A6B]">
+                      انستغرام: <a href="https://www.instagram.com/dhamma.productions/" target="_blank" rel="noopener noreferrer" className="text-[#4A2C2A] dark:text-[#E0C9A6] hover:underline font-medium">@dhamma.productions</a>
                     </p>
                   </div>
 
@@ -385,7 +387,7 @@ const CoffeeEyes: React.FC = () => {
                         href={social.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[#4A2C2A] hover:text-[#8B4513] transition-all duration-300 group p-2"
+                        className="text-[#4A2C2A] hover:text-[#8B4513] dark:text-[#E0C9A6] dark:hover:text-[#C19A6B] transition-all duration-300 group p-2"
                         whileHover={{ scale: 1.2, y: -5 }}
                         whileTap={{ scale: 0.9 }}
                         aria-label={social.label}

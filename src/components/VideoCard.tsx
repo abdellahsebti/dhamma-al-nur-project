@@ -22,26 +22,23 @@ interface VideoCardProps {
 const VideoCard: React.FC<VideoCardProps> = ({ 
   id, 
   title, 
+  videoUrl, 
   category, 
   views, 
-  thumbnail,
-  videoUrl
+  thumbnail 
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleView = async () => {
+    setIsOpen(true);
     try {
-      // Update view count in Firestore
       const videoRef = doc(db, 'videos', id);
       await updateDoc(videoRef, {
         views: increment(1)
       });
     } catch (error) {
-      console.error('Error updating view count:', error);
+      console.error('Error updating views:', error);
     }
-    
-    // Open the modal
-    setIsOpen(true);
   };
 
   // Extract YouTube video ID from URL
@@ -56,7 +53,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
 
   return (
     <>
-      <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300" onClick={handleView}>
+      <Card className="group cursor-pointer hover:shadow-lg dark:hover:shadow-xl dark:hover:shadow-black/20 transition-all duration-300" onClick={handleView}>
         <CardContent className="p-0">
           <div className="aspect-video relative overflow-hidden">
             <img 
@@ -65,19 +62,19 @@ const VideoCard: React.FC<VideoCardProps> = ({
               className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="bg-saudi hover:bg-saudi-dark rounded-full p-4 transform scale-90 group-hover:scale-100 transition-transform duration-300">
-                <Play size={24} className="text-white" />
+              <div className="bg-saudi hover:bg-saudi-dark dark:bg-saudi-light dark:hover:bg-saudi-light/90 rounded-full p-4 transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                <Play size={24} className="text-white dark:text-saudi" />
               </div>
             </div>
           </div>
           <div className="p-4">
-            <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">{title}</h3>
+            <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-2 line-clamp-2">{title}</h3>
             <div className="flex items-center justify-between">
-              <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-saudi/10 text-saudi text-sm">
+              <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-saudi/10 dark:bg-saudi/20 text-saudi dark:text-saudi-light text-sm">
                 <Tag className="w-4 h-4" />
                 <span>{category}</span>
               </div>
-              <div className="flex items-center gap-2 text-gray-600">
+              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                 <Eye className="w-4 h-4" />
                 <span className="text-sm">{views.toLocaleString()} مشاهدة</span>
               </div>
@@ -87,22 +84,16 @@ const VideoCard: React.FC<VideoCardProps> = ({
       </Card>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-4xl w-[90vw] p-0 bg-black">
-          <DialogHeader className="absolute top-2 right-2 z-10">
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
-            >
-              <X className="w-6 h-6 text-white" />
-            </button>
+        <DialogContent className="sm:max-w-[800px] p-0 bg-background">
+          <DialogHeader className="p-4 border-b border-border">
+            <DialogTitle className="text-foreground">{title}</DialogTitle>
           </DialogHeader>
-          <div className="aspect-video w-full">
+          <div className="aspect-video">
             <iframe
               src={embedUrl}
-              title={title}
+              className="w-full h-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
-              className="w-full h-full"
             />
           </div>
         </DialogContent>

@@ -198,18 +198,18 @@ const Contact: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen py-12">
+    <div className="min-h-screen py-12 bg-background dark:bg-gray-900">
       <div className="container mx-auto max-w-3xl">
-        <h1 className="text-3xl font-bold mb-8 text-saudi">اتصل بنا</h1>
+        <h1 className="text-3xl font-bold mb-8 text-saudi dark:text-saudi-light">اتصل بنا</h1>
         
-        <div className="bg-white rounded-2xl p-8 shadow-md border border-saudi-light">
-          <p className="mb-6 text-lg">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-md border border-saudi-light dark:border-border">
+          <p className="mb-6 text-lg text-gray-700 dark:text-gray-300">
             يسعدنا تواصلكم واستقبال استفساراتكم واقتراحاتكم. يرجى ملء النموذج أدناه وسنقوم بالرد عليكم في أقرب وقت ممكن.
           </p>
           
           {isRateLimited && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600">
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg dark:bg-red-950 dark:border-red-700">
+              <p className="text-red-600 dark:text-red-300">
                 تم تجاوز الحد المسموح من الرسائل. يرجى المحاولة مرة أخرى بعد ساعة.
               </p>
             </div>
@@ -217,7 +217,7 @@ const Contact: React.FC = () => {
           
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="name" className="block mb-2 font-medium">
+              <label htmlFor="name" className="block mb-2 font-medium text-gray-900 dark:text-gray-100">
                 الاسم
               </label>
               <Input
@@ -226,14 +226,14 @@ const Contact: React.FC = () => {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="border-saudi-light"
+                className="border-saudi-light dark:border-border"
                 disabled={isSubmitting || isRateLimited}
                 placeholder="أدخل اسمك الكامل"
               />
             </div>
             
             <div>
-              <label htmlFor="email" className="block mb-2 font-medium">
+              <label htmlFor="email" className="block mb-2 font-medium text-gray-900 dark:text-gray-100">
                 البريد الإلكتروني
               </label>
               <Input
@@ -243,14 +243,14 @@ const Contact: React.FC = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="border-saudi-light"
+                className="border-saudi-light dark:border-border"
                 disabled={isSubmitting || isRateLimited}
                 placeholder="أدخل بريدك الإلكتروني"
               />
             </div>
             
             <div>
-              <label htmlFor="subject" className="block mb-2 font-medium">
+              <label htmlFor="subject" className="block mb-2 font-medium text-gray-900 dark:text-gray-100">
                 الموضوع
               </label>
               <Input
@@ -259,14 +259,14 @@ const Contact: React.FC = () => {
                 value={formData.subject}
                 onChange={handleChange}
                 required
-                className="border-saudi-light"
+                className="border-saudi-light dark:border-border"
                 disabled={isSubmitting || isRateLimited}
                 placeholder="أدخل موضوع الرسالة"
               />
             </div>
             
             <div>
-              <label htmlFor="message" className="block mb-2 font-medium">
+              <label htmlFor="message" className="block mb-2 font-medium text-gray-900 dark:text-gray-100">
                 الرسالة
               </label>
               <Textarea
@@ -275,7 +275,7 @@ const Contact: React.FC = () => {
                 value={formData.message}
                 onChange={handleChange}
                 required
-                className="min-h-[150px] border-saudi-light"
+                className="min-h-[150px] border-saudi-light dark:border-border"
                 disabled={isSubmitting || isRateLimited}
                 placeholder="اكتب رسالتك هنا..."
               />
@@ -283,7 +283,7 @@ const Contact: React.FC = () => {
             
             <Button 
               type="submit" 
-              className="bg-saudi hover:bg-saudi-dark w-full"
+              className="bg-saudi hover:bg-saudi-dark w-full dark:bg-saudi-light dark:hover:bg-saudi-light/90 dark:text-saudi"
               disabled={isSubmitting || isRateLimited}
             >
               {isSubmitting ? 'جاري الإرسال...' : 'إرسال'}

@@ -236,7 +236,7 @@ const Index: React.FC = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-saudi"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-saudi dark:border-saudi-light"></div>
         </motion.div>
       ) : (
         <>
@@ -249,324 +249,269 @@ const Index: React.FC = () => {
           >
             <div className="container mx-auto text-center">
               <motion.h1 
-                className="text-4xl md:text-5xl font-bold mb-6 text-saudi"
+                className="text-4xl md:text-5xl font-bold text-saudi dark:text-saudi-light mb-4"
                 variants={heroVariants}
               >
                 ضَـمَّـة
               </motion.h1>
               <motion.p 
-                className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto"
+                className="text-xl md:text-2xl text-gray-700 dark:text-gray-300 mb-8"
                 variants={heroVariants}
               >
-                منصة إسلامية تهدف إلى نشر الوعي السلفي والبحث العلمي من خلال مقاطع الفيديو والبودكاست والفوائد العلمية
+                منصة إسلامية تهدف إلى نشر الوعي السلفي والبحث العلمي من خلال
+                مقاطع الفيديو والبودكاست والفوائد العلمية
               </motion.p>
               <motion.div 
-                className="flex flex-wrap gap-4 justify-center mb-8"
+                className="flex justify-center items-center gap-4 flex-wrap"
                 variants={containerVariants}
               >
                 <motion.div variants={buttonVariants} whileHover="hover">
                   <Button 
                     size="lg" 
-                    className="bg-saudi hover:bg-saudi-dark transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl relative overflow-hidden group"
+                    className="bg-saudi hover:bg-saudi-dark dark:bg-saudi-light dark:hover:bg-saudi-light/90 text-white dark:text-saudi rounded-full px-8 py-3 text-lg"
                     onClick={() => navigate('/videos')}
                   >
-                    <span className="relative z-10">استعراض الفيديوهات</span>
-                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                    <Play className="w-5 h-5 ml-2" /> استعراض الفيديوهات
                   </Button>
                 </motion.div>
                 <motion.div variants={buttonVariants} whileHover="hover">
                   <Button 
                     size="lg" 
-                    variant="outline" 
-                    className="border-saudi text-saudi hover:bg-saudi-light transform hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+                    variant="outline"
+                    className="border-saudi text-saudi hover:bg-saudi/10 dark:border-saudi-light dark:text-saudi-light dark:hover:bg-saudi/20 rounded-full px-8 py-3 text-lg"
                     onClick={() => navigate('/al-qawl-al-mufid')}
                   >
-                    <span className="relative z-10">القول المفيد</span>
-                    <div className="absolute inset-0 bg-saudi/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                    <BookOpen className="w-5 h-5 ml-2" /> القول المفيد
                   </Button>
                 </motion.div>
                 <motion.div variants={buttonVariants} whileHover="hover">
                   <Button 
                     size="lg" 
-                    variant="outline" 
-                    className="border-[#6F4E37] text-[#6F4E37] hover:bg-[#6F4E37]/10 transform hover:scale-105 transition-all duration-300 flex items-center gap-2 relative overflow-hidden group"
+                    variant="outline"
+                    className="border-saudi text-saudi hover:bg-saudi/10 dark:border-saudi-light dark:text-saudi-light dark:hover:bg-saudi/20 rounded-full px-8 py-3 text-lg"
                     onClick={() => navigate('/coffee-eyes')}
                   >
-                    <Coffee size={18} className="relative z-10" />
-                    <span className="relative z-10">عيون القهوة</span>
-                    <div className="absolute inset-0 bg-[#6F4E37]/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                    <Coffee className="w-5 h-5 ml-2" /> عيون القهوة
                   </Button>
                 </motion.div>
               </motion.div>
-
-              {/* Social Media Links */}
               <motion.div 
-                className="flex justify-center items-center gap-4"
+                className="flex justify-center gap-6 mt-8"
                 variants={containerVariants}
               >
-                {[
-                  { icon: Youtube, href: "#", label: "YouTube" },
-                  { icon: Linkedin, href: "#", label: "LinkedIn" },
-                  { icon: Instagram, href: "https://www.instagram.com/dhamma.productions/", label: "Instagram" },
-                  { icon: Facebook, href: "#", label: "Facebook" }
-                ].map((social, index) => (
-                  <motion.a
-                    key={index}
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transform hover:scale-110 transition-all duration-300 group relative overflow-hidden"
-                    variants={socialVariants}
-                    whileHover="hover"
-                  >
-                    <social.icon className="w-6 h-6 text-saudi group-hover:text-saudi-dark transition-colors duration-300 relative z-10" />
-                    <div className="absolute inset-0 bg-saudi/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                    <span className="sr-only">{social.label}</span>
-                  </motion.a>
-                ))}
+                <motion.a 
+                  href="https://www.facebook.com/Dhamma.al.Nur" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-saudi dark:text-gray-600 dark:hover:text-saudi-light transition-colors"
+                  variants={socialVariants}
+                  whileHover="hover"
+                >
+                  <Facebook size={30} />
+                </motion.a>
+                <motion.a 
+                  href="https://www.instagram.com/dhamma.al.nur" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-saudi dark:text-gray-600 dark:hover:text-saudi-light transition-colors"
+                  variants={socialVariants}
+                  whileHover="hover"
+                >
+                  <Instagram size={30} />
+                </motion.a>
+                <motion.a 
+                  href="https://www.linkedin.com/company/dhamma-al-nur" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-saudi dark:text-gray-600 dark:hover:text-saudi-light transition-colors"
+                  variants={socialVariants}
+                  whileHover="hover"
+                >
+                  <Linkedin size={30} />
+                </motion.a>
+                <motion.a 
+                  href="https://www.youtube.com/@Dhamma.al.Nur" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-saudi dark:text-gray-600 dark:hover:text-saudi-light transition-colors"
+                  variants={socialVariants}
+                  whileHover="hover"
+                >
+                  <Youtube size={30} />
+                </motion.a>
               </motion.div>
             </div>
           </motion.section>
 
           {/* Random Videos Section */}
-          <motion.section 
-            className="py-16 bg-gray-50"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-          >
+          <section className="py-16 bg-background dark:bg-gray-900">
             <div className="container mx-auto px-4">
+              <div className="flex justify-between items-center mb-8">
+                <motion.h2 
+                  className="text-2xl md:text-3xl font-bold text-saudi dark:text-saudi-light flex items-center gap-3"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Play className="w-7 h-7 text-saudi dark:text-saudi-light" /> فيديوهات عشوائية
+                </motion.h2>
+                <motion.a 
+                  href="/videos" 
+                  className="flex items-center text-gray-600 hover:text-saudi dark:text-gray-400 dark:hover:text-saudi-light transition-colors"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  عرض المزيد <ArrowLeft className="w-4 h-4 mr-1" />
+                </motion.a>
+              </div>
               <motion.div 
-                className="flex justify-between items-center mb-8"
-                variants={itemVariants}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
               >
-                <div className="flex items-center gap-3">
-                  <motion.div 
-                    className="p-2 bg-saudi/10 rounded-lg relative overflow-hidden group"
-                    whileHover={{ scale: 1.1 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Play className="w-6 h-6 text-saudi relative z-10" />
-                    <div className="absolute inset-0 bg-saudi/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                {videos.map(video => (
+                  <motion.div key={video.id} variants={itemVariants}>
+                    <VideoCard 
+                      id={video.id}
+                      title={video.title}
+                      videoUrl={video.videoUrl}
+                      category={video.category}
+                      views={video.views}
+                      thumbnail={video.thumbnailUrl}
+                    />
                   </motion.div>
-                  <h2 className="text-3xl font-bold text-saudi relative">
-                    فيديوهات عشوائية
-                    <span className="absolute -bottom-2 left-0 w-12 h-0.5 bg-saudi/30 rounded-full"></span>
-                  </h2>
-                </div>
-                <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-                  <Button
-                    variant="ghost"
-                    className="text-saudi hover:text-saudi-dark hover:bg-saudi/10 flex items-center gap-2 relative overflow-hidden group"
-                    onClick={() => navigate('/videos')}
-                  >
-                    <span className="relative z-10">عرض المزيد</span>
-                    <ArrowLeft size={16} className="relative z-10 transform group-hover:-translate-x-1 transition-transform duration-300" />
-                    <div className="absolute inset-0 bg-saudi/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                  </Button>
-                </motion.div>
+                ))}
               </motion.div>
-              {loading ? (
-                <motion.div 
-                  className="text-center py-12"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <div className="animate-pulse flex flex-col items-center gap-4">
-                    <div className="h-4 w-32 bg-gray-200 rounded"></div>
-                    <div className="h-4 w-48 bg-gray-200 rounded"></div>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div 
-                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                  variants={containerVariants}
-                >
-                  <AnimatePresence mode="wait">
-                    {videos.map((video, index) => (
-                      <motion.div
-                        key={video.id}
-                        variants={itemVariants}
-                        custom={index}
-                        layout
-                      >
-                        <VideoCard
-                          id={video.id}
-                          title={video.title}
-                          videoUrl={video.videoUrl}
-                          category={video.category}
-                          views={video.views}
-                          thumbnail={video.thumbnailUrl}
-                        />
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </motion.div>
-              )}
             </div>
-          </motion.section>
+          </section>
 
           {/* Random Podcasts Section */}
-          <motion.section 
-            className="py-16"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-          >
+          <section className="py-16 bg-gray-50 dark:bg-gray-800">
             <div className="container mx-auto px-4">
+              <div className="flex justify-between items-center mb-8">
+                <motion.h2 
+                  className="text-2xl md:text-3xl font-bold text-saudi dark:text-saudi-light flex items-center gap-3"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                >
+                  <Headphones className="w-7 h-7 text-saudi dark:text-saudi-light" /> بودكاست عشوائي
+                </motion.h2>
+                <motion.a 
+                  href="/podcasts" 
+                  className="flex items-center text-gray-600 hover:text-saudi dark:text-gray-400 dark:hover:text-saudi-light transition-colors"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                >
+                  عرض المزيد <ArrowLeft className="w-4 h-4 mr-1" />
+                </motion.a>
+              </div>
               <motion.div 
-                className="flex justify-between items-center mb-8"
-                variants={itemVariants}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
               >
-                <div className="flex items-center gap-3">
-                  <motion.div 
-                    className="p-2 bg-saudi/10 rounded-lg relative overflow-hidden group"
-                    whileHover={{ scale: 1.1 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Headphones className="w-6 h-6 text-saudi relative z-10" />
-                    <div className="absolute inset-0 bg-saudi/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                {podcasts.map(podcast => (
+                  <motion.div key={podcast.id} variants={itemVariants}>
+                    <PodcastCard 
+                      id={podcast.id}
+                      title={podcast.title}
+                      thumbnail={podcast.thumbnail}
+                      externalLink={podcast.externalLink}
+                      platform={podcast.platform}
+                      listens={podcast.listens}
+                    />
                   </motion.div>
-                  <h2 className="text-3xl font-bold text-saudi relative">
-                    بودكاست عشوائي
-                    <span className="absolute -bottom-2 left-0 w-12 h-0.5 bg-saudi/30 rounded-full"></span>
-                  </h2>
-                </div>
-                <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-                  <Button
-                    variant="ghost"
-                    className="text-saudi hover:text-saudi-dark hover:bg-saudi/10 flex items-center gap-2 relative overflow-hidden group"
-                    onClick={() => navigate('/podcasts')}
-                  >
-                    <span className="relative z-10">عرض المزيد</span>
-                    <ArrowLeft size={16} className="relative z-10 transform group-hover:-translate-x-1 transition-transform duration-300" />
-                    <div className="absolute inset-0 bg-saudi/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                  </Button>
-                </motion.div>
+                ))}
               </motion.div>
-              {loading ? (
-                <motion.div 
-                  className="text-center py-12"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <div className="animate-pulse flex flex-col items-center gap-4">
-                    <div className="h-4 w-32 bg-gray-200 rounded"></div>
-                    <div className="h-4 w-48 bg-gray-200 rounded"></div>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div 
-                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                  variants={containerVariants}
-                >
-                  <AnimatePresence mode="wait">
-                    {podcasts.map((podcast, index) => (
-                      <motion.div
-                        key={podcast.id}
-                        variants={itemVariants}
-                        custom={index}
-                        layout
-                      >
-                        <PodcastCard
-                          id={podcast.id}
-                          title={podcast.title}
-                          thumbnail={podcast.thumbnail}
-                          externalLink={podcast.externalLink}
-                          platform={podcast.platform}
-                          listens={podcast.listens}
-                        />
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </motion.div>
-              )}
             </div>
-          </motion.section>
+          </section>
 
-          {/* Random Benefits Section */}
-          <motion.section 
-            className="py-16 bg-gray-50"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-          >
+          {/* Latest Benefits Section */}
+          <section className="py-16 bg-background dark:bg-gray-900">
             <div className="container mx-auto px-4">
+              <div className="flex justify-between items-center mb-8">
+                <motion.h2 
+                  className="text-2xl md:text-3xl font-bold text-saudi dark:text-saudi-light flex items-center gap-3"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <BookOpen className="w-7 h-7 text-saudi dark:text-saudi-light" /> آخر الفوائد العلمية
+                </motion.h2>
+                <motion.a 
+                  href="/benefits" 
+                  className="flex items-center text-gray-600 hover:text-saudi dark:text-gray-400 dark:hover:text-saudi-light transition-colors"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  عرض المزيد <ArrowLeft className="w-4 h-4 mr-1" />
+                </motion.a>
+              </div>
               <motion.div 
-                className="flex justify-between items-center mb-8"
-                variants={itemVariants}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
               >
-                <div className="flex items-center gap-3">
-                  <motion.div 
-                    className="p-2 bg-saudi/10 rounded-lg relative overflow-hidden group"
-                    whileHover={{ scale: 1.1 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <BookOpen className="w-6 h-6 text-saudi relative z-10" />
-                    <div className="absolute inset-0 bg-saudi/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                {benefits.map(benefit => (
+                  <motion.div key={benefit.id} variants={itemVariants}>
+                    <BenefitCard 
+                      id={benefit.id}
+                      bookName={benefit.bookName}
+                      volumeAndPage={benefit.volumeAndPage}
+                      benefitText={benefit.benefitText}
+                      scholarComment={benefit.scholarComment}
+                      category={benefit.category}
+                    />
                   </motion.div>
-                  <h2 className="text-3xl font-bold text-saudi relative">
-                    القول المفيد
-                    <span className="absolute -bottom-2 left-0 w-12 h-0.5 bg-saudi/30 rounded-full"></span>
-                  </h2>
-                </div>
-                <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
-                  <Button
-                    variant="ghost"
-                    className="text-saudi hover:text-saudi-dark hover:bg-saudi/10 flex items-center gap-2 relative overflow-hidden group"
-                    onClick={() => navigate('/al-qawl-al-mufid')}
-                  >
-                    <span className="relative z-10">عرض المزيد</span>
-                    <ArrowLeft size={16} className="relative z-10 transform group-hover:-translate-x-1 transition-transform duration-300" />
-                    <div className="absolute inset-0 bg-saudi/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                  </Button>
-                </motion.div>
+                ))}
               </motion.div>
-              {loading ? (
-                <motion.div 
-                  className="text-center py-12"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <div className="animate-pulse flex flex-col items-center gap-4">
-                    <div className="h-4 w-32 bg-gray-200 rounded"></div>
-                    <div className="h-4 w-48 bg-gray-200 rounded"></div>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div 
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                  variants={containerVariants}
-                >
-                  <AnimatePresence mode="wait">
-                    {benefits.map((benefit, index) => (
-                      <motion.div
-                        key={benefit.id}
-                        variants={itemVariants}
-                        custom={index}
-                        layout
-                      >
-                        <BenefitCard
-                          id={benefit.id}
-                          bookName={benefit.bookName}
-                          volumeAndPage={benefit.volumeAndPage}
-                          benefitText={benefit.benefitText}
-                          scholarComment={benefit.scholarComment}
-                          category={benefit.category}
-                        />
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </motion.div>
-              )}
             </div>
-          </motion.section>
+          </section>
+
+          {/* About Section */}
+          <section className="py-16 bg-gray-50 dark:bg-gray-800">
+            <div className="container mx-auto px-4 text-center">
+              <motion.h2 
+                className="text-3xl font-bold text-saudi dark:text-saudi-light mb-8"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                عن المشروع
+              </motion.h2>
+              <motion.p 
+                className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed max-w-3xl mx-auto mb-8"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                ضَـمَّـة هي منصة إسلامية علمية تسعى لنشر العلم الشرعي
+                 المبني على منهج أهل السنة والجماعة بفهم السلف الصالح، مع التركيز على
+                 الفوائد المنتقاة من الكتب المعتمدة والشروح الموثوقة للعلماء الراسخين.
+              </motion.p>
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+              >
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="border-saudi text-saudi hover:bg-saudi/10 dark:border-saudi-light dark:text-saudi-light dark:hover:bg-saudi/20 rounded-full px-8 py-3 text-lg"
+                  onClick={() => navigate('/about')}
+                >
+                  اقرأ المزيد عنا
+                </Button>
+              </motion.div>
+            </div>
+          </section>
         </>
       )}
     </motion.div>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 const NavLink: React.FC<{ to: string; children: React.ReactNode }> = ({ to, children }) => {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ const NavLink: React.FC<{ to: string; children: React.ReactNode }> = ({ to, chil
 
   return (
     <div
-      className="relative cursor-pointer text-muted-foreground hover:text-foreground transition-all duration-300 group px-3 py-2 rounded-lg hover:bg-saudi/5"
+      className="relative cursor-pointer text-muted-foreground hover:text-foreground transition-all duration-300 group px-3 py-2 rounded-lg hover:bg-saudi/5 dark:hover:bg-saudi/10"
       onClick={() => navigate(to)}
     >
       {children}
@@ -50,8 +51,8 @@ const Header: React.FC = () => {
     <header 
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
         isScrolled 
-          ? 'bg-background/70 backdrop-blur-md supports-[backdrop-filter]:bg-background/40 shadow-lg border-b border-border/40' 
-          : 'bg-background/50 backdrop-blur-sm supports-[backdrop-filter]:bg-background/30'
+          ? 'bg-background/80 dark:bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/40 dark:supports-[backdrop-filter]:bg-background/60 shadow-lg border-b border-border/40' 
+          : 'bg-background/50 dark:bg-background/60 backdrop-blur-sm supports-[backdrop-filter]:bg-background/30 dark:supports-[backdrop-filter]:bg-background/40'
       }`}
     >
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -59,13 +60,13 @@ const Header: React.FC = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden hover:bg-saudi/10"
+            className="md:hidden hover:bg-saudi/10 dark:hover:bg-saudi/20"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            {isMenuOpen ? <X className="text-saudi" /> : <Menu className="text-saudi" />}
+            {isMenuOpen ? <X className="text-saudi dark:text-saudi-light" /> : <Menu className="text-saudi dark:text-saudi-light" />}
           </Button>
           <div 
-            className="font-bold text-2xl cursor-pointer text-saudi hover:text-saudi/80 transition-colors duration-300" 
+            className="font-bold text-2xl cursor-pointer text-saudi dark:text-saudi-light hover:text-saudi/80 dark:hover:text-saudi-light/80 transition-colors duration-300" 
             onClick={() => navigate('/')}
           >
             ضَـمَّـة
@@ -80,7 +81,7 @@ const Header: React.FC = () => {
           ))}
           <Button
             onClick={() => navigate('/join')}
-            className="bg-saudi hover:bg-saudi-dark text-white px-4 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center gap-2 group"
+            className="bg-saudi hover:bg-saudi-dark text-white px-4 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center gap-2 group dark:bg-saudi-light dark:hover:bg-saudi-light/90 dark:text-saudi"
           >
             <UserPlus className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
             <span>انضم إلينا</span>
@@ -88,18 +89,18 @@ const Header: React.FC = () => {
         </nav>
         
         <div className="flex items-center gap-4">
-          {/* Empty div for layout balance */}
+          <ThemeToggle />
         </div>
       </div>
       
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden absolute top-16 right-0 left-0 p-4 pt-0 bg-background/95 backdrop-blur-md border-b border-border/40">
+        <div className="md:hidden absolute top-16 right-0 left-0 p-4 pt-0 bg-background/95 dark:bg-background/98 backdrop-blur-md border-b border-border/40">
           <nav className="flex flex-col gap-2">
             {navItems.map((item) => (
               <div
                 key={item.path}
-                className="cursor-pointer py-3 px-4 text-muted-foreground hover:text-foreground hover:bg-saudi/5 rounded-lg transition-all duration-300"
+                className="cursor-pointer py-3 px-4 text-muted-foreground hover:text-foreground hover:bg-saudi/5 dark:hover:bg-saudi/10 rounded-lg transition-all duration-300"
                 onClick={() => {
                   navigate(item.path);
                   setIsMenuOpen(false);
@@ -113,7 +114,7 @@ const Header: React.FC = () => {
                 navigate('/join');
                 setIsMenuOpen(false);
               }}
-              className="bg-saudi hover:bg-saudi-dark text-white px-4 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center gap-2 group mt-2"
+              className="bg-saudi hover:bg-saudi-dark text-white px-4 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center gap-2 group mt-2 dark:bg-saudi-light dark:hover:bg-saudi-light/90 dark:text-saudi"
             >
               <UserPlus className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
               <span>انضم إلينا</span>

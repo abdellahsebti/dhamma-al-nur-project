@@ -18,10 +18,10 @@ const staggerContainer = {
 
 const PrivacyPolicy: React.FC = () => {
   return (
-    <div className="min-h-screen py-8 sm:py-12">
+    <div className="min-h-screen py-8 sm:py-12 bg-background dark:bg-gray-900">
       <div className="container mx-auto px-4">
         <motion.h1 
-          className="text-3xl sm:text-4xl font-bold mb-6 sm:mb-8 text-saudi text-center"
+          className="text-3xl sm:text-4xl font-bold mb-6 sm:mb-8 text-saudi dark:text-saudi-light text-center"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -30,14 +30,14 @@ const PrivacyPolicy: React.FC = () => {
         </motion.h1>
         
         <motion.div 
-          className="bg-white rounded-2xl p-4 sm:p-8 shadow-md border border-saudi-light arabesque-bg"
+          className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-8 shadow-md border border-saudi-light dark:border-border arabesque-bg"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
         >
           {/* Introduction */}
           <motion.div 
-            className="space-y-6 text-base sm:text-lg mb-8"
+            className="space-y-6 text-base sm:text-lg mb-8 text-gray-700 dark:text-gray-300"
             variants={fadeInUp}
             initial="initial"
             animate="animate"
@@ -55,7 +55,7 @@ const PrivacyPolicy: React.FC = () => {
             animate="animate"
           >
             <motion.h2 
-              className="text-2xl sm:text-3xl font-bold text-saudi mb-6"
+              className="text-2xl sm:text-3xl font-bold text-saudi dark:text-saudi-light mb-6"
               variants={fadeInUp}
             >
               حماية خصوصيتكم
@@ -67,14 +67,14 @@ const PrivacyPolicy: React.FC = () => {
             >
               {/* Basic Principles */}
               <motion.div 
-                className="bg-gradient-to-br from-saudi/5 to-saudi/10 p-4 sm:p-6 rounded-xl"
+                className="bg-gradient-to-br from-saudi/5 to-saudi/10 dark:from-saudi/10 dark:to-saudi/15 p-4 sm:p-6 rounded-xl"
                 variants={fadeInUp}
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.2 }}
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <Shield className="w-6 h-6 text-saudi" />
-                  <h3 className="text-lg sm:text-xl font-bold text-saudi">المبادئ الأساسية</h3>
+                  <Shield className="w-6 h-6 text-saudi dark:text-saudi-light" />
+                  <h3 className="text-lg sm:text-xl font-bold text-saudi dark:text-saudi-light">المبادئ الأساسية</h3>
                 </div>
                 <ul className="list-none space-y-3">
                   {[
@@ -83,8 +83,8 @@ const PrivacyPolicy: React.FC = () => {
                     'الالتزام بقوانين حماية البيانات في الجمهورية الجزائرية',
                     'عدم استخدام البيانات الشخصية في أي غرض يخالف الشريعة الإسلامية'
                   ].map((item, index) => (
-                    <li key={index} className="flex items-start gap-3 text-gray-700">
-                      <span className="text-saudi mt-2">•</span>
+                    <li key={index} className="flex items-start gap-3 text-gray-700 dark:text-gray-300">
+                      <span className="text-saudi dark:text-saudi-light mt-2">•</span>
                       <span>{item}</span>
                     </li>
                   ))}
@@ -93,14 +93,14 @@ const PrivacyPolicy: React.FC = () => {
 
               {/* Information Collection */}
               <motion.div 
-                className="bg-gradient-to-br from-saudi/5 to-saudi/10 p-4 sm:p-6 rounded-xl"
+                className="bg-gradient-to-br from-saudi/5 to-saudi/10 dark:from-saudi/10 dark:to-saudi/15 p-4 sm:p-6 rounded-xl"
                 variants={fadeInUp}
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.2 }}
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <Database className="w-6 h-6 text-saudi" />
-                  <h3 className="text-lg sm:text-xl font-bold text-saudi">المعلومات التي نجمعها</h3>
+                  <Database className="w-6 h-6 text-saudi dark:text-saudi-light" />
+                  <h3 className="text-lg sm:text-xl font-bold text-saudi dark:text-saudi-light">المعلومات التي نجمعها</h3>
                 </div>
                 <ul className="list-none space-y-3">
                   {[
@@ -109,8 +109,8 @@ const PrivacyPolicy: React.FC = () => {
                     'سجل النشاط على المنصة',
                     'تفضيلات المحتوى والاهتمامات'
                   ].map((item, index) => (
-                    <li key={index} className="flex items-start gap-3 text-gray-700">
-                      <span className="text-saudi mt-2">•</span>
+                    <li key={index} className="flex items-start gap-3 text-gray-700 dark:text-gray-300">
+                      <span className="text-saudi dark:text-saudi-light mt-2">•</span>
                       <span>{item}</span>
                     </li>
                   ))}
@@ -119,16 +119,16 @@ const PrivacyPolicy: React.FC = () => {
 
               {/* Data Protection */}
               <motion.div 
-                className="bg-gradient-to-br from-saudi/5 to-saudi/10 p-4 sm:p-6 rounded-xl"
+                className="bg-gradient-to-br from-saudi/5 to-saudi/10 dark:from-saudi/10 dark:to-saudi/15 p-4 sm:p-6 rounded-xl"
                 variants={fadeInUp}
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.2 }}
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <Lock className="w-6 h-6 text-saudi" />
-                  <h3 className="text-lg sm:text-xl font-bold text-saudi">حماية البيانات</h3>
+                  <Lock className="w-6 h-6 text-saudi dark:text-saudi-light" />
+                  <h3 className="text-lg sm:text-xl font-bold text-saudi dark:text-saudi-light">حماية البيانات</h3>
                 </div>
-                <p className="text-gray-700 mb-4">
+                <p className="text-gray-700 dark:text-gray-300 mb-4">
                   نحن نستخدم تقنيات تشفير متقدمة لحماية بياناتكم الشخصية، ونتخذ إجراءات أمنية صارمة لمنع الوصول غير المصرح به.
                 </p>
                 <ul className="list-none space-y-3">
@@ -138,8 +138,8 @@ const PrivacyPolicy: React.FC = () => {
                     'مراقبة مستمرة للأنشطة المشبوهة',
                     'تحديثات دورية لأنظمة الحماية'
                   ].map((item, index) => (
-                    <li key={index} className="flex items-start gap-3 text-gray-700">
-                      <span className="text-saudi mt-2">•</span>
+                    <li key={index} className="flex items-start gap-3 text-gray-700 dark:text-gray-300">
+                      <span className="text-saudi dark:text-saudi-light mt-2">•</span>
                       <span>{item}</span>
                     </li>
                   ))}
@@ -148,16 +148,16 @@ const PrivacyPolicy: React.FC = () => {
 
               {/* Data Usage */}
               <motion.div 
-                className="bg-gradient-to-br from-saudi/5 to-saudi/10 p-4 sm:p-6 rounded-xl"
+                className="bg-gradient-to-br from-saudi/5 to-saudi/10 dark:from-saudi/10 dark:to-saudi/15 p-4 sm:p-6 rounded-xl"
                 variants={fadeInUp}
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.2 }}
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <Eye className="w-6 h-6 text-saudi" />
-                  <h3 className="text-lg sm:text-xl font-bold text-saudi">استخدام البيانات</h3>
+                  <Eye className="w-6 h-6 text-saudi dark:text-saudi-light" />
+                  <h3 className="text-lg sm:text-xl font-bold text-saudi dark:text-saudi-light">استخدام البيانات</h3>
                 </div>
-                <p className="text-gray-700 mb-4">
+                <p className="text-gray-700 dark:text-gray-300 mb-4">
                   نستخدم بياناتكم فقط للأغراض المصرح بها، مثل:
                 </p>
                 <ul className="list-none space-y-3">
@@ -167,8 +167,8 @@ const PrivacyPolicy: React.FC = () => {
                     'تحليل استخدام المنصة',
                     'التواصل معكم حول التحديثات المهمة'
                   ].map((item, index) => (
-                    <li key={index} className="flex items-start gap-3 text-gray-700">
-                      <span className="text-saudi mt-2">•</span>
+                    <li key={index} className="flex items-start gap-3 text-gray-700 dark:text-gray-300">
+                      <span className="text-saudi dark:text-saudi-light mt-2">•</span>
                       <span>{item}</span>
                     </li>
                   ))}
@@ -177,14 +177,14 @@ const PrivacyPolicy: React.FC = () => {
 
               {/* User Rights */}
               <motion.div 
-                className="bg-gradient-to-br from-saudi/5 to-saudi/10 p-4 sm:p-6 rounded-xl"
+                className="bg-gradient-to-br from-saudi/5 to-saudi/10 dark:from-saudi/10 dark:to-saudi/15 p-4 sm:p-6 rounded-xl"
                 variants={fadeInUp}
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.2 }}
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <Users className="w-6 h-6 text-saudi" />
-                  <h3 className="text-lg sm:text-xl font-bold text-saudi">حقوق المستخدمين</h3>
+                  <Users className="w-6 h-6 text-saudi dark:text-saudi-light" />
+                  <h3 className="text-lg sm:text-xl font-bold text-saudi dark:text-saudi-light">حقوق المستخدمين</h3>
                 </div>
                 <ul className="list-none space-y-3">
                   {[
@@ -193,8 +193,8 @@ const PrivacyPolicy: React.FC = () => {
                     'الحق في طلب حذف بياناتكم',
                     'الحق في الاعتراض على معالجة بياناتكم'
                   ].map((item, index) => (
-                    <li key={index} className="flex items-start gap-3 text-gray-700">
-                      <span className="text-saudi mt-2">•</span>
+                    <li key={index} className="flex items-start gap-3 text-gray-700 dark:text-gray-300">
+                      <span className="text-saudi dark:text-saudi-light mt-2">•</span>
                       <span>{item}</span>
                     </li>
                   ))}
@@ -203,41 +203,41 @@ const PrivacyPolicy: React.FC = () => {
 
               {/* Policy Updates */}
               <motion.div 
-                className="bg-gradient-to-br from-saudi/5 to-saudi/10 p-4 sm:p-6 rounded-xl"
+                className="bg-gradient-to-br from-saudi/5 to-saudi/10 dark:from-saudi/10 dark:to-saudi/15 p-4 sm:p-6 rounded-xl"
                 variants={fadeInUp}
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.2 }}
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <FileText className="w-6 h-6 text-saudi" />
-                  <h3 className="text-lg sm:text-xl font-bold text-saudi">تحديثات السياسة</h3>
+                  <FileText className="w-6 h-6 text-saudi dark:text-saudi-light" />
+                  <h3 className="text-lg sm:text-xl font-bold text-saudi dark:text-saudi-light">تحديثات السياسة</h3>
                 </div>
-                <p className="text-gray-700">
+                <p className="text-gray-700 dark:text-gray-300">
                   نحتفظ بالحق في تحديث سياسة الخصوصية في أي وقت. سيتم إخطاركم بأي تغييرات جوهرية من خلال المنصة أو عبر البريد الإلكتروني.
                 </p>
               </motion.div>
 
               {/* Contact Information */}
               <motion.div 
-                className="bg-gradient-to-br from-saudi/5 to-saudi/10 p-4 sm:p-6 rounded-xl"
+                className="bg-gradient-to-br from-saudi/5 to-saudi/10 dark:from-saudi/10 dark:to-saudi/15 p-4 sm:p-6 rounded-xl"
                 variants={fadeInUp}
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.2 }}
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <Mail className="w-6 h-6 text-saudi" />
-                  <h3 className="text-lg sm:text-xl font-bold text-saudi">اتصل بنا</h3>
+                  <Mail className="w-6 h-6 text-saudi dark:text-saudi-light" />
+                  <h3 className="text-lg sm:text-xl font-bold text-saudi dark:text-saudi-light">اتصل بنا</h3>
                 </div>
-                <p className="text-gray-700 mb-4">
+                <p className="text-gray-700 dark:text-gray-300 mb-4">
                   إذا كان لديكم أي أسئلة حول سياسة الخصوصية، يمكنكم التواصل معنا من خلال:
                 </p>
                 <ul className="list-none space-y-3">
-                  <li className="flex items-start gap-3 text-gray-700">
-                    <span className="text-saudi mt-2">•</span>
-                    <span>البريد الإلكتروني: <a href="mailto:dhamma.productionss@gmail.com" className="text-saudi hover:underline">dhamma.productionss@gmail.com</a></span>
+                  <li className="flex items-start gap-3 text-gray-700 dark:text-gray-300">
+                    <span className="text-saudi dark:text-saudi-light mt-2">•</span>
+                    <span>البريد الإلكتروني: <a href="mailto:dhamma.productionss@gmail.com" className="text-saudi dark:text-saudi-light hover:underline">dhamma.productionss@gmail.com</a></span>
                   </li>
-                  <li className="flex items-start gap-3 text-gray-700">
-                    <span className="text-saudi mt-2">•</span>
+                  <li className="flex items-start gap-3 text-gray-700 dark:text-gray-300">
+                    <span className="text-saudi dark:text-saudi-light mt-2">•</span>
                     <span>صفحة التواصل على المنصة</span>
                   </li>
                 </ul>

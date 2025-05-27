@@ -402,24 +402,24 @@ const Join: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen py-12 bg-gradient-to-b from-saudi-light/5 to-white">
+    <div className="min-h-screen py-12 bg-gradient-to-b from-saudi/5 to-white dark:from-saudi/10 dark:to-gray-900">
       <div className="container mx-auto px-4">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl font-bold mb-8 text-saudi text-center">انضم إلينا</h1>
+          <h1 className="text-4xl font-bold mb-8 text-saudi dark:text-saudi-light text-center">انضم إلينا</h1>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Rules and Conditions */}
-            <div className="bg-white rounded-2xl p-8 shadow-md border border-saudi-light relative overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-md border border-saudi/10 dark:border-saudi-light/10 relative overflow-hidden">
               <div className="absolute inset-0 arabesque-bg opacity-10"></div>
               <div className="relative z-10">
-                <h2 className="text-2xl font-bold mb-6 text-saudi">القوانين التنظيمية</h2>
-                <p className="text-gray-600 mb-6">يرجى قراءة الشروط والأحكام بعناية قبل التقديم</p>
+                <h2 className="text-2xl font-bold mb-6 text-saudi dark:text-saudi-light">القوانين التنظيمية</h2>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">يرجى قراءة الشروط والأحكام بعناية قبل التقديم</p>
 
                 <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="basic-principles" className="border-b border-saudi-light">
-                    <AccordionTrigger className="hover:text-saudi">الباب الأول: المبادئ الأساسية للمشروع</AccordionTrigger>
+                  <AccordionItem value="basic-principles" className="border-b border-saudi/10 dark:border-saudi-light/10">
+                    <AccordionTrigger className="hover:text-saudi dark:hover:text-saudi-light">الباب الأول: المبادئ الأساسية للمشروع</AccordionTrigger>
                     <AccordionContent>
-                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700 dark:text-gray-300">
                         <li>يُشترط الالتزام التام بالمنهج السلفي في جميع ما يُطرح داخل المشروع.</li>
                         <li>يجب أن يتم العمل بروح الأخوة والنية الصالحة والالتزام الجماعي.</li>
                         <li>التواصل داخل مجموعات العمل يجب أن يكون بلغة راقية بعيدًا عن المزاح المفرط أو اللهجة العامية السوقية.</li>
@@ -429,10 +429,10 @@ const Join: React.FC = () => {
                     </AccordionContent>
                   </AccordionItem>
 
-                  <AccordionItem value="content-rules" className="border-b border-saudi-light">
-                    <AccordionTrigger className="hover:text-saudi">الباب الثاني: القواعد الخاصة بالمحتوى والنشر</AccordionTrigger>
+                  <AccordionItem value="content-rules" className="border-b border-saudi/10 dark:border-saudi-light/10">
+                    <AccordionTrigger className="hover:text-saudi dark:hover:text-saudi-light">الباب الثاني: القواعد الخاصة بالمحتوى والنشر</AccordionTrigger>
                     <AccordionContent>
-                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700 dark:text-gray-300">
                         <li>يُمنع إخراج أي محتوى أو نقاش داخلي من مجموعات المشروع إلى الخارج.</li>
                         <li>يُمنع نشر أي محتوى دون مراجعته شرعيًا وعلميًا.</li>
                         <li>يُمنع نشر أي مادة على المنصات الرسمية إلا بإذن مسبق من المشرف العام.</li>
@@ -444,10 +444,10 @@ const Join: React.FC = () => {
                     </AccordionContent>
                   </AccordionItem>
 
-                  <AccordionItem value="management" className="border-b border-saudi-light">
-                    <AccordionTrigger className="hover:text-saudi">الباب الثالث: التنظيم الإداري والإشراف</AccordionTrigger>
+                  <AccordionItem value="management" className="border-b border-saudi/10 dark:border-saudi-light/10">
+                    <AccordionTrigger className="hover:text-saudi dark:hover:text-saudi-light">الباب الثالث: التنظيم الإداري والإشراف</AccordionTrigger>
                     <AccordionContent>
-                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700 dark:text-gray-300">
                         <li>يُمنع فتح مجموعات أو قنوات جديدة باسم المشروع دون إذن صريح من الإدارة.</li>
                         <li>يُمنع التحدث باسم المشروع أو تمثيله دون تكليف رسمي من الإدارة.</li>
                         <li>يتم تقييم الأعضاء دوريًا لضمان جودة الأداء واستمرار الاستحقاق في البقاء ضمن الفريق.</li>
@@ -458,10 +458,10 @@ const Join: React.FC = () => {
                     </AccordionContent>
                   </AccordionItem>
 
-                  <AccordionItem value="confidentiality" className="border-b border-saudi-light">
-                    <AccordionTrigger className="hover:text-saudi">الباب الرابع: السرية والأخلاقيات</AccordionTrigger>
+                  <AccordionItem value="confidentiality" className="border-b border-saudi/10 dark:border-saudi-light/10">
+                    <AccordionTrigger className="hover:text-saudi dark:hover:text-saudi-light">الباب الرابع: السرية والأخلاقيات</AccordionTrigger>
                     <AccordionContent>
-                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700 dark:text-gray-300">
                         <li>يجب الحفاظ على سرية هوية الأعضاء وعدم ذكر الأسماء خارج نطاق المشروع.</li>
                         <li>يُمنع استخدام أدوات أو برامج مقرصنة ضمن أنشطة المشروع.</li>
                         <li>يجب الحفاظ على سرية الملفات والتعامل معها بحذر واحترافية.</li>
@@ -473,10 +473,10 @@ const Join: React.FC = () => {
                     </AccordionContent>
                   </AccordionItem>
 
-                  <AccordionItem value="time-management" className="border-b border-saudi-light">
-                    <AccordionTrigger className="hover:text-saudi">الباب الخامس: التنظيم الزمني والمهام</AccordionTrigger>
+                  <AccordionItem value="time-management" className="border-b border-saudi/10 dark:border-saudi-light/10">
+                    <AccordionTrigger className="hover:text-saudi dark:hover:text-saudi-light">الباب الخامس: التنظيم الزمني والمهام</AccordionTrigger>
                     <AccordionContent>
-                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700 dark:text-gray-300">
                         <li>الالتزام بالمواعيد المحددة لإنجاز المهام وعدم التأخر دون عذر مقبول.</li>
                         <li>يُمنع النقاش في المسائل الخلافية أو السياسية داخل مجموعات المشروع.</li>
                         <li>يُمنع للعضو الانضمام لمشروع مشابه دون إعلام الإدارة وأخذ الإذن.</li>
@@ -487,10 +487,10 @@ const Join: React.FC = () => {
                     </AccordionContent>
                   </AccordionItem>
 
-                  <AccordionItem value="project-name" className="border-b border-saudi-light">
-                    <AccordionTrigger className="hover:text-saudi">الباب السادس: استخدام اسم المشروع</AccordionTrigger>
+                  <AccordionItem value="project-name" className="border-b border-saudi/10 dark:border-saudi-light/10">
+                    <AccordionTrigger className="hover:text-saudi dark:hover:text-saudi-light">الباب السادس: استخدام اسم المشروع</AccordionTrigger>
                     <AccordionContent>
-                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700 dark:text-gray-300">
                         <li>يُمنع استخدام اسم المشروع في أي نشاط خارجي دون موافقة مسبقة من الإدارة.</li>
                         <li>يُمنع استخدام اسم المشروع في أي منصات أو فعاليات دون إذن مسبق.</li>
                         <li>حماية العلامة التجارية للمشروع وشعاره.</li>
@@ -500,9 +500,9 @@ const Join: React.FC = () => {
                   </AccordionItem>
 
                   <AccordionItem value="discipline" className="border-b-0">
-                    <AccordionTrigger className="hover:text-saudi">الباب السابع: العقوبات والجزاءات</AccordionTrigger>
+                    <AccordionTrigger className="hover:text-saudi dark:hover:text-saudi-light">الباب السابع: العقوبات والجزاءات</AccordionTrigger>
                     <AccordionContent>
-                      <ul className="list-disc pr-6 space-y-2 text-gray-700">
+                      <ul className="list-disc pr-6 space-y-2 text-gray-700 dark:text-gray-300">
                         <li>تطبيق نظام تحذيري متدرج للمخالفات.</li>
                         <li>حق الإدارة في فصل أي عضو يخالف القوانين التنظيمية.</li>
                         <li>إمكانية إيقاف العضو مؤقتاً عن العمل في حال المخالفات المتكررة.</li>
@@ -515,23 +515,23 @@ const Join: React.FC = () => {
             </div>
 
             {/* Application Form */}
-            <div className="bg-white rounded-2xl p-8 shadow-md border border-saudi-light relative overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-md border border-saudi/10 dark:border-saudi-light/10 relative overflow-hidden">
               <div className="absolute inset-0 arabesque-bg opacity-10"></div>
               <div className="relative z-10">
-                <h2 className="text-2xl font-bold mb-6 text-saudi">نموذج التقديم</h2>
-                <p className="text-gray-600 mb-6">يرجى ملء النموذج التالي للتقديم على الانضمام للمشروع</p>
+                <h2 className="text-2xl font-bold mb-6 text-saudi dark:text-saudi-light">نموذج التقديم</h2>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">يرجى ملء النموذج التالي للتقديم على الانضمام للمشروع</p>
 
-                <div className="mb-6 p-4 bg-saudi-light/10 border border-saudi-light rounded-lg">
-                  <p className="text-saudi-dark">
+                <div className="mb-6 p-4 bg-saudi/5 dark:bg-saudi/10 border border-saudi/10 dark:border-saudi-light/10 rounded-lg">
+                  <p className="text-gray-700 dark:text-gray-300">
                     للتواصل المباشر: <br />
-                    البريد الإلكتروني: <a href="mailto:dhamma.productionss@gmail.com" className="text-saudi hover:underline">dhamma.productionss@gmail.com</a><br />
-                    انستغرام: <a href="https://www.instagram.com/dhamma.productions/" target="_blank" rel="noopener noreferrer" className="text-saudi hover:underline">@dhamma.productions</a>
+                    البريد الإلكتروني: <a href="mailto:dhamma.productionss@gmail.com" className="text-saudi dark:text-saudi-light hover:underline">dhamma.productionss@gmail.com</a><br />
+                    انستغرام: <a href="https://www.instagram.com/dhamma.productions/" target="_blank" rel="noopener noreferrer" className="text-saudi dark:text-saudi-light hover:underline">@dhamma.productions</a>
                   </p>
                 </div>
 
                 {isRateLimited && (
-                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-red-600">
+                  <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <p className="text-red-600 dark:text-red-400">
                       تم تجاوز الحد المسموح من الطلبات. يرجى المحاولة مرة أخرى بعد ساعة.
                     </p>
                   </div>
@@ -539,7 +539,7 @@ const Join: React.FC = () => {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-gray-700">الاسم الكامل</Label>
+                    <Label htmlFor="name" className="text-gray-700 dark:text-gray-300">الاسم الكامل</Label>
                     <Input
                       id="name"
                       name="name"
@@ -547,13 +547,13 @@ const Join: React.FC = () => {
                       onChange={handleChange}
                       required
                       placeholder="أدخل اسمك الكامل"
-                      className="border-saudi-light focus:border-saudi"
+                      className="border-saudi/10 dark:border-saudi-light/10 focus:border-saudi dark:focus:border-saudi-light"
                       disabled={isSubmitting || isRateLimited}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-gray-700">البريد الإلكتروني</Label>
+                    <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">البريد الإلكتروني</Label>
                     <Input
                       id="email"
                       name="email"
@@ -562,13 +562,13 @@ const Join: React.FC = () => {
                       onChange={handleChange}
                       required
                       placeholder="أدخل بريدك الإلكتروني"
-                      className="border-saudi-light focus:border-saudi"
+                      className="border-saudi/10 dark:border-saudi-light/10 focus:border-saudi dark:focus:border-saudi-light"
                       disabled={isSubmitting || isRateLimited}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-gray-700">رقم الهاتف</Label>
+                    <Label htmlFor="phone" className="text-gray-700 dark:text-gray-300">رقم الهاتف</Label>
                     <Input
                       id="phone"
                       name="phone"
@@ -576,13 +576,13 @@ const Join: React.FC = () => {
                       onChange={handleChange}
                       required
                       placeholder="أدخل رقم هاتفك"
-                      className="border-saudi-light focus:border-saudi"
+                      className="border-saudi/10 dark:border-saudi-light/10 focus:border-saudi dark:focus:border-saudi-light"
                       disabled={isSubmitting || isRateLimited}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="specialization" className="text-gray-700">التخصص</Label>
+                    <Label htmlFor="specialization" className="text-gray-700 dark:text-gray-300">التخصص</Label>
                     <Input
                       id="specialization"
                       name="specialization"
@@ -590,13 +590,13 @@ const Join: React.FC = () => {
                       onChange={handleChange}
                       required
                       placeholder="أدخل تخصصك"
-                      className="border-saudi-light focus:border-saudi"
+                      className="border-saudi/10 dark:border-saudi-light/10 focus:border-saudi dark:focus:border-saudi-light"
                       disabled={isSubmitting || isRateLimited}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="message" className="text-gray-700">رسالة التقديم</Label>
+                    <Label htmlFor="message" className="text-gray-700 dark:text-gray-300">رسالة التقديم</Label>
                     <Textarea
                       id="message"
                       name="message"
@@ -604,27 +604,27 @@ const Join: React.FC = () => {
                       onChange={handleChange}
                       required
                       placeholder="اكتب رسالة توضح سبب رغبتك في الانضمام للمشروع"
-                      className="min-h-[120px] border-saudi-light focus:border-saudi"
+                      className="min-h-[120px] border-saudi/10 dark:border-saudi-light/10 focus:border-saudi dark:focus:border-saudi-light"
                       disabled={isSubmitting || isRateLimited}
                     />
                   </div>
 
-                  <div className="flex items-center space-x-2 space-x-reverse p-4 border border-saudi-light/50 rounded-lg">
+                  <div className="flex items-center space-x-2 space-x-reverse p-4 border border-saudi/10 dark:border-saudi-light/10 rounded-lg">
                     <Checkbox
                       id="terms"
                       checked={formData.agreedToTerms}
                       onCheckedChange={handleCheckboxChange}
-                      className="border-saudi-light data-[state=checked]:bg-saudi data-[state=checked]:border-saudi"
+                      className="border-saudi/10 dark:border-saudi-light/10 data-[state=checked]:bg-saudi dark:data-[state=checked]:bg-saudi-light data-[state=checked]:border-saudi dark:data-[state=checked]:border-saudi-light"
                       disabled={isSubmitting || isRateLimited}
                     />
-                    <Label htmlFor="terms" className="text-sm text-gray-700">
+                    <Label htmlFor="terms" className="text-sm text-gray-700 dark:text-gray-300">
                       أوافق على جميع الشروط والأحكام المذكورة أعلاه
                     </Label>
                   </div>
 
                   <Button
                     type="submit"
-                    className="w-full bg-saudi hover:bg-saudi-dark text-white font-medium py-2.5"
+                    className="w-full bg-saudi hover:bg-saudi-dark dark:bg-saudi-light dark:hover:bg-saudi text-white font-medium py-2.5"
                     disabled={isSubmitting || isRateLimited}
                   >
                     {isSubmitting ? 'جاري التقديم...' : 'تقديم الطلب'}

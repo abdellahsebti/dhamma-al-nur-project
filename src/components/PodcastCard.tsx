@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { Headphones, Play, Tag, X } from 'lucide-react';
+import { Headphones, Play, ArrowUpRight } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { doc, updateDoc, increment } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
+import { motion } from 'framer-motion';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 
 interface PodcastCardProps {
@@ -14,7 +16,7 @@ interface PodcastCardProps {
   title: string;
   thumbnail: string;
   externalLink: string;
-  platform?: string;
+  platform: string;
   listens: number;
 }
 
@@ -23,7 +25,7 @@ const PodcastCard: React.FC<PodcastCardProps> = ({
   title,
   thumbnail,
   externalLink,
-  platform = 'استماع',
+  platform,
   listens
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -48,6 +50,12 @@ const PodcastCard: React.FC<PodcastCardProps> = ({
     }
   };
 
+  const getPlatformIcon = (link: string) => {
+    if (link.includes('youtube.com')) return <Play className="w-4 h-4 ml-1" />;
+    if (link.includes('spotify.com')) return <Headphones className="w-4 h-4 ml-1" />;
+    return <ArrowUpRight className="w-4 h-4 ml-1" />;
+  };
+
   // Extract platform-specific embed URL
   const getEmbedUrl = (url: string) => {
     if (url.includes('spotify.com')) {
@@ -67,31 +75,30 @@ const PodcastCard: React.FC<PodcastCardProps> = ({
 
   return (
     <>
-      <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300" onClick={handleListen}>
+      <Card 
+        className="group cursor-pointer hover:shadow-lg dark:hover:shadow-xl dark:hover:shadow-black/20 transition-all duration-300"
+        onClick={handleListen}
+      >
         <CardContent className="p-0">
-          <div className="aspect-[3/2] relative overflow-hidden">
-            <img
-              src={thumbnail}
+          <div className="aspect-square relative overflow-hidden">
+            <img 
+              src={thumbnail} 
               alt={title}
               className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-              <div className="bg-saudi hover:bg-saudi-dark rounded-full p-4 transform scale-90 group-hover:scale-100 transition-transform duration-300">
-                <Play size={24} className="text-white" />
+            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="bg-saudi hover:bg-saudi-dark dark:bg-saudi-light dark:hover:bg-saudi-light/90 rounded-full p-4 transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                {getPlatformIcon(externalLink) ? React.cloneElement(getPlatformIcon(externalLink) as React.ReactElement, { className: "w-6 h-6 text-white dark:text-saudi" }) : null}
               </div>
             </div>
           </div>
-          <div className="p-6">
-            <h3 className="font-bold text-lg text-gray-900 mb-3 line-clamp-2">{title}</h3>
-            
-            <div className="flex items-center justify-between">
-              <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-saudi/10 text-saudi text-sm">
+          <div className="p-4">
+            <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-2 line-clamp-2">{title}</h3>
+            <div className="flex items-center justify-between text-gray-600 dark:text-gray-400 text-sm">
+              <span>{platform}</span>
+              <div className="flex items-center gap-1">
+                <span>{listens.toLocaleString()} استماع</span>
                 <Headphones className="w-4 h-4" />
-                <span>{platform}</span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-600">
-                <Headphones className="w-4 h-4" />
-                <span className="text-sm">{listens.toLocaleString()} استماع</span>
               </div>
             </div>
           </div>
@@ -105,7 +112,7 @@ const PodcastCard: React.FC<PodcastCardProps> = ({
               onClick={() => setIsOpen(false)}
               className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
             >
-              <X className="w-6 h-6 text-white" />
+              <Headphones className="w-6 h-6 text-white" />
             </button>
           </DialogHeader>
           <div className="aspect-video w-full">
